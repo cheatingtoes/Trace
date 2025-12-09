@@ -1,0 +1,84 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # ----------------------------------------------------
+  # 1. POSTGIS DATABASE SERVICE (New!)
+  # ----------------------------------------------------
+  postgis:
+    # Uses a standard image that includes both PostgreSQL and PostGIS extension
+    image: postgis/postgis:16-3.4 
+    container_name: trace_postgis
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      # Named Volume for persistent data storage
+      - postgis-data:/var/lib/postgresql/data
+    environment:
+      # Standard PostgreSQL setup
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tracedb
+
+  # ----------------------------------------------------
+  # 2. NODE.JS BACKEND SERVICE (API - connects to PostGIS)
+  # ----------------------------------------------------
+  backend:
+    build: 
+      context: ./trace-backend 
+    container_name: trace_backend
+    ports:
+      - "3001:3001" 
+    volumes:
+      - ./trace-backend:/app 
+      - /app/node_modules 
+    depends_on:
+      - postgis # Must wait for the database
+    environment:
+      # Connection details for PostgreSQL
+      DB_HOST: postgis    # IMPORTANT: Use the service name 'postgis'
+      DB_USER: user
+      DB_PASSWORD: password
+      DB_NAME: tracedb
+      DB_PORT: 5432
+    # Command to run the development server
+    command: ["npm", "run", "dev"]
+
+  # ----------------------------------------------------
+  # 3. PYTHON MATCHER MICROSERVICE (New!)
+  # ----------------------------------------------------
+  matcher:
+    build:
+      context: ./trace-matcher
+    container_name: trace_matcher
+    # Expose the service port (e.g., 5000) for the Node.js backend to call it
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./trace-matcher:/app
+      - /app/venv
+    depends_on:
+      - postgis
+    # We'll define the command later (e.g., uvicorn or gunicorn for a Python API)
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
+
+  # ----------------------------------------------------
+  # 4. REACT FRONTEND SERVICE
+  # ----------------------------------------------------
+  # frontend:
+  #   build:
+  #     context: ./trace-frontend
+  #   container_name: trace_frontend
+  #   ports:
+  #     - "3000:5173" 
+  #   volumes:
+  #     - ./trace-frontend:/app 
+  #     - /app/node_modules 
+  #   depends_on:
+  #     - backend
+  #   command: ["npm", "run", "dev"]
+
+# Define the named volume for persistent database storage
+volumes:
+  postgis-data:
