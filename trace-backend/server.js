@@ -1,30 +1,33 @@
 require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
-const exifr = require('exifr');
-const fs = require('fs');
-const connectDB = require('./config/db');
-const Photo = require('./models/Photo');
-const Activity = require('./models/Activity');
-const Route = require('./models/Route');
 const cors = require('cors');
+const db = require('./config/db'); // Renamed from connectDB for consistency, db is the knex instance
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors()); // Allow cross-origin requests from the frontend
-
-// Connect to Database (will attempt connection on start)
-connectDB();
+// --- Middleware ---
+app.use(cors()); // Allow cross-origin requests
+app.use(express.json()); // Parse JSON bodies
 
 // Configure Multer for file uploads
 const upload = multer({ dest: './temp_uploads/' }); 
 
-// --- ROUTES ---
+// --- API Routes ---
+const usersRouter = require('./routes/users');
+const activitiesRouter = require('./routes/activities');
+const routesRouter = require('./routes/routes');
+const polylinesRouter = require('./routes/polylines');
 
+app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/activities', activitiesRouter);
+app.use('/api/v1/routes', routesRouter);
+app.use('/api/v1/polylines', polylinesRouter);
+
+// --- Server Root ---
 app.get('/', (req, res) => {
-    res.send('Trace API is running and connected to MongoDB!');
+    res.send('Trace API is running.');
 });
 
 // Start server
