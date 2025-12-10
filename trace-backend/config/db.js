@@ -27,7 +27,6 @@ db.raw('SELECT 1')
   .then(() => console.log('PostgreSQL/PostGIS Connected successfully!'))
   .catch((err) => {
       console.error('PostgreSQL connection error:', err.message);
-      process.exit(1);
   });
 
 module.exports = db;
