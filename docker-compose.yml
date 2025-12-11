@@ -1,6 +1,32 @@
 # docker-compose.yml
 version: '3.8'
 
+# ----------------------------------------------------
+# Define a reusable base for backend services
+# ----------------------------------------------------
+x-backend-defaults: &backend-defaults
+  build: 
+    context: ./trace-backend 
+  restart: always
+  volumes:
+    # Mounts the backend code into the container for hot-reloading
+    - ./trace-backend:/app 
+    # Persists node_modules in a volume to avoid overwriting on host
+    - /app/node_modules 
+  depends_on:
+    - postgis
+    - redis
+  environment:
+    # Connection details for PostgreSQL
+    DB_HOST: postgis
+    DB_USER: user
+    DB_PASSWORD: password
+    DB_NAME: tracedb
+    DB_PORT: 5432
+    # Connection details for Redis
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+
 services:
   # ----------------------------------------------------
   # 1. POSTGIS DATABASE SERVICE (New!)
@@ -25,43 +51,28 @@ services:
   # 2. NODE.JS BACKEND SERVICE (API - connects to PostGIS)
   # ----------------------------------------------------
   backend:
-    build: 
-      context: ./trace-backend 
+    <<: *backend-defaults # Merge in the defaults
     container_name: trace_backend
     ports:
       - "3001:3001" 
-    volumes:
-      - ./trace-backend:/app 
-      - /app/node_modules 
-    depends_on:
-      - postgis # Must wait for the database
-    environment:
-      # Connection details for PostgreSQL
-      DB_HOST: postgis    # IMPORTANT: Use the service name 'postgis'
-      DB_USER: user
-      DB_PASSWORD: password
-      DB_NAME: tracedb
-      DB_PORT: 5432
     # Command to run the development server
     command: ["npm", "run", "dev"]
 
-  # ----------------------------------------------------
-  # 3. PYTHON MATCHER MICROSERVICE (New!)
-  # ----------------------------------------------------
-  matcher:
-    build:
-      context: ./trace-matcher
-    container_name: trace_matcher
-    # Expose the service port (e.g., 5000) for the Node.js backend to call it
+  redis:
+    image: redis:alpine
+    container_name: trace_redis
+    restart: always
     ports:
-      - "5001:5000"
-    volumes:
-      - ./trace-matcher:/app
-      - /app/venv
-    depends_on:
-      - postgis
-    # We'll define the command later (e.g., uvicorn or gunicorn for a Python API)
-    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
+      - "6379:6379"
+
+  # ----------------------------------------------------
+  # 3. NODE.JS WORKER SERVICE (New!)
+  # ----------------------------------------------------
+  worker:
+    <<: *backend-defaults # Merge in the defaults
+    container_name: trace_worker
+    # Overwrite the default CMD to run the worker script specifically
+    command: ["node", "jobs/worker.js"]
 
   # ----------------------------------------------------
   # 4. REACT FRONTEND SERVICE

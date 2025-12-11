@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const { ingestionQueue } = require('../jobs/queues'); // Import the queue
 const Activity = require('../models/Activity');
 const User = require('../models/User'); // For checking if user exists
+
+const upload = multer({ dest: 'uploads/' }); // Temp storage
 
 // GET /api/v1/activities - Get all activities (use with caution in a real app)
 router.get('/', async (req, res) => {
@@ -78,6 +82,26 @@ router.get('/user/:userId', async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
+});
+
+router.post('/:id/upload-gpx', upload.single('file'), async (req, res) => {
+  const activityId = req.params.id;
+  
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+
+  // Add job to background queue
+  await ingestionQueue.add('process-route', {
+    activityId,
+    filePath: req.file.path
+  });
+
+  // Respond immediately
+  res.json({ 
+    message: 'File received. Processing started.', 
+    jobId: 'queued' // In a real app you might return job.id
+  });
 });
 
 
