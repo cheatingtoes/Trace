@@ -1,0 +1,14 @@
+### A simple request to the root
+GET http://localhost:3001/
+
+### Get all users (example)
+GET http://localhost:3001/api/v1/users
+
+### Create a new user (example)
+POST http://localhost:3001/api/v1/users
+Content-Type: application/json
+
+{
+  "email": "charlie@example.com",
+  "displayName": "Charlie"
+}
