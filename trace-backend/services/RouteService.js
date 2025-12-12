@@ -30,7 +30,7 @@ function extractCoordinates(trackSegments) {
   return coords;
 }
 
-async function processRouteFile(filePath, activityId) {
+async function processRouteFile(filePath, routeId) {
   try {
     console.log(`[RouteService] Reading file: ${filePath}`);
     const fileContent = fs.readFileSync(filePath, 'utf8');
@@ -42,7 +42,7 @@ async function processRouteFile(filePath, activityId) {
     // Note: You might need extra checks here if file is KML vs GPX
     const track = gpxtObj.gpx?.trk;
     
-    if (!track || !track.trkseg) {
+    if (!track || track.trkseg === undefined) {
       throw new Error("Invalid GPX: No track segments found.");
     }
 
@@ -58,20 +58,29 @@ async function processRouteFile(filePath, activityId) {
     };
 
     // 3. Save Raw Geometry to DB
-    await db('polylines').insert({
-      activity_id: activityId,
-      geom: db.raw('ST_GeomFromGeoJSON(?)', [JSON.stringify(geometry)])
-    });
+    const [newPolylineId] = await db('polylines')
+      .insert({
+        route_id: routeId,
+        sourceUrl: filePath,
+        sourceType: 'gpx',
+        geom: db.raw('ST_GeomFromGeoJSON(?)', [JSON.stringify(geometry)])
+      })
+      .returning('id');
 
     // 4. Simplify in DB (The "Magic" PostGIS step)
     // 0.0001 is roughly 10 meters tolerance
     await db.raw(`
       UPDATE polylines 
       SET geom = ST_Simplify(geom, 0.0001) 
-      WHERE activity_id = ?
-    `, [activityId]);
+      WHERE id = ?
+    `, [newPolylineId]);
 
-    console.log(`[RouteService] Success for Activity ${activityId}`);
+    // update as new polyline
+    await db('routes').update({
+      active_polyline_id: newPolylineId
+    }).where('id', routeId);
+
+    console.log(`[RouteService] Success for Route ${routeId}`);
     return { success: true, pointCount: coordinates.length };
 
   } catch (err) {
