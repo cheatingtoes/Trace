@@ -12,3 +12,24 @@ Content-Type: application/json
   "email": "charlie@example.com",
   "displayName": "Charlie"
 }
+
+GET http://localhost:3001/api/v1/routes/
+
+### Upload GPX file for Route ID 1
+# @name uploadGpx
+POST http://localhost:3000/api/v1/routes/1/upload-gpx
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="routeFile"; filename="sample.gpx"
+Content-Type: application/gpx+xml
+
+<gpx version="1.1" creator="Test">
+  <trk>
+    <trkseg>
+      <trkpt lat="40.7128" lon="-74.0060"></trkpt>
+      <trkpt lat="40.7130" lon="-74.0062"></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+--boundary--

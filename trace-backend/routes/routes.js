@@ -2,6 +2,88 @@ const express = require('express');
 const router = express.Router();
 const Route = require('../models/Route');
 const Activity = require('../models/Activity'); // For checking if activity exists
+const { processRouteFile } = require('../services/RouteService');
+// 1. Import multer and necessary modules
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const db = require('../config/db'); // Assuming db is available in this scope
+
+// 2. Configure Multer Disk Storage for temporary file saving
+const upload = multer({
+  // Use memoryStorage if you only care about the buffer and the file is small
+  // For potentially large GPX files, disk storage is safer.
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      // Use a temporary folder for uploads
+      cb(null, path.join(__dirname, '..', 'tmp_uploads'));
+    },
+    filename: (req, file, cb) => {
+      // Create a unique filename
+      cb(null, `${Date.now()}-${file.originalname}`);
+    },
+  }),
+  // Optional: Limit file size and number of files
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 1,
+  },
+});
+
+// POST /api/v1/routes/:id/upload-gpx - Upload a GPX file for a specific route
+router.post('/:id/upload-gpx', upload.single('routeFile'), async (req, res) => {
+    const routeId = req.params.id;
+    const file = req.file;
+
+    // A. Input Validation
+    if (!file) {
+        return res.status(400).json({ message: 'No file uploaded.' });
+    }
+    if (!routeId) {
+         // This should ideally be handled by the outer router middleware, but is a good safeguard
+        return res.status(400).json({ message: 'Route ID is required.' });
+    }
+
+    try {
+        // B. Check if Route exists (Good practice before processing)
+        const route = await Route.findById(routeId);
+        if (!route) {
+            // Clean up the uploaded file if the route doesn't exist
+            fs.unlinkSync(file.path);
+            return res.status(404).json({ message: 'Route not found' });
+        }
+
+        // C. Process the file using your new service
+        const result = await processRouteFile(file.path, routeId);
+
+        // D. Optional: Delete the temporary file after successful processing
+        // Note: processRouteFile currently uses the path as sourceUrl, 
+        // so if you plan to keep the file, this cleanup must be skipped. 
+        // For a true "upload-then-process" flow, keeping it locally is rarely desired.
+        // Assuming your service handles file persistence (e.g., to S3 or permanent storage) 
+        // or that the sourceUrl is a temporary path, we delete it.
+        fs.unlinkSync(file.path);
+
+        res.json({ 
+            message: 'GPX file processed and route updated successfully',
+            routeId: routeId,
+            pointCount: result.pointCount,
+            polylineId: result.polylineId
+        });
+
+    } catch (err) {
+        console.error(`[Routes] Upload Error:`, err);
+        // Ensure temporary file is deleted even on processing failure
+        if (file && file.path && fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+        }
+        res.status(500).json({ 
+            message: 'Error processing file',
+            error: err.message 
+        });
+    }
+});
+
 
 // GET /api/v1/routes - Get all routes
 router.get('/', async (req, res) => {
@@ -36,6 +118,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+/*
+
 // PUT /api/v1/routes/:id - Update a route
 router.put('/:id', async (req, res) => {
   try {
@@ -63,7 +147,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 
-// --- Nested Routes ---
+// --- Nested Routes --- 
 
 // GET /api/v1/activities/:activityId/routes - Get all routes for a specific activity
 router.get('/activity/:activityId', async (req, res) => {
@@ -79,5 +163,7 @@ router.get('/activity/:activityId', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+*/
 
 module.exports = router;

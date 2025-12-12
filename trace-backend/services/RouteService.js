@@ -58,11 +58,11 @@ async function processRouteFile(filePath, routeId) {
     };
 
     // 3. Save Raw Geometry to DB
-    const [newPolylineId] = await db('polylines')
+    const [newPolyline] = await db('polylines')
       .insert({
         route_id: routeId,
-        sourceUrl: filePath,
-        sourceType: 'gpx',
+        source_url: filePath,
+        source_type: 'gpx',
         geom: db.raw('ST_GeomFromGeoJSON(?)', [JSON.stringify(geometry)])
       })
       .returning('id');
@@ -73,15 +73,15 @@ async function processRouteFile(filePath, routeId) {
       UPDATE polylines 
       SET geom = ST_Simplify(geom, 0.0001) 
       WHERE id = ?
-    `, [newPolylineId]);
+    `, [newPolyline.id]);
 
     // update as new polyline
     await db('routes').update({
-      active_polyline_id: newPolylineId
+      active_polyline_id: newPolyline.id
     }).where('id', routeId);
 
     console.log(`[RouteService] Success for Route ${routeId}`);
-    return { success: true, pointCount: coordinates.length };
+    return { success: true, pointCount: coordinates.length, polylineId: newPolyline.id };
 
   } catch (err) {
     console.error(`[RouteService] Error:`, err.message);

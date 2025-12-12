@@ -4,6 +4,17 @@ const Polyline = require('../models/Polyline');
 const Route = require('../models/Route'); // For checking if route exists
 const db = require('../config/db'); // For PostGIS functions
 
+// GET /api/v1/polylines - Get all polylines
+router.get('/', async (req, res) => {
+  try {
+    const polylines = await db('polylines').select('*');
+    res.json(polylines);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
 // POST /api/v1/polylines - Create a new polyline
 router.post('/', async (req, res) => {
   // Example req.body: { route_id: 1, source_url: '...', wkt: 'LINESTRING( ... )' }
