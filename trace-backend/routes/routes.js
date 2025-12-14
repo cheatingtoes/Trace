@@ -84,7 +84,6 @@ router.post('/:id/upload-gpx', upload.single('routeFile'), async (req, res) => {
     }
 });
 
-
 // GET /api/v1/routes - Get all routes
 router.get('/', async (req, res) => {
   try {

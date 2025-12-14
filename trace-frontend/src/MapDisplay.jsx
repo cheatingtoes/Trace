@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import L from 'leaflet';
 
 // Fix for Leaflet marker icons not showing in React
@@ -11,10 +11,28 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapDisplay = ({ latitude, longitude, date }) => {
+    const [geometryData, setGeometryData] = useState(null);
+
+    useEffect(() => {
+        fetch('http://localhost:3001/api/v1/polylines/85') // Example polyline ID
+            .then(response => response.json())
+            .then(data => {
+                setGeometryData(data.geometry);
+            })
+            .catch(error => {
+                console.error('Error fetching polyline data:', error);
+            });
+    }, []);
+
+    console.log('Geometry Data:', geometryData);
+
     const defaultCenter = [39.0, -100.0]; // Center of US
     const zoomLevel = latitude ? 10 : 3;
-    const position = [latitude || defaultCenter[0], longitude || defaultCenter[1]];
-
+    // const position = [latitude || defaultCenter[0], longitude || defaultCenter[1]];
+    const position = geometryData 
+        ? [geometryData.coordinates[0][1], geometryData.coordinates[0][0]] 
+        : defaultCenter;
+        
     return (
         <MapContainer 
             center={position} 
@@ -24,7 +42,7 @@ const MapDisplay = ({ latitude, longitude, date }) => {
             <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-
+            {geometryData && <GeoJSON data={geometryData} />}
             {latitude && longitude && (
                 <Marker position={position}>
                     <Popup>

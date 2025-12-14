@@ -7,21 +7,33 @@ const db = require('../config/db'); // For PostGIS functions
 // GET /api/v1/polylines - Get all polylines
 router.get('/', async (req, res) => {
   try {
-    const polylines = await db('polylines').select('*');
+    const polylines = await Polyline.findAll();
     res.json(polylines);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
+// GET /api/v1/polylines/:id - Get a single polyline by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const polyline = await Polyline.findByIdAsGeoJSON(req.params.id);
+    if (!polyline) {
+      return res.status(404).json({ message: 'Polyline not found' });
+    }
+    res.json(polyline);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // POST /api/v1/polylines - Create a new polyline
 router.post('/', async (req, res) => {
-  // Example req.body: { route_id: 1, source_url: '...', wkt: 'LINESTRING( ... )' }
-  const { route_id, source_url, source_type, wkt } = req.body;
+  // Example req.body: { route_id: 1, source_url: '...', geojson: { "type": "LineString", "coordinates": [...] } }
+  const { route_id, source_url, source_type, geojson } = req.body;
 
-  if (!route_id || !wkt) {
-    return res.status(400).json({ message: 'route_id and wkt (Well-Known Text) are required.' });
+  if (!route_id || !geojson) {
+    return res.status(400).json({ message: 'route_id and geojson are required.' });
   }
 
   try {
@@ -29,26 +41,14 @@ router.post('/', async (req, res) => {
       route_id,
       source_url,
       source_type,
-      geom: db.raw(`ST_GeomFromText(?, 4326)`, [wkt]) // Use Knex.raw for PostGIS function
+      // PostGIS's ST_GeomFromGeoJSON function requires the GeoJSON object as a string.
+      geom: db.raw(`ST_GeomFromGeoJSON(?)`, [JSON.stringify(geojson)])
     };
     
     const newPolyline = await Polyline.create(polylineData);
     res.status(201).json(newPolyline);
   } catch (err) {
     res.status(400).json({ message: err.message });
-  }
-});
-
-// GET /api/v1/polylines/:id - Get a single polyline by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const polyline = await Polyline.findById(req.params.id);
-    if (!polyline) {
-      return res.status(404).json({ message: 'Polyline not found' });
-    }
-    res.json(polyline);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
 });
 
@@ -64,7 +64,6 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 
 // --- Nested Routes ---
 
