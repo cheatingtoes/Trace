@@ -4,7 +4,7 @@
  */
 exports.seed = async function(knex) {
   // Deletes ALL existing entries
-  await knex('media_items').del();
+  await knex('moments').del();
 
   // Get activities
   const pctActivity = await knex('activities').where({ name: 'PCT Trail' }).first();
@@ -33,13 +33,13 @@ exports.seed = async function(knex) {
     { route: sierrasRoute, activity: sierrasActivity },
   ];
 
-  const mediaItems = [];
+  const moments = [];
   const photosPerRoute = 20;
 
   routesAndActivities.forEach(({ route, activity }) => {
     for (let i = 0; i < photosPerRoute; i++) {
       const fraction = photosPerRoute > 1 ? i / (photosPerRoute - 1) : 0; // interpolates from 0.0 to 1.0
-      mediaItems.push({
+      moments.push({
         activity_id: activity.id,
         type: 'photo',
         timestamp: new Date(),
@@ -57,7 +57,7 @@ exports.seed = async function(knex) {
   });
 
   // Insert all media items in a single batch
-  if (mediaItems.length > 0) {
-    await knex.batchInsert('media_items', mediaItems);
+  if (moments.length > 0) {
+    await knex.batchInsert('moments', moments);
   }
 };

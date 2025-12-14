@@ -3,7 +3,7 @@
  * @returns { Promise<void> }
  */
 exports.up = function(knex) {
-  return knex.schema.createTable('media_items', function(table) {
+  return knex.schema.createTable('moments', function(table) {
     table.bigIncrements('id').primary();
 
     table.integer('activity_id').unsigned().notNullable();
@@ -42,7 +42,7 @@ exports.up = function(knex) {
     table.index('timestamp');
   })
   // Add a spatial index for the geom column for fast location-based queries
-  .then(() => knex.raw('CREATE INDEX media_items_geom_idx ON media_items USING GIST (geom)'));
+  .then(() => knex.raw('CREATE INDEX moments_geom_idx ON moments USING GIST (geom)'));
 };
 
 /**
@@ -50,5 +50,5 @@ exports.up = function(knex) {
  * @returns { Promise<void> }
  */
 exports.down = function(knex) {
-  return knex.schema.dropTableIfExists('media_items');
+  return knex.schema.dropTableIfExists('moments');
 };
