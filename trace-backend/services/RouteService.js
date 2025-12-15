@@ -1,92 +1,62 @@
 const fs = require('fs');
-const { XMLParser } = require('fast-xml-parser');
-const db = require('../config/db'); // Your existing Knex config
+// 1. Import the DOMParser (The "Fake Browser")
+const { DOMParser } = require('@xmldom/xmldom');
+// 2. Import the Converter
+const toGeoJSON = require('@mapbox/togeojson');
+const db = require('../config/db');
 
-// Secure Parser Configuration
-const parser = new XMLParser({
-  ignoreAttributes: false,
-  attributeNamePrefix: "@_",
-});
+async function createRouteFromGpx(file, userId) {
+    try {
+        // A. Read the file as a simple string
+        const gpxString = fs.readFileSync(file.path, 'utf8');
 
-// Helper to extract [lon, lat] from the parsed XML object
-function extractCoordinates(trackSegments) {
-  let coords = [];
-  // Handle case where gpx has 1 segment vs array of segments
-  const segments = Array.isArray(trackSegments) ? trackSegments : [trackSegments];
+        // B. Parse string -> DOM Node (This is the step that usually breaks)
+        const doc = new DOMParser().parseFromString(gpxString, 'text/xml');
 
-  for (const segment of segments) {
-    if (!segment.trkpt) continue;
-    const points = Array.isArray(segment.trkpt) ? segment.trkpt : [segment.trkpt];
-    
-    for (const point of points) {
-      if (point["@_lon"] && point["@_lat"]) {
-        coords.push([
-          parseFloat(point["@_lon"]),
-          parseFloat(point["@_lat"])
-        ]);
-      }
+        // C. Convert DOM -> GeoJSON
+        const geoJson = toGeoJSON.gpx(doc);
+
+        // --- Standard Validation Logic ---
+        const trackFeature = geoJson.features.find(f => f.geometry.type === 'LineString');
+        
+        if (!trackFeature) {
+            // Fallback: Some GPX files use 'MultiLineString'
+            const multiTrack = geoJson.features.find(f => f.geometry.type === 'MultiLineString');
+            if (multiTrack) {
+                // If you want to handle complex tracks, you'd merge them here.
+                // For now, we error to keep it simple.
+                throw new Error('Complex GPX (MultiLineString) not yet supported.');
+            }
+            throw new Error('No track found in GPX file.');
+        }
+
+        const { properties, geometry } = trackFeature;
+
+        // --- Transactional Save (Same as before) ---
+        return await db.transaction(async (trx) => {
+            const [route] = await trx('routes').insert({
+                user_id: userId, // Ensure your DB has this column or remove it
+                name: properties.name || 'Untitled Activity',
+                start_time: properties.time || new Date(),
+            }).returning('*');
+
+            await trx('polylines').insert({
+                route_id: route.id,
+                source_type: 'gpx',
+                // PostGIS: Set SRID 4326 + Simplify (0.0001 deg ~ 11 meters)
+                geom: db.raw(
+                    'ST_SetSRID(ST_Simplify(ST_GeomFromGeoJSON(?), 0.0001), 4326)', 
+                    [JSON.stringify(geometry)]
+                )
+            });
+
+            return route;
+        });
+
+    } catch (err) {
+        console.error("GPX Parse Error:", err);
+        throw new Error(`Failed to process GPX: ${err.message}`);
     }
-  }
-  return coords;
 }
 
-async function processRouteFile(filePath, routeId) {
-  try {
-    console.log(`[RouteService] Reading file: ${filePath}`);
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    
-    // 1. Parse XML securely
-    const gpxtObj = parser.parse(fileContent);
-    
-    // Drill down into GPX structure ( <gpx> -> <trk> -> <trkseg> )
-    // Note: You might need extra checks here if file is KML vs GPX
-    const track = gpxtObj.gpx?.trk;
-    
-    if (!track || track.trkseg === undefined) {
-      throw new Error("Invalid GPX: No track segments found.");
-    }
-
-    const coordinates = extractCoordinates(track.trkseg);
-    console.log(`[RouteService] Extracted ${coordinates.length} points.`);
-
-    if (coordinates.length === 0) throw new Error("No points found.");
-
-    // 2. Format as GeoJSON LineString
-    const geometry = {
-      type: 'LineString',
-      coordinates: coordinates
-    };
-
-    // 3. Save Raw Geometry to DB
-    const [newPolyline] = await db('polylines')
-      .insert({
-        route_id: routeId,
-        source_url: filePath,
-        source_type: 'gpx',
-        geom: db.raw('ST_GeomFromGeoJSON(?)', [JSON.stringify(geometry)])
-      })
-      .returning('id');
-
-    // 4. Simplify in DB (The "Magic" PostGIS step)
-    // 0.0001 is roughly 10 meters tolerance
-    await db.raw(`
-      UPDATE polylines 
-      SET geom = ST_Simplify(geom, 0.0001) 
-      WHERE id = ?
-    `, [newPolyline.id]);
-
-    // update as new polyline
-    await db('routes').update({
-      active_polyline_id: newPolyline.id
-    }).where('id', routeId);
-
-    console.log(`[RouteService] Success for Route ${routeId}`);
-    return { success: true, pointCount: coordinates.length, polylineId: newPolyline.id };
-
-  } catch (err) {
-    console.error(`[RouteService] Error:`, err.message);
-    throw err; // Re-throw so the worker knows it failed
-  }
-}
-
-module.exports = { processRouteFile };
+module.exports = { createRouteFromGpx };

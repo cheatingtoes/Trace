@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import MapDisplay from './MapDisplay';
+import PhotoUpload from './components/PhotoUpload';
 import './index.css'; 
 
 function App() {
@@ -57,6 +58,10 @@ function App() {
             </button>
 
             <p style={{ marginTop: '10px' }}><strong>{message}</strong></p>
+
+            <hr style={{ margin: '30px 0' }} />
+            <PhotoUpload activityId="1" />
+            <hr style={{ margin: '30px 0' }} />
 
             <div style={{ marginTop: '30px' }}>
                 <MapDisplay 

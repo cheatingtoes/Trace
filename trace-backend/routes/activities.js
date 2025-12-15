@@ -4,6 +4,9 @@ const multer = require('multer');
 const { ingestionQueue } = require('../jobs/queues'); // Import the queue
 const Activity = require('../models/Activity');
 const User = require('../models/User'); // For checking if user exists
+const { getPresignedUploadUrl } = require('../services/PhotoService');
+const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
+const db = require('../config/db');
 
 const upload = multer({ dest: 'uploads/' }); // Temp storage
 
@@ -102,6 +105,51 @@ router.post('/:id/upload-gpx', upload.single('file'), async (req, res) => {
     message: 'File received. Processing started.', 
     jobId: 'queued' // In a real app you might return job.id
   });
+});
+
+// POST /api/v1/activities/:id/photos/sign-batch
+router.post('/:id/photos/sign-batch', async (req, res) => {
+    const activityId = req.params.id;
+    const { files } = req.body; // Expecting array of { fileName, fileType }
+
+    if (!files || !Array.isArray(files) || files.length === 0) {
+        return res.status(400).json({ error: 'No files provided' });
+    }
+
+    // Limit batch size if needed (e.g., max 50 at a time)
+    // if (files.length > 50) {
+    //     return res.status(400).json({ error: 'Batch limit exceeded. Please sign 50 files at a time.' });
+    // }
+
+    try {
+        // Use Promise.all to run all signatures in parallel
+        const signedUrls = await Promise.all(files.map(async (file) => {
+            // 1. Validate Type
+            if (!ALLOWED_MIME_TYPES.includes(file.fileType)) {
+                return { 
+                    error: true, 
+                    fileName: file.fileName, 
+                    message: `Unsupported type: ${file.fileType}` 
+                };
+            }
+
+            // 2. Generate Signature
+            const { signedUrl, key } = await getPresignedUploadUrl(activityId, file.fileName, file.fileType);
+            
+            return {
+                originalName: file.fileName, // Send this back so Frontend can match file to URL
+                fileType: file.fileType,
+                signedUrl,
+                key
+            };
+        }));
+
+        res.json(signedUrls);
+
+    } catch (err) {
+        console.error("Batch Signing Error:", err);
+        res.status(500).json({ error: 'Failed to generate signatures' });
+    }
 });
 
 

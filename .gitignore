@@ -8,3 +8,13 @@ Thumbs.db
 
 # Environment files at the root
 .env
+
+# Node build artifacts and dependencies
+# Ignore these at the root level to prevent accidental check-ins.
+# Sub-projects (trace-backend, trace-frontend) have their own .gitignore files.
+/node_modules
+/package.json
+/package-lock.json
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*

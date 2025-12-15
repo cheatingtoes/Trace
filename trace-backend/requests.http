@@ -13,11 +13,15 @@ Content-Type: application/json
   "displayName": "Charlie"
 }
 
-GET http://localhost:3001/api/v1/routes/
+### Get all routes
+GET http://localhost:3001/api/v1/polylines/
+
+### Create a new route
+GET http://localhost:3001/api/v1/routes/40
 
 ### Upload GPX file for Route ID 1
 # @name uploadGpx
-POST http://localhost:3000/api/v1/routes/1/upload-gpx
+POST http://localhost:3001/api/v1/routes/40/upload-gpx
 Content-Type: multipart/form-data; boundary=boundary
 
 --boundary
@@ -27,8 +31,26 @@ Content-Type: application/gpx+xml
 <gpx version="1.1" creator="Test">
   <trk>
     <trkseg>
-      <trkpt lat="40.7128" lon="-74.0060"></trkpt>
-      <trkpt lat="40.7130" lon="-74.0062"></trkpt>
+      <trkpt lat="40.7128" lon="-74.0060"><ele>10.0</ele></trkpt>
+      <trkpt lat="40.7200" lon="-73.9500"><ele>12.0</ele></trkpt>
+      <trkpt lat="40.7300" lon="-73.9000"><ele>15.0</ele></trkpt>
+      <trkpt lat="40.7400" lon="-73.8500"><ele>15.0</ele></trkpt>
+      <trkpt lat="40.7500" lon="-73.8000"><ele>20.0</ele></trkpt>
+      <trkpt lat="40.7600" lon="-73.7500"><ele>22.0</ele></trkpt>
+      <trkpt lat="40.7700" lon="-73.7000"><ele>25.0</ele></trkpt>
+      <trkpt lat="40.7800" lon="-73.6000"><ele>30.0</ele></trkpt>
+      <trkpt lat="40.7900" lon="-73.5000"><ele>35.0</ele></trkpt>
+      <trkpt lat="40.8000" lon="-73.4000"><ele>40.0</ele></trkpt>
+      <trkpt lat="40.8200" lon="-73.2000"><ele>45.0</ele></trkpt>
+      <trkpt lat="40.8500" lon="-73.0000"><ele>50.0</ele></trkpt>
+      <trkpt lat="40.8800" lon="-72.8000"><ele>40.0</ele></trkpt>
+      <trkpt lat="40.9000" lon="-72.6000"><ele>30.0</ele></trkpt>
+      <trkpt lat="40.9200" lon="-72.4000"><ele>20.0</ele></trkpt>
+      <trkpt lat="40.9500" lon="-72.3000"><ele>15.0</ele></trkpt>
+      <trkpt lat="40.9800" lon="-72.2000"><ele>10.0</ele></trkpt>
+      <trkpt lat="41.0000" lon="-72.1000"><ele>10.0</ele></trkpt>
+      <trkpt lat="41.0200" lon="-72.0000"><ele>5.0</ele></trkpt>
+      <trkpt lat="41.0359" lon="-71.9545"><ele>0.0</ele></trkpt>
     </trkseg>
   </trk>
 </gpx>

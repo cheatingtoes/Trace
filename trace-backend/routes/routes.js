@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Route = require('../models/Route');
 const Activity = require('../models/Activity'); // For checking if activity exists
-const { processRouteFile } = require('../services/RouteService');
+const { createRouteFromGpx } = require('../services/RouteService');
 // 1. Import multer and necessary modules
 const multer = require('multer');
 const path = require('path');
@@ -25,7 +25,7 @@ const upload = multer({
   }),
   // Optional: Limit file size and number of files
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 100 * 1024 * 1024, // 100MB limit
     files: 1,
   },
 });
@@ -54,10 +54,10 @@ router.post('/:id/upload-gpx', upload.single('routeFile'), async (req, res) => {
         }
 
         // C. Process the file using your new service
-        const result = await processRouteFile(file.path, routeId);
+        const result = await createRouteFromGpx(file.path, routeId);
 
         // D. Optional: Delete the temporary file after successful processing
-        // Note: processRouteFile currently uses the path as sourceUrl, 
+        // Note: createRouteFromGpx currently uses the path as sourceUrl, 
         // so if you plan to keep the file, this cleanup must be skipped. 
         // For a true "upload-then-process" flow, keeping it locally is rarely desired.
         // Assuming your service handles file persistence (e.g., to S3 or permanent storage) 

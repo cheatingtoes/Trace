@@ -5,77 +5,65 @@ version: '3.8'
 # Define a reusable base for backend services
 # ----------------------------------------------------
 x-backend-defaults: &backend-defaults
-  build: 
-    context: ./trace-backend 
+  build:
+    context: ./trace-backend
   restart: always
   volumes:
     # Mounts the backend code into the container for hot-reloading
-    - ./trace-backend:/app 
+    - ./trace-backend:/app
     # Persists node_modules in a volume to avoid overwriting on host
-    - /app/node_modules 
+    - /app/node_modules
   depends_on:
     - postgis
     - redis
+    - minio # <-- All backend services depend on Minio
   environment:
-    # Connection details for PostgreSQL
+    # --- PostGIS Connection
     DB_HOST: postgis
     DB_USER: user
     DB_PASSWORD: password
     DB_NAME: tracedb
     DB_PORT: 5432
-    # Connection details for Redis
+    # --- Redis Connection
     REDIS_HOST: redis
     REDIS_PORT: 6379
+    # --- S3/MinIO Connection
+    S3_ENDPOINT: http://minio:9000
+    S3_ACCESS_KEY_ID: minioadmin
+    S3_SECRET_ACCESS_KEY: minioadmin
+    S3_BUCKET_NAME: trace-media
+    # Use path-style access to avoid DNS resolution issues in Docker
+    S3_FORCE_PATH_STYLE: 'true'
 
 services:
   # ----------------------------------------------------
-  # 1. POSTGIS DATABASE SERVICE (New!)
+  # 1. POSTGIS DATABASE SERVICE
   # ----------------------------------------------------
   postgis:
-    # Uses a standard image that includes both PostgreSQL and PostGIS extension
-    image: postgis/postgis:16-3.4 
+    image: postgis/postgis:16-3.4
     container_name: trace_postgis
     restart: always
     ports:
       - "5432:5432"
     volumes:
-      # Named Volume for persistent data storage
       - postgis-data:/var/lib/postgresql/data
     environment:
-      # Standard PostgreSQL setup
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: tracedb
 
   # ----------------------------------------------------
-  # 2. NODE.JS BACKEND SERVICE (API - connects to PostGIS)
+  # 2. NODE.JS BACKEND SERVICE (API)
   # ----------------------------------------------------
   backend:
-    <<: *backend-defaults # Merge in the defaults
+    <<: *backend-defaults
     container_name: trace_backend
     ports:
-      - "3001:3001" 
-    # Command to run the development server
+      - "3001:3001"
     command: ["npm", "run", "dev"]
 
-  redis:
-    image: redis:alpine
-    container_name: trace_redis
-    restart: always
-    ports:
-      - "6379:6379"
-
   # ----------------------------------------------------
-  # 3. NODE.JS WORKER SERVICE (New!)
-  # ----------------------------------------------------
-  worker:
-    <<: *backend-defaults # Merge in the defaults
-    container_name: trace_worker
-    # Overwrite the default CMD to run the worker script specifically
-    command: ["node", "jobs/worker.js"]
-
-  # ----------------------------------------------------
-  # 4. REACT FRONTEND SERVICE
+  # 3. REACT FRONTEND SERVICE
   # ----------------------------------------------------
   # frontend:
   #   build:
@@ -90,6 +78,64 @@ services:
   #     - backend
   #   command: ["npm", "run", "dev"]
 
-# Define the named volume for persistent database storage
+  # ----------------------------------------------------
+  # 4. REDIS SERVICE
+  # ----------------------------------------------------
+  redis:
+    image: redis:alpine
+    container_name: trace_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # ----------------------------------------------------
+  # 5. NODE.JS WORKER SERVICE
+  # ----------------------------------------------------
+  worker:
+    <<: *backend-defaults
+    container_name: trace_worker
+    command: ["node", "jobs/worker.js"]
+
+  # ----------------------------------------------------
+  # 6. MINIO S3-COMPATIBLE STORAGE
+  # ----------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: trace_minio
+    restart: always
+    ports:
+      - "9000:9000" # API Port
+      - "9001:9001" # Web Console Port
+    volumes:
+      - minio-data:/data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # ----------------------------------------------------
+  # 6. MINIO BUCKET CREATION SERVICE (New!)
+  # ----------------------------------------------------
+  createbuckets:
+    image: minio/mc
+    container_name: trace_createbuckets # <-- Added for predictable naming
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set local http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb --ignore-existing local/trace-media;
+      /usr/bin/mc anonymous set public local/trace-media;
+      exit 0;
+      "
+
+# Define the named volumes for persistent data storage
 volumes:
   postgis-data:
+  minio-data: # <-- New volume for Minio

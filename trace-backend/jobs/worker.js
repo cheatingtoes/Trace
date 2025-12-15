@@ -1,6 +1,6 @@
 const { Worker } = require('bullmq');
 const connection = require('./connection');
-const { processRouteFile } = require('../services/RouteService');
+const { createRouteFromGpx } = require('../services/RouteService');
 
 console.log('[Worker] Starting Trace Worker...');
 
@@ -8,7 +8,7 @@ const worker = new Worker('ingestion', async (job) => {
   const { activityId, filePath } = job.data;
   
   if (job.name === 'process-route') {
-    return await processRouteFile(filePath, activityId);
+    return await createRouteFromGpx(filePath, activityId);
   }
 }, { connection });
 

@@ -19,11 +19,13 @@ const usersRouter = require('./routes/users');
 const activitiesRouter = require('./routes/activities');
 const routesRouter = require('./routes/routes');
 const polylinesRouter = require('./routes/polylines');
+const momentsRouter = require('./routes/moments');
 
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/activities', activitiesRouter);
 app.use('/api/v1/routes', routesRouter);
 app.use('/api/v1/polylines', polylinesRouter);
+app.use('/api/v1/moments', momentsRouter);
 
 // --- Server Root ---
 app.get('/', (req, res) => {
