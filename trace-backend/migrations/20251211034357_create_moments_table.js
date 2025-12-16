@@ -17,7 +17,7 @@ exports.up = function(knex) {
 
     // geom, GEOMETRY(Point), Location for the map pin.
     // Using 4326 as the SRID for standard geographic coordinates.
-    table.specificType('geom', 'GEOMETRY(Point, 4326)');
+    table.specificType('geom', 'GEOMETRY(PointZ, 4326)');
 
     // mile_marker, NUMERIC, Calculated distance on trail.
     table.decimal('mile_marker');

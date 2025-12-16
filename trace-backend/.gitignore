@@ -12,3 +12,6 @@ yarn-debug.log*
 .DS_Store
 .idea/
 .vscode/
+
+uploads/
+requests.http

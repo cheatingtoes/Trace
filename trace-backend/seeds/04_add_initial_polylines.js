@@ -34,49 +34,49 @@ exports.seed = async function(knex) {
         // Use knex.raw to call the PostGIS function ST_GeomFromText.
         // The '?' is a binding that prevents SQL injection.
         // 4326 is the SRID for standard GPS coordinates (WGS 84).
-        geom: knex.raw('ST_GeomFromText(?, 4326)', [pacificCrestTrail_v1]),
+        geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [pacificCrestTrail_v1]),
         source_url: 'http://example.com/pct_v1',
         source_type: 'gpx'
     },
     {
         route_id: PCTRoute.id,
-        geom: knex.raw('ST_GeomFromText(?, 4326)', [pacificCrestTrail_v2]),
+        geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [pacificCrestTrail_v2]),
         source_url: 'http://example.com/pct_v2',
         source_type: 'gpx'
     },
     {
         route_id: OCTRoute.id,
-        geom: knex.raw('ST_GeomFromText(?, 4326)', [oregonCoastTrail_v1]),
+        geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [oregonCoastTrail_v1]),
         source_url: 'http://example.com/oct_v1',
         source_type: 'gpx'
     },
     {
         route_id: OCTRoute.id,
-        geom: knex.raw('ST_GeomFromText(?, 4326)', [oregonCoastTrail_v2]),
+        geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [oregonCoastTrail_v2]),
         source_url: 'http://example.com/oct_v1',
         source_type: 'gpx'
     },
     {
         route_id: ATRoute.id,
-        geom: knex.raw('ST_GeomFromText(?, 4326)', [appalachianTrail_v1]),
+        geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [appalachianTrail_v1]),
         source_url: 'http://example.com/at_v1',
         source_type: 'gpx'
     },
     {
         route_id: ATRoute.id,
-        geom: knex.raw('ST_GeomFromText(?, 4326)', [appalachianTrail_v2]),
+        geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [appalachianTrail_v2]),
         source_url: 'http://example.com/at_v1',
         source_type: 'gpx'
     },
     {
         route_id: sierrasRoute.id,
-        geom: knex.raw('ST_GeomFromText(?, 4326)', [sierras_v1]),
+        geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [sierras_v1]),
         source_url: 'http://example.com/sierras_v1',
         source_type: 'gpx'
     },
     {
         route_id: sierrasRoute.id,
-        geom: knex.raw('ST_GeomFromText(?, 4326)', [sierras_v2]),
+        geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [sierras_v2]),
         source_url: 'http://example.com/sierras_v2',
         source_type: 'gpx'
     }

@@ -3,7 +3,7 @@ exports.up = function(knex) {
     table.increments('id').primary();
     table.uuid('uuid').defaultTo(knex.raw('gen_random_uuid()')).notNullable().unique();
     table.timestamps(true, true);
-    table.specificType('geom', 'GEOMETRY(LineString, 4326)').notNullable();
+    table.specificType('geom', 'GEOMETRY(LineStringZ, 4326)').notNullable();
     table.text('source_url');
     table.text('source_type');   
     

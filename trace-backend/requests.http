@@ -14,20 +14,33 @@ Content-Type: application/json
 }
 
 ### Get all routes
-GET http://localhost:3001/api/v1/polylines/
+get http://localhost:3001/api/v1/moments/presigned-url?activityId=1&fileName=test.jpg&fileType=image/jpeg
 
 ### Create a new route
-GET http://localhost:3001/api/v1/routes/40
+GET http://localhost:3001/api/v1/polylines/6
 
-### Upload GPX file for Route ID 1
-# @name uploadGpx
-POST http://localhost:3001/api/v1/routes/40/upload-gpx
-Content-Type: multipart/form-data; boundary=boundary
+### Upload GPX from File
+POST http://localhost:3001/api/v1/activities/1/upload-route-file
+Content-Type: multipart/form-data; boundary=MyBoundary
 
---boundary
+--MyBoundary
 Content-Disposition: form-data; name="routeFile"; filename="sample.gpx"
 Content-Type: application/gpx+xml
 
+< ./tmp_uploads/sample.gpx
+--MyBoundary--
+
+
+
+
+### Upload GPX file for Route ID 1
+# @name uploadGpx
+POST http://localhost:3001/api/v1/activities/1/upload-route-file
+Content-Type: multipart/form-data; boundary=boundary
+--boundary
+Content-Disposition: form-data; name="routeFile"; filename="sample.gpx"
+Content-Type: application/gpx+xml
+e
 <gpx version="1.1" creator="Test">
   <trk>
     <trkseg>

@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { ingestionQueue } = require('../jobs/queues'); // Import the queue
-const Activity = require('../models/Activity');
-const User = require('../models/User'); // For checking if user exists
-const { getPresignedUploadUrl } = require('../services/PhotoService');
-const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
+
 const db = require('../config/db');
+const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
+const Activity = require('../models/Activity');
+const User = require('../models/User');
+const { getPresignedUploadUrl } = require('../services/PhotoService');
+const { createRouteFromGpx } = require('../services/RouteService');
 
 const upload = multer({ dest: 'uploads/' }); // Temp storage
 
@@ -87,24 +88,31 @@ router.get('/user/:userId', async (req, res) => {
     }
 });
 
-router.post('/:id/upload-gpx', upload.single('file'), async (req, res) => {
-  const activityId = req.params.id;
-  
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
+router.post('/:id/upload-route-file', upload.single('routeFile'), async (req, res) => {
+    try {
+        // DEBUGGING: Print what Multer found
+        console.log('File:', req.file); 
+        console.log('Body:', req.body);
 
-  // Add job to background queue
-  await ingestionQueue.add('process-route', {
-    activityId,
-    filePath: req.file.path
-  });
-
-  // Respond immediately
-  res.json({ 
-    message: 'File received. Processing started.', 
-    jobId: 'queued' // In a real app you might return job.id
-  });
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded. Check field name is "routeFile".' });
+        }
+        
+        const newRoute = await createRouteFromGpx({
+          file: req.file,
+          activityId: req.params.id,
+          name: req.body.name,
+          description: req.body.description
+        });
+        
+        // Cleanup temp file
+        require('fs').unlinkSync(req.file.path);
+        
+        res.json(newRoute);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // POST /api/v1/activities/:id/photos/sign-batch

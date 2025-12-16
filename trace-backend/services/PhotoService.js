@@ -1,25 +1,10 @@
-const { S3Client, PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { Upload } = require('@aws-sdk/lib-storage');
 const fs = require('fs');
 const exifr = require('exifr');
 const db = require('../config/db');
-
-
-// 1. Initialize Client
-const s3 = new S3Client({
-    region: process.env.AWS_REGION || 'us-east-1',
-    // In Docker, hostname is 'minio'. Locally, it might be localhost.
-    // We use a logic check: if running in docker (env var), use 'minio', else 'localhost'
-    endpoint: process.env.S3_ENDPOINT || 'http://localhost:9000',
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'minioadmin',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'minioadmin'
-    },
-    forcePathStyle: true, // REQUIRED for MinIO
-});
-
-const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'trace-media';
+const { s3Client, BUCKET_NAME } = require('../config/s3');
 
 /**
  * Uploads a file stream to S3/MinIO

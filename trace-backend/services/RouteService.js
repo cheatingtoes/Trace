@@ -1,11 +1,11 @@
 const fs = require('fs');
-// 1. Import the DOMParser (The "Fake Browser")
 const { DOMParser } = require('@xmldom/xmldom');
-// 2. Import the Converter
 const toGeoJSON = require('@mapbox/togeojson');
+const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const db = require('../config/db');
+const { s3Client, BUCKET_NAME, PUBLIC_ENDPOINT } = require('../config/s3');
 
-async function createRouteFromGpx(file, userId) {
+async function createRouteFromGpx({ file, activityId, name, description }) {
     try {
         // A. Read the file as a simple string
         const gpxString = fs.readFileSync(file.path, 'utf8');
@@ -30,25 +30,41 @@ async function createRouteFromGpx(file, userId) {
             throw new Error('No track found in GPX file.');
         }
 
-        const { properties, geometry } = trackFeature;
+        const { geometry, properties} = trackFeature;
+
+        const fileName = properties.name || name || `Untitled`;
+
+        const s3Key = `activities/${activityId}/gpx/${Date.now()}-${fileName}.gpx`;
+    
+        // Use the shared 's3Client'
+        await s3Client.send(new PutObjectCommand({
+            Bucket: BUCKET_NAME, // Use the shared constant
+            Key: s3Key,
+            Body: gpxString,
+            ContentType: 'application/gpx+xml'
+        }));
+
+        const sourceUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${s3Key}`;
 
         // --- Transactional Save (Same as before) ---
         return await db.transaction(async (trx) => {
             const [route] = await trx('routes').insert({
-                user_id: userId, // Ensure your DB has this column or remove it
-                name: properties.name || 'Untitled Activity',
-                start_time: properties.time || new Date(),
+                activity_id: activityId,
+                name: fileName,
+                description: description || null,
             }).returning('*');
 
-            await trx('polylines').insert({
+            const [polyline] = await trx('polylines').insert({
                 route_id: route.id,
                 source_type: 'gpx',
-                // PostGIS: Set SRID 4326 + Simplify (0.0001 deg ~ 11 meters)
+                source_url: sourceUrl,
                 geom: db.raw(
-                    'ST_SetSRID(ST_Simplify(ST_GeomFromGeoJSON(?), 0.0001), 4326)', 
+                    'ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', 
                     [JSON.stringify(geometry)]
                 )
-            });
+            }).returning('*');
+
+            await trx('routes').where({ id: route.id }).update({ active_polyline_id: polyline.id });
 
             return route;
         });
