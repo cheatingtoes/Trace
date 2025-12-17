@@ -7,7 +7,7 @@ const db = require('../config/db');
 const { s3Client, BUCKET_NAME } = require('../config/s3');
 
 /**
- * Uploads a file stream to S3/MinIO
+ * 1. MANUAL UPLOAD to S3/MinIO (Keep for debugging)
  * @param {Object} file - Multer file object
  * @param {string} activityId - ID of the activity (folder structure)
  */
@@ -16,7 +16,7 @@ async function uploadPhoto(file, activityId) {
     const key = `activities/${activityId}/${Date.now()}-${file.originalname}`;
 
     const upload = new Upload({
-        client: s3,
+        client: s3Client,
         params: {
             Bucket: BUCKET_NAME,
             Key: key,
@@ -26,6 +26,8 @@ async function uploadPhoto(file, activityId) {
     });
 
     await upload.done();
+
+    fs.unlinkSync(file.path); // Clean up temp file
     
     // Construct public URL
     // Note: In production, this would be your Cloudfront/CDN URL.
@@ -40,39 +42,30 @@ async function uploadPhoto(file, activityId) {
 }
 
 /**
- * 1. Generates a URL that allows the frontend to upload directly
+ * 2. Generates a URL that allows the frontend to upload directly
  */
 async function getPresignedUploadUrl(activityId, fileName, fileType) {
     const key = `activities/${activityId}/images/${Date.now()}-${fileName}`;
-    
     const command = new PutObjectCommand({
         Bucket: BUCKET_NAME,
         Key: key,
         ContentType: fileType,
-        // ACL: 'public-read' // Uncomment if you want files public immediately
     });
-
-    // URL expires in 60 seconds
     const signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
-    
     return { signedUrl, key };
 }
+
 /**
- * 2. Worker Method: Downloads from S3 to parse EXIF
+ * 3. Worker Method: Downloads from S3 to parse EXIF
  * (Note: We use a buffer here. For massive files, we'd stream to a temp file)
  */
 async function processUploadedPhoto(key, activityId) {
     console.log(`[Worker] Processing S3 Object: ${key}`);
-
-    // Fetch the file BACK from S3 to process it
-    // (This seems redundant but is necessary because the backend never saw the file)
     const command = new GetObjectCommand({
         Bucket: BUCKET_NAME,
         Key: key
     });
-    
     const response = await s3.send(command);
-    
     // Convert stream to buffer for exifr
     const streamToBuffer = (stream) => new Promise((resolve, reject) => {
         const chunks = [];

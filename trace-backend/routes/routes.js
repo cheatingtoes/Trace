@@ -1,31 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const Route = require('../models/Route');
-const Activity = require('../models/Activity'); // For checking if activity exists
+const Activity = require('../models/Activity');
 const { createRouteFromGpx } = require('../services/RouteService');
-// 1. Import multer and necessary modules
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const db = require('../config/db'); // Assuming db is available in this scope
+const db = require('../config/db');
 
-// 2. Configure Multer Disk Storage for temporary file saving
+// Configure Multer Disk Storage for temporary file saving
 const upload = multer({
-  // Use memoryStorage if you only care about the buffer and the file is small
-  // For potentially large GPX files, disk storage is safer.
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      // Use a temporary folder for uploads
       cb(null, path.join(__dirname, '..', 'tmp_uploads'));
     },
     filename: (req, file, cb) => {
-      // Create a unique filename
       cb(null, `${Date.now()}-${file.originalname}`);
     },
   }),
   // Optional: Limit file size and number of files
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit
+    fileSize: 100 * 1024 * 1024,
     files: 1,
   },
 });
