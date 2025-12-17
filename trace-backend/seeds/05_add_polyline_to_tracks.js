@@ -12,10 +12,10 @@ exports.seed = async function(knex) {
       throw new Error('Required tracks not found. Ensure that tracks seed has been run.');
     }
 
-    const ATPolyline = await knex('polylines').where({ Track_id: ATTrack.id }).first();
-    const PCTPolyline = await knex('polylines').where({ Track_id: PCTTrack.id }).first();
-    const OCTPolyline = await knex('polylines').where({ Track_id: OCTTrack.id }).first();
-    const sierrasPolyline = await knex('polylines').where({ Track_id: sierrasTrack.id }).first();
+    const ATPolyline = await knex('polylines').where({ track_id: ATTrack.id }).first();
+    const PCTPolyline = await knex('polylines').where({ track_id: PCTTrack.id }).first();
+    const OCTPolyline = await knex('polylines').where({ track_id: OCTTrack.id }).first();
+    const sierrasPolyline = await knex('polylines').where({ track_id: sierrasTrack.id }).first();
 
     if (!ATPolyline || !PCTPolyline || !OCTPolyline || !sierrasPolyline) {
       throw new Error('Required polylines not found. Ensure that polylines seed has been run.');

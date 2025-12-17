@@ -1,6 +1,5 @@
 const db = require('../config/db');
-const User = require('../models/User');
-const UserModel = require('../models/user.model');
+const UserModel = require('../models/users.model');
 
 const getAllUsers = async () => {
     return UserModel.getAllUsers();
