@@ -11,7 +11,7 @@ app.use(cors()); // Allow cross-origin requests
 app.use(express.json()); // Parse JSON bodies
 
 // --- API Routes ---
-const usersRouter = require('./routes/users');
+const usersRouter = require('./routes/users.routes');
 const activitiesRouter = require('./routes/activities');
 const tracksRouter = require('./routes/tracks');
 const polylinesRouter = require('./routes/polylines');
