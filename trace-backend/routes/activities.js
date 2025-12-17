@@ -6,12 +6,14 @@ const db = require('../config/db');
 const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
 const Activity = require('../models/Activity');
 const User = require('../models/User');
+const Route = require('../models/Route');
+const Polyline = require('../models/Polyline');
 const { getPresignedUploadUrl } = require('../services/PhotoService');
 const { createRouteFromGpx } = require('../services/RouteService');
 
 const upload = multer({ dest: 'uploads/' }); // Temp storage
 
-// GET /api/v1/activities - Get all activities (use with caution in a real app)
+// GET /api/v1/activities - Get all activities
 router.get('/', async (req, res) => {
   try {
     // This could be paginated. Might not be a useful route without filtering.
@@ -73,7 +75,7 @@ router.delete('/:id', async (req, res) => {
 
 // --- Nested Routes ---
 
-// GET /api/v1/users/:userId/activities - Get all activities for a specific user
+// GET /api/v1/user/:userId/activities - Get all activities for a specific user
 router.get('/user/:userId', async (req, res) => {
     try {
         // Check if user exists first
@@ -88,6 +90,34 @@ router.get('/user/:userId', async (req, res) => {
     }
 });
 
+// GET /api/v1/activity/:activityId/route/:routeId - Get all data for a specific route under an activity
+router.get('/:id/route/:routeId', async (req, res) => {
+  const { id, routeId } = req.params;
+    try {
+      // check if activity exists first
+      const activity = await Activity.findById(id);
+      if (!activity) {
+        return res.status(404).json({ message: 'Activity not found' });
+      }
+      const route = await Route.findById(routeId);
+      if (!route) {
+        return res.status(404).json({ message: 'Route not found' });
+      }
+
+      const polyline = await Polyline.findByIdAsGeoJSON(route.active_polyline_id);
+      if (!polyline) {
+        return res.status(404).json({ message: 'Polyline not found' });
+      }
+
+      // TODO: fetch all media and such
+
+      res.json({ activity, route, polyline });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// POST /api/v1/activities/:id/upload-route-file - Upload a GPX file to create a route
 router.post('/:id/upload-route-file', upload.single('routeFile'), async (req, res) => {
     try {
         // DEBUGGING: Print what Multer found
@@ -115,7 +145,7 @@ router.post('/:id/upload-route-file', upload.single('routeFile'), async (req, re
     }
 });
 
-// POST /api/v1/activities/:id/photos/sign-batch
+// POST /api/v1/activities/:id/photos/sign-batch - Get presigned URLs for batch photo upload
 router.post('/:id/photos/sign-batch', async (req, res) => {
     const activityId = req.params.id;
     const { files } = req.body; // Expecting array of { fileName, fileType }
