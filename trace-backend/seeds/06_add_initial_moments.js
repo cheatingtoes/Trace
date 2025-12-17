@@ -15,40 +15,40 @@ exports.seed = async function(knex) {
     throw new Error('Required activities not found. Ensure that the activities seed has been run.');
   }
 
-  // Get routes
-  const pctRoute = await knex('routes').where({ name: 'PCT Yosemite National Park' }).first();
-  const octRoute = await knex('routes').where({ name: 'OCT Samuel H. Boardman Corridor' }).first();
-  const atRoute = await knex('routes').where({ name: 'Appalachian Trail Virginia near McAfee Knob' }).first();
-  const sierrasRoute = await knex('routes').where({ name: 'Sierras' }).first();
+  // Get tracks
+  const pctTrack = await knex('tracks').where({ name: 'PCT Yosemite National Park' }).first();
+  const octTrack = await knex('tracks').where({ name: 'OCT Samuel H. Boardman Corridor' }).first();
+  const atTrack = await knex('tracks').where({ name: 'Appalachian Trail Virginia near McAfee Knob' }).first();
+  const sierrasTrack = await knex('tracks').where({ name: 'Sierras' }).first();
 
-  if (!pctRoute || !octRoute || !atRoute || !sierrasRoute) {
-    throw new Error('Required routes not found. Ensure that the routes seed has been run.');
+  if (!pctTrack || !octTrack || !atTrack || !sierrasTrack) {
+    throw new Error('Required tracks not found. Ensure that the tracks seed has been run.');
   }
 
-  const routesAndActivities = [
-    { route: atRoute, activity: atActivity },
-    { route: pctRoute, activity: pctActivity },
+  const tracksAndActivities = [
+    { track: atTrack, activity: atActivity },
+    { track: pctTrack, activity: pctActivity },
     // OCT photos will be associated with the PCT activity as the PCT runs through Oregon.
-    { route: octRoute, activity: pctActivity },
-    { route: sierrasRoute, activity: sierrasActivity },
+    { track: octTrack, activity: pctActivity },
+    { track: sierrasTrack, activity: sierrasActivity },
   ];
 
   const moments = [];
-  const photosPerRoute = 20;
+  const photosPerTrack = 20;
 
-  routesAndActivities.forEach(({ route, activity }) => {
-    for (let i = 0; i < photosPerRoute; i++) {
-      const fraction = photosPerRoute > 1 ? i / (photosPerRoute - 1) : 0; // interpolates from 0.0 to 1.0
+  tracksAndActivities.forEach(({ track, activity }) => {
+    for (let i = 0; i < photosPerTrack; i++) {
+      const fraction = photosPerTrack > 1 ? i / (photosPerTrack - 1) : 0; // interpolates from 0.0 to 1.0
       moments.push({
         activity_id: activity.id,
         type: 'photo',
         timestamp: new Date(),
         // Use ST_LineInterpolatePoint to find a point along the polyline and explicitly set SRID.
-        geom: knex.raw('ST_SetSRID(ST_LineInterpolatePoint((SELECT geom FROM polylines WHERE id = ?), ?), 4326)', [route.active_polyline_id, fraction]),
+        geom: knex.raw('ST_SetSRID(ST_LineInterpolatePoint((SELECT geom FROM polylines WHERE id = ?), ?), 4326)', [track.active_polyline_id, fraction]),
         mile_marker: Math.random() * 20, // Placeholder mile marker
-        media_url: `https://picsum.photos/seed/${activity.id}${route.id}${i}/800/600`,
-        thumbnail_url: `https://picsum.photos/seed/${activity.id}${route.id}${i}/200/150`,
-        text_content: `A photo from the ${route.name}.`,
+        media_url: `https://picsum.photos/seed/${activity.id}${track.id}${i}/800/600`,
+        thumbnail_url: `https://picsum.photos/seed/${activity.id}${track.id}${i}/200/150`,
+        text_content: `A photo from the ${track.name}.`,
         metadata: {
           camera: 'Virtual Camera',
         },

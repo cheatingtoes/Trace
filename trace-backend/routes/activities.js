@@ -6,17 +6,17 @@ const db = require('../config/db');
 const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
 const Activity = require('../models/Activity');
 const User = require('../models/User');
-const Route = require('../models/Route');
+const Track = require('../models/Track');
 const Polyline = require('../models/Polyline');
 const { getPresignedUploadUrl } = require('../services/PhotoService');
-const { createRouteFromGpx } = require('../services/RouteService');
+const { createTrackFromGpx } = require('../services/TrackService');
 
 const upload = multer({ dest: 'uploads/' }); // Temp storage
 
 // GET /api/v1/activities - Get all activities
 router.get('/', async (req, res) => {
   try {
-    // This could be paginated. Might not be a useful route without filtering.
+    // This could be paginated. Might not be a useful track without filtering.
     const activities = await db('activities').select('*');
     res.json(activities);
   } catch (err) {
@@ -90,45 +90,45 @@ router.get('/user/:userId', async (req, res) => {
     }
 });
 
-// GET /api/v1/activity/:activityId/route/:routeId - Get all data for a specific route under an activity
-router.get('/:id/route/:routeId', async (req, res) => {
-  const { id, routeId } = req.params;
+// GET /api/v1/activity/:activityId/track/:trackId - Get all data for a specific track under an activity
+router.get('/:id/track/:trackId', async (req, res) => {
+  const { id, trackId } = req.params;
     try {
       // check if activity exists first
       const activity = await Activity.findById(id);
       if (!activity) {
         return res.status(404).json({ message: 'Activity not found' });
       }
-      const route = await Route.findById(routeId);
-      if (!route) {
-        return res.status(404).json({ message: 'Route not found' });
+      const track = await Track.findById(trackId);
+      if (!track) {
+        return res.status(404).json({ message: 'Track not found' });
       }
 
-      const polyline = await Polyline.findByIdAsGeoJSON(route.active_polyline_id);
+      const polyline = await Polyline.findByIdAsGeoJSON(track.active_polyline_id);
       if (!polyline) {
         return res.status(404).json({ message: 'Polyline not found' });
       }
 
       // TODO: fetch all media and such
 
-      res.json({ activity, route, polyline });
+      res.json({ activity, track, polyline });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-// POST /api/v1/activities/:id/upload-route-file - Upload a GPX file to create a route
-router.post('/:id/upload-route-file', upload.single('routeFile'), async (req, res) => {
+// POST /api/v1/activities/:id/upload-track-file - Upload a GPX file to create a track
+router.post('/:id/upload-track-file', upload.single('trackFile'), async (req, res) => {
     try {
         // DEBUGGING: Print what Multer found
         console.log('File:', req.file); 
         console.log('Body:', req.body);
 
         if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded. Check field name is "routeFile".' });
+            return res.status(400).json({ error: 'No file uploaded. Check field name is "trackFile".' });
         }
         
-        const newRoute = await createRouteFromGpx({
+        const newTrack = await createTrackFromGpx({
           file: req.file,
           activityId: req.params.id,
           name: req.body.name,
@@ -138,7 +138,7 @@ router.post('/:id/upload-route-file', upload.single('routeFile'), async (req, re
         // Cleanup temp file
         require('fs').unlinkSync(req.file.path);
         
-        res.json(newRoute);
+        res.json(newTrack);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });

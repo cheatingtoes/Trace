@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Polyline = require('../models/Polyline');
-const Route = require('../models/Route'); // For checking if route exists
-const db = require('../config/db'); // For PostGIS functions
+const Track = require('../models/Track');
+const db = require('../config/db');
 
 // GET /api/v1/polylines - Get all polylines
 router.get('/', async (req, res) => {
@@ -29,16 +29,16 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/v1/polylines - Create a new polyline
 router.post('/', async (req, res) => {
-  // Example req.body: { route_id: 1, source_url: '...', geojson: { "type": "LineString", "coordinates": [...] } }
-  const { route_id, source_url, source_type, geojson } = req.body;
+  // Example req.body: { track_id: 1, source_url: '...', geojson: { "type": "LineString", "coordinates": [...] } }
+  const { track_id, source_url, source_type, geojson } = req.body;
 
-  if (!route_id || !geojson) {
-    return res.status(400).json({ message: 'route_id and geojson are required.' });
+  if (!track_id || !geojson) {
+    return res.status(400).json({ message: 'track_id and geojson are required.' });
   }
 
   try {
     const polylineData = {
-      route_id,
+      track_id,
       source_url,
       source_type,
       // PostGIS's ST_GeomFromGeoJSON function requires the GeoJSON object as a string.
@@ -63,23 +63,6 @@ router.delete('/:id', async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-});
-
-// --- Nested Routes ---
-
-// GET /api/v1/routes/:routeId/polylines - Get all polylines for a specific route
-router.get('/route/:routeId', async (req, res) => {
-    try {
-        // Check if route exists first
-        const route = await Route.findById(req.params.routeId);
-        if (!route) {
-            return res.status(404).json({ message: 'Route not found' });
-        }
-        const polylines = await Polyline.findByRoute(req.params.routeId);
-        res.json(polylines);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
 });
 
 module.exports = router;

@@ -6,7 +6,7 @@ const Polyline = {
   /**
    * Creates a new polyline.
    * For the 'geom' field, you must use a PostGIS function like db.raw('ST_GeomFromText(...)').
-   * @param {object} polyline - The polyline object to create (e.g., { route_id, source_url, geom }).
+   * @param {object} polyline - The polyline object to create (e.g., { track_id, source_url, geom }).
    * @returns {Promise<object>} The newly created polyline.
    */
   create: (polylineData) => {
@@ -49,7 +49,7 @@ const Polyline = {
       .where({ id })
       // 1. Simplify the geometry first (0.0001 is the tolerance in degrees ~10 meters)
       // 2. Convert the SIMPLIFIED version to GeoJSON
-      .select('id', 'route_id', db.raw('ST_AsGeoJSON(ST_Simplify(geom, 0.0001)) as geometry_json'))
+      .select('id', 'track_id', db.raw('ST_AsGeoJSON(ST_Simplify(geom, 0.0001)) as geometry_json'))
       .first();
 
     if (!row) return null;
@@ -60,12 +60,12 @@ const Polyline = {
   },
 
   /**
-   * Finds all polylines for a given route.
-   * @param {number} routeId - The ID of the route.
+   * Finds all polylines for a given track.
+   * @param {number} trackId - The ID of the track.
    * @returns {Promise<Array<object>>} A list of polylines.
    */
-  findByRoute: (routeId) => {
-    return db(TABLE_NAME).where({ route_id: routeId }).select('*');
+  findByTrack: (trackId) => {
+    return db(TABLE_NAME).where({ track_id: trackId }).select('*');
   },
 
   /**

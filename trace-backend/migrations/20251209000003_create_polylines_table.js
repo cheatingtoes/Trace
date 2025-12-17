@@ -7,9 +7,9 @@ exports.up = function(knex) {
     table.text('source_url');
     table.text('source_type');   
     
-    table.integer('route_id').unsigned().notNullable();
-    table.foreign('route_id').references('id').inTable('routes').onDelete('CASCADE');
-    table.index('route_id');
+    table.integer('track_id').unsigned().notNullable();
+    table.foreign('track_id').references('id').inTable('tracks').onDelete('CASCADE');
+    table.index('track_id');
   });
 };
 

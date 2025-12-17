@@ -13,13 +13,13 @@ app.use(express.json()); // Parse JSON bodies
 // --- API Routes ---
 const usersRouter = require('./routes/users');
 const activitiesRouter = require('./routes/activities');
-const routesRouter = require('./routes/routes');
+const tracksRouter = require('./routes/tracks');
 const polylinesRouter = require('./routes/polylines');
 const momentsRouter = require('./routes/moments');
 
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/activities', activitiesRouter);
-app.use('/api/v1/routes', routesRouter);
+app.use('/api/v1/tracks', tracksRouter);
 app.use('/api/v1/polylines', polylinesRouter);
 app.use('/api/v1/moments', momentsRouter);
 

@@ -4,7 +4,7 @@
  */
 exports.seed = async function(knex) {
   // Deletes ALL existing entries
-  await knex('routes').del()
+  await knex('tracks').del()
 
   // user one
   const activityOne = await knex('activities').where({ name: 'PCT Trail' }).first();
@@ -16,7 +16,7 @@ exports.seed = async function(knex) {
     throw new Error('Required activities not found. Ensure that activities seed has been run.');
   }
 
-  await knex('routes').insert([
+  await knex('tracks').insert([
     // for user 1 PCT
     {
         activity_id: activityOne.id,

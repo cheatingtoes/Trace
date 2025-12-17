@@ -13,18 +13,18 @@ Content-Type: application/json
   "displayName": "Charlie"
 }
 
-### Get all routes
+### Get all tracks
 get http://localhost:3001/api/v1/moments/presigned-url?activityId=1&fileName=test.jpg&fileType=image/jpeg
 
-### Create a new route
-GET http://localhost:3001/api/v1/polylines/6
+### Create a new track
+GET http://localhost:3001/api/v1/activities/1/track/6
 
 ### Upload GPX from File
-POST http://localhost:3001/api/v1/activities/1/upload-route-file
+POST http://localhost:3001/api/v1/activities/1/upload-track-file
 Content-Type: multipart/form-data; boundary=MyBoundary
 
 --MyBoundary
-Content-Disposition: form-data; name="routeFile"; filename="sample.gpx"
+Content-Disposition: form-data; name="trackFile"; filename="sample.gpx"
 Content-Type: application/gpx+xml
 
 < ./tmp_uploads/sample.gpx
@@ -33,12 +33,12 @@ Content-Type: application/gpx+xml
 
 
 
-### Upload GPX file for Route ID 1
+### Upload GPX file for track ID 1
 # @name uploadGpx
-POST http://localhost:3001/api/v1/activities/1/upload-route-file
+POST http://localhost:3001/api/v1/activities/1/upload-track-file
 Content-Type: multipart/form-data; boundary=boundary
 --boundary
-Content-Disposition: form-data; name="routeFile"; filename="sample.gpx"
+Content-Disposition: form-data; name="trackFile"; filename="sample.gpx"
 Content-Type: application/gpx+xml
 e
 <gpx version="1.1" creator="Test">

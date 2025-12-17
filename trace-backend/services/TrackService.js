@@ -5,7 +5,7 @@ const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const db = require('../config/db');
 const { s3Client, BUCKET_NAME, PUBLIC_ENDPOINT } = require('../config/s3');
 
-async function createRouteFromGpx({ file, activityId, name, description }) {
+async function createTrackFromGpx({ file, activityId, name, description }) {
     try {
         // A. Read the file as a simple string
         const gpxString = fs.readFileSync(file.path, 'utf8');
@@ -48,14 +48,14 @@ async function createRouteFromGpx({ file, activityId, name, description }) {
 
         // --- Transactional Save (Same as before) ---
         return await db.transaction(async (trx) => {
-            const [route] = await trx('routes').insert({
+            const [track] = await trx('tracks').insert({
                 activity_id: activityId,
                 name: fileName,
                 description: description || null,
             }).returning('*');
 
             const [polyline] = await trx('polylines').insert({
-                route_id: route.id,
+                track_id: track.id,
                 source_type: 'gpx',
                 source_url: sourceUrl,
                 geom: db.raw(
@@ -64,9 +64,9 @@ async function createRouteFromGpx({ file, activityId, name, description }) {
                 )
             }).returning('*');
 
-            await trx('routes').where({ id: route.id }).update({ active_polyline_id: polyline.id });
+            await trx('tracks').where({ id: track.id }).update({ active_polyline_id: polyline.id });
 
-            return route;
+            return track;
         });
 
     } catch (err) {
@@ -75,4 +75,4 @@ async function createRouteFromGpx({ file, activityId, name, description }) {
     }
 }
 
-module.exports = { createRouteFromGpx };
+module.exports = { createTrackFromGpx };

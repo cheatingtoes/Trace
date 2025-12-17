@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const Route = require('../models/Route');
+const Track = require('../models/Track');
 const Activity = require('../models/Activity');
-const { createRouteFromGpx } = require('../services/RouteService');
+const { createTrackFromGpx } = require('../services/TrackService');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -25,34 +25,34 @@ const upload = multer({
   },
 });
 
-// POST /api/v1/routes/:id/upload-gpx - Upload a GPX file for a specific route
-router.post('/:id/upload-gpx', upload.single('routeFile'), async (req, res) => {
-    const routeId = req.params.id;
+// POST /api/v1/tracks/:id/upload-gpx - Upload a GPX file for a specific track
+router.post('/:id/upload-gpx', upload.single('trackFile'), async (req, res) => {
+    const trackId = req.params.id;
     const file = req.file;
 
     // A. Input Validation
     if (!file) {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
-    if (!routeId) {
+    if (!trackId) {
          // This should ideally be handled by the outer router middleware, but is a good safeguard
-        return res.status(400).json({ message: 'Route ID is required.' });
+        return res.status(400).json({ message: 'Track ID is required.' });
     }
 
     try {
-        // B. Check if Route exists (Good practice before processing)
-        const route = await Route.findById(routeId);
-        if (!route) {
-            // Clean up the uploaded file if the route doesn't exist
+        // B. Check if Track exists (Good practice before processing)
+        const track = await Track.findById(trackId);
+        if (!track) {
+            // Clean up the uploaded file if the track doesn't exist
             fs.unlinkSync(file.path);
-            return res.status(404).json({ message: 'Route not found' });
+            return res.status(404).json({ message: 'Track not found' });
         }
 
         // C. Process the file using your new service
-        const result = await createRouteFromGpx(file.path, routeId);
+        const result = await createTrackFromGpx(file.path, trackId);
 
         // D. Optional: Delete the temporary file after successful processing
-        // Note: createRouteFromGpx currently uses the path as sourceUrl, 
+        // Note: createTrackFromGpx currently uses the path as sourceUrl, 
         // so if you plan to keep the file, this cleanup must be skipped. 
         // For a true "upload-then-process" flow, keeping it locally is rarely desired.
         // Assuming your service handles file persistence (e.g., to S3 or permanent storage) 
@@ -60,14 +60,14 @@ router.post('/:id/upload-gpx', upload.single('routeFile'), async (req, res) => {
         fs.unlinkSync(file.path);
 
         res.json({ 
-            message: 'GPX file processed and route updated successfully',
-            routeId: routeId,
+            message: 'GPX file processed and track updated successfully',
+            trackId: trackId,
             pointCount: result.pointCount,
             polylineId: result.polylineId
         });
 
     } catch (err) {
-        console.error(`[Routes] Upload Error:`, err);
+        console.error(`[Track] Upload Error:`, err);
         // Ensure temporary file is deleted even on processing failure
         if (file && file.path && fs.existsSync(file.path)) {
             fs.unlinkSync(file.path);
@@ -79,34 +79,34 @@ router.post('/:id/upload-gpx', upload.single('routeFile'), async (req, res) => {
     }
 });
 
-// GET /api/v1/routes - Get all routes
+// GET /api/v1/tracks - Get all tracks
 router.get('/', async (req, res) => {
   try {
-    const routes = await db('routes').select('*');
-    res.json(routes);
+    const tracks = await db('tracks').select('*');
+    res.json(tracks);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// POST /api/v1/routes - Create a new route
+// POST /api/v1/tracks - Create a new track
 router.post('/', async (req, res) => {
   try {
-    const newRoute = await Route.create(req.body);
+    const newRoute = await Track.create(req.body);
     res.status(201).json(newRoute);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// GET /api/v1/routes/:id - Get a single route by ID
+// GET /api/v1/tracks/:id - Get a single track by ID
 router.get('/:id', async (req, res) => {
   try {
-    const route = await Route.findById(req.params.id);
-    if (!route) {
-      return res.status(404).json({ message: 'Route not found' });
+    const track = await Track.findById(req.params.id);
+    if (!track) {
+      return res.status(404).json({ message: 'Track not found' });
     }
-    res.json(route);
+    res.json(track);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -114,25 +114,25 @@ router.get('/:id', async (req, res) => {
 
 /*
 
-// PUT /api/v1/routes/:id - Update a route
+// PUT /api/v1/tracks/:id - Update a track
 router.put('/:id', async (req, res) => {
   try {
-    const updatedRoute = await Route.update(req.params.id, req.body);
-    if (!updatedRoute) {
-      return res.status(404).json({ message: 'Route not found' });
+    const updatedTrack = await Track.update(req.params.id, req.body);
+    if (!updatedTrack) {
+      return res.status(404).json({ message: 'Track not found' });
     }
-    res.json(updatedRoute);
+    res.json(updatedTrack);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 
-// DELETE /api/v1/routes/:id - Delete a route
+// DELETE /api/v1/tracks/:id - Delete a track
 router.delete('/:id', async (req, res) => {
   try {
-    const deletedCount = await Route.delete(req.params.id);
+    const deletedCount = await Track.delete(req.params.id);
     if (deletedCount === 0) {
-      return res.status(404).json({ message: 'Route not found' });
+      return res.status(404).json({ message: 'Track not found' });
     }
     res.status(204).send(); // No Content
   } catch (err) {
@@ -141,9 +141,9 @@ router.delete('/:id', async (req, res) => {
 });
 
 
-// --- Nested Routes --- 
+// --- Nested Tracks --- 
 
-// GET /api/v1/activities/:activityId/routes - Get all routes for a specific activity
+// GET /api/v1/activities/:activityId/tracks - Get all tracks for a specific activity
 router.get('/activity/:activityId', async (req, res) => {
     try {
         // Check if activity exists first
@@ -151,8 +151,8 @@ router.get('/activity/:activityId', async (req, res) => {
         if (!activity) {
             return res.status(404).json({ message: 'Activity not found' });
         }
-        const routes = await Route.findByActivity(req.params.activityId);
-        res.json(routes);
+        const tracks = await Track.findByActivity(req.params.activityId);
+        res.json(tracks);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
