@@ -5,9 +5,9 @@ const multer = require('multer');
 const db = require('../config/db');
 const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
 const Activity = require('../models/Activity');
-const User = require('../models/User');
-const Track = require('../models/Track');
-const Polyline = require('../models/Polyline');
+const User = require('../models/users.model');
+const Track = require('../models/tracks.model');
+const Polyline = require('../models/polylines.model');
 const { getPresignedUploadUrl } = require('../services/PhotoService');
 const { createTrackFromGpx } = require('../services/TrackService');
 
