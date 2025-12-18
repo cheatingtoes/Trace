@@ -5,7 +5,7 @@ const getAllTracks = () => {
     return db(TABLE_NAME).select('*');
 };
 
-const getTracksById = (id) => {
+const getTrackById = (id) => {
     return db(TABLE_NAME).where({ id }).first();
 };
 
@@ -14,8 +14,13 @@ const createTrack = (trackData, trx) => {
     return queryBuilder(TABLE_NAME).insert(trackData);
 }
 
+const getTracksByActivityId = (activityId) => {
+    return db(TABLE_NAME).where({ activity_id: activityId }).select('*');
+}
+
 module.exports = {
     getAllTracks,
-    getTracksById,
-    createTrack
+    getTrackById,
+    createTrack,
+    getTracksByActivityId
 };

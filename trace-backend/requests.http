@@ -1,35 +1,50 @@
-### A simple request to the root
-GET http://localhost:3001/
-
-### Get all users (example)
-GET http://localhost:3001/api/v1/users
-
-### Create a new user (example)
-POST http://localhost:3001/api/v1/users
-Content-Type: application/json
-
-{
-  "email": "charlie@example.com",
-  "displayName": "Charlie"
-}
-
 ### Get all tracks
 get http://localhost:3001/api/v1/moments/presigned-url?activityId=1&fileName=test.jpg&fileType=image/jpeg
 
 ### Create a new track
-GET http://localhost:3001/api/v1/activities/1/track/6
+GET http://localhost:3001/api/v1/activities/4/routes
 
-### Upload GPX from File
-POST http://localhost:3001/api/v1/activities/1/upload-track-file
+### Create a new track
+GET http://localhost:3001/api/v1/tracks/12
+
+### 
+POST http://localhost:3001/api/v1/activities/4/upload-track-file
 Content-Type: multipart/form-data; boundary=MyBoundary
 
 --MyBoundary
-Content-Disposition: form-data; name="trackFile"; filename="sample.gpx"
+Content-Disposition: form-data; name="file"; filename="sample.gpx"
 Content-Type: application/gpx+xml
 
-< ./tmp_uploads/sample.gpx
+< ./uploads/sample.gpx
 --MyBoundary--
 
+###
+# @name signBatchPhotoUpload
+#
+# Get pre-signed URLs for uploading multiple photos to an activity.
+# The server will return a list of URLs that you can then use to
+# PUT the actual image files to S3.
+
+@activityId = 4
+POST http://localhost:3001/api/v1/activities/{{activityId}}/photos/sign-batch
+Content-Type: application/json
+
+{
+  "files": [
+    {
+      "filename": "photo-1.jpg",
+      "fileType": "image/jpeg"
+    },
+    {
+      "filename": "photo-2.png",
+      "fileType": "image/png"
+    },
+    {
+      "filename": "selfie.jpg",
+      "fileType": "image/jpeg"
+    }
+  ]
+}
 
 
 
@@ -38,9 +53,8 @@ Content-Type: application/gpx+xml
 POST http://localhost:3001/api/v1/activities/1/upload-track-file
 Content-Type: multipart/form-data; boundary=boundary
 --boundary
-Content-Disposition: form-data; name="trackFile"; filename="sample.gpx"
+Content-Disposition: form-data; name="file"; filename="sample.gpx"
 Content-Type: application/gpx+xml
-e
 <gpx version="1.1" creator="Test">
   <trk>
     <trkseg>
@@ -68,3 +82,8 @@ e
   </trk>
 </gpx>
 --boundary--
+
+
+curl -X POST http://localhost:3001/api/v1/activities/4/upload-track-file \
+  -F "file=@./uploads/sample.gpx" \
+  -F "name=Test Track"

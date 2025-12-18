@@ -33,32 +33,8 @@ const createTrack = async (req, res, next) => {
     }
 }
 
-const uploadGPX = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const { file } = req;   // Assuming the file is uploaded using a middleware like multer and is available in req.file
-
-        if (!file) {
-            return res.status(400).json({ message: 'No file uploaded.' });
-        }
-        if (!id) {
-            return res.status(400).json({ message: 'Track ID is required.' });
-        }
-        const result = await TrackService.uploadGPX(id, file);
-        res.status(201).json(result);
-    } catch (error) {
-        next(error);
-    } finally {
-        if (req.file) {
-            fs.unlinkSync(req.file.path);  // Clean up the uploaded file
-        }
-    }
-}
-
-
 module.exports = {
     getAllTracks,
     getTrackById,
     createTrack,
-    uploadGPX
 }
