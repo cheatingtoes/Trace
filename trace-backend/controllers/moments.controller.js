@@ -1,5 +1,4 @@
 const MomentService = require('../services/moments.service');
-const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
 
 const getAllMoments = async (req, res, next) => {
     try {
@@ -37,5 +36,4 @@ module.exports = {
     getAllMoments,
     getMomentById,
     createMoment,
-    getPresignedUrl,
 }

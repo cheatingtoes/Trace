@@ -20,6 +20,8 @@ const generateS3Key = ({ entityType, entityId, fileName, fileType }) => {
         mediaCategory = 'images';
     } else if (fileType.startsWith('video/')) {
         mediaCategory = 'videos';
+    } else if (fileType === 'application/gpx+xml') {
+        mediaCategory = 'gpx';
     }
     const safeName = fileName ? fileName.replace(/[^a-zA-Z0-9.-]/g, '_') : 'untitled';
     return `${entityType}/${entityId}/${mediaCategory}/${Date.now()}-${uuid}-${safeName}`;

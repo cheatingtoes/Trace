@@ -13,4 +13,4 @@ const s3Client = new S3Client({
 const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'trace-storage';
 const PUBLIC_ENDPOINT = process.env.S3_PUBLIC_ENDPOINT || 'http://localhost:9000';
 
-module.exports = { s3Client, BUCKET_NAME };
+module.exports = { s3Client, BUCKET_NAME, PUBLIC_ENDPOINT };

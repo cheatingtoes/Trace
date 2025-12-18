@@ -1,5 +1,4 @@
 const ActivityService = require('../services/activities.service');
-const fs = require('fs');
 
 const MAX_GPX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
 const ALLOWED_GPX_MIME_TYPES = ['`application/gpx`+xml', '`application/xml`', '`text/xml`'];
@@ -68,12 +67,9 @@ const uploadTrackFile = async (req, res, next) => {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded. Check field name is "file".' });
         }
-        // if (!ALLOWED_GPX_MIME_TYPES.includes(req.file.mimetype)) {
-        //     return res.status(400).json({ 
-        //         error: `Invalid file type: '${req.file.mimetype}'. Only GPX files are accepted.`
-        //     });
-        // }
-
+        if (!isGpx(req.file.mimetype, req.file.name)) {
+            return res.status(400).json({ error: 'File not valid. Please upload a gpx file.' });
+        }
         if (req.file.size > MAX_GPX_SIZE_BYTES) {
             return res.status(400).json({ 
                 error: `File is too large. Maximum size is ${MAX_GPX_SIZE_BYTES / 1024 / 1024} MB.`
@@ -91,11 +87,26 @@ const uploadTrackFile = async (req, res, next) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
-    } finally {
-        if (req.file) {
-            fs.unlinkSync(req.file.path);
-        }
     }
+}
+
+function isGpx(mimeType, fileName) {
+    const validMimes = [
+        'application/gpx+xml',
+        'application/xml',
+        'text/xml',
+        'application/octet-stream' // Common fallback for unknown types
+    ];
+
+    // 1. Check strict MIME first (fastest)
+    if (mimeType === 'application/gpx+xml') return true;
+
+    // 2. If MIME is generic XML or unknown, we MUST verify the extension
+    if (validMimes.includes(mimeType)) {
+        return fileName.toLowerCase().endsWith('.gpx');
+    }
+
+    return false;
 }
 
 module.exports = {

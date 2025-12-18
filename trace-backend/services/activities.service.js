@@ -38,7 +38,7 @@ const signBatch = async (activityId, files) => {
             };
         }
 
-        const { signedUrl, key } = await s3Service.getPresignedUploadUrl({ entityeType: 'activities', activityId, fileName, fileType });
+        const { signedUrl, key } = await s3Service.getPresignedUploadUrl({ entityType: 'activities', entityId: activityId, fileName, fileType });
 
         return {
             originalName: fileName, // Send this back so Frontend can match file to URL
@@ -55,10 +55,8 @@ async function uploadTrackFile({ file, activityId, name, description }) {
     try {
         // A. Read the file as a simple string
         const gpxString = fs.readFileSync(file.path, 'utf8');
-
         // B. Parse string -> DOM Node (This is the step that usually breaks)
         const doc = new DOMParser().parseFromString(gpxString, 'text/xml');
-
         // C. Convert DOM -> GeoJSON
         const geoJson = toGeoJSON.gpx(doc);
 
@@ -77,17 +75,7 @@ async function uploadTrackFile({ file, activityId, name, description }) {
         }
 
         const { geometry, properties} = trackFeature;
-
-        const fileName = properties.name || name || `Untitled`;
-
-        const s3Key = `activities/${activityId}/gpx/${Date.now()}-${fileName}.gpx`;
-    
-        const sourceUrl = await s3Service.uploadS3File({
-            bucket: BUCKET_NAME,
-            key: s3Key,
-            body: gpxString,
-            contentType: 'application/gpx+xml',
-        });
+        const fileName = name || properties.name || file.name;
 
         // --- Transactional Save (Same as before) ---
         return await db.transaction(async (trx) => {
@@ -100,21 +88,39 @@ async function uploadTrackFile({ file, activityId, name, description }) {
             const [polyline] = await trx('polylines').insert({
                 track_id: track.id,
                 source_type: 'gpx',
-                source_url: sourceUrl,
+                // source_url: sourceUrl,
                 geom: db.raw(
                     'ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', 
                     [JSON.stringify(geometry)]
                 )
             }).returning('*');
 
-            await trx('tracks').where({ id: track.id }).update({ active_polyline_id: polyline.id });
+            const s3Key = s3Service.generateS3Key({
+                entityType: 'polylines',
+                entityId: polyline.id,
+                fileName,
+                fileType: 'application/gpx+xml',
+            });
 
-            return track;
+            const sourceUrl = await s3Service.uploadFile({
+                key: s3Key,
+                body: gpxString,
+                contentType: 'application/gpx+xml',
+            });
+
+            await trx('polylines').where({ id: polyline.id }).update({ source_url: sourceUrl });
+            const [updatedTrack] = await trx('tracks').where({ id: track.id }).update({ active_polyline_id: polyline.id }).returning('*');
+
+            return updatedTrack;
         });
 
     } catch (err) {
         console.error("GPX Parse Error:", err);
         throw new Error(`Failed to process GPX: ${err.message}`);
+    } finally {
+        if (file) {
+            fs.unlinkSync(file.path);
+        }
     }
 }
 
