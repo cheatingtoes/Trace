@@ -33,25 +33,6 @@ const createMoment = async (req, res, next) => {
     }
 }
 
-const getPresignedUrl = async (req, res, next) => {
-    const { activityId, fileName, fileType } = req.query;
-    if (!activityId || !fileName || !fileType) {
-        return res.status(400).send('Missing activityId, fileName, or fileType query parameter');
-    }
-    if (!ALLOWED_MIME_TYPES.includes(fileType)) {
-        return res.status(400).json({ 
-            error: `File type ${fileType} is not supported. Upload images, video, or audio recordings only.` 
-        });
-    }
-    
-    try {
-        const presignedUrl = await MomentService.getPresignedUploadUrl({ activityId, fileName, fileType });
-        res.status(200).json(presignedUrl);
-    } catch (error) {
-        next(error);
-    }
-}
-
 module.exports = {
     getAllMoments,
     getMomentById,

@@ -1,4 +1,3 @@
-const db = require('../config/db');
 const PolylineModel = require('../models/polylines.model');
 
 const getAllPolylines = async () => {

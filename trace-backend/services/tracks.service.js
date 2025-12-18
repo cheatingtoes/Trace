@@ -1,4 +1,3 @@
-const db = require('../config/db');
 const TrackModel = require('../models/tracks.model');
 
 const getAllTracks = () => {

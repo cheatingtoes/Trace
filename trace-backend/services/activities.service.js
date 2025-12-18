@@ -1,11 +1,10 @@
 const fs = require('fs');
 const { DOMParser } = require('@xmldom/xmldom');
 const toGeoJSON = require('@mapbox/togeojson');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
-const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const db = require('../config/db');
-const { s3Client, BUCKET_NAME, PUBLIC_ENDPOINT } = require('../config/s3');
+const { BUCKET_NAME } = require('../config/s3');
+const s3Service = require('../services/s3.service');
 const ActivityModel = require('../models/activities.model');
 const TrackModel = require('../models/tracks.model');
 const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
@@ -26,37 +25,24 @@ const getActivityRoutes = async (id) => {
     return TrackModel.getTracksByActivityId(id);
 };
 
-async function getPresignedUploadUrl(activityId, fileName, fileType) {
-    const uuid = crypto.randomUUID();
-    const safeName = fileName ? fileName.replace(/[^a-zA-Z0-9.-]/g, '_') : 'untitled';
-    const key = `activities/${activityId}/images/${Date.now()}-${uuid}-${fileName}`;
-    const command = new PutObjectCommand({
-        Bucket: BUCKET_NAME,
-        Key: key,
-        ContentType: fileType,
-    });
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
-    return { signedUrl, key };
-}
-
 const signBatch = async (activityId, files) => {
     // Use Promise.all to run all signatures in parallel
     const signedUrls = await Promise.all(files.map(async (file) => {
+        const { fileName, fileType } = file;
         // 1. Validate Type
-        if (!ALLOWED_MIME_TYPES.includes(file.fileType)) {
+        if (!ALLOWED_MIME_TYPES.includes(fileType)) {
             return {
                 error: true,
-                fileName: file.fileName,
-                message: `Unsupported type: ${file.fileType}`
+                fileName: fileName,
+                message: `Unsupported type: ${fileType}`
             };
         }
 
-        // 2. Generate Signature
-        const { signedUrl, key } = await getPresignedUploadUrl(activityId, file.fileName, file.fileType);
+        const { signedUrl, key } = await s3Service.getPresignedUploadUrl({ entityeType: 'activities', activityId, fileName, fileType });
 
         return {
-            originalName: file.fileName, // Send this back so Frontend can match file to URL
-            fileType: file.fileType,
+            originalName: fileName, // Send this back so Frontend can match file to URL
+            fileType: fileType,
             signedUrl,
             key
         };
@@ -96,15 +82,12 @@ async function uploadTrackFile({ file, activityId, name, description }) {
 
         const s3Key = `activities/${activityId}/gpx/${Date.now()}-${fileName}.gpx`;
     
-        // Use the shared 's3Client'
-        await s3Client.send(new PutObjectCommand({
-            Bucket: BUCKET_NAME, // Use the shared constant
-            Key: s3Key,
-            Body: gpxString,
-            ContentType: 'application/gpx+xml'
-        }));
-
-        const sourceUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${s3Key}`;
+        const sourceUrl = await s3Service.uploadS3File({
+            bucket: BUCKET_NAME,
+            key: s3Key,
+            body: gpxString,
+            contentType: 'application/gpx+xml',
+        });
 
         // --- Transactional Save (Same as before) ---
         return await db.transaction(async (trx) => {
