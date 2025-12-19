@@ -5,7 +5,10 @@ get http://localhost:3001/api/v1/moments/presigned-url?activityId=1&fileName=tes
 GET http://localhost:3001/api/v1/activities/4/routes
 
 ### Create a new track
-GET http://localhost:3001/api/v1/tracks/12
+GET http://localhost:3001/api/v1/tracks/14
+
+### Create a new track
+GET http://localhost:3001/api/v1/polylines/31
 
 ### 
 POST http://localhost:3001/api/v1/activities/4/upload-track-file
@@ -26,7 +29,7 @@ Content-Type: application/gpx+xml
 # PUT the actual image files to S3.
 
 @activityId = 4
-POST http://localhost:3001/api/v1/activities/{{activityId}}/photos/sign-batch
+POST http://localhost:3001/api/v1/activities/{{activityId}}/sign-batch
 Content-Type: application/json
 
 {

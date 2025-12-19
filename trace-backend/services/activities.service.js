@@ -1,13 +1,9 @@
-const fs = require('fs');
-const { DOMParser } = require('@xmldom/xmldom');
-const toGeoJSON = require('@mapbox/togeojson');
-
-const db = require('../config/db');
-const { BUCKET_NAME } = require('../config/s3');
 const s3Service = require('../services/s3.service');
 const ActivityModel = require('../models/activities.model');
+const MomentModel = require('../models/moments.model');
 const TrackModel = require('../models/tracks.model');
-const { ALLOWED_MIME_TYPES } = require('../constants/mediaTypes');
+const { ALLOWED_MIME_TYPES, IMAGE_TYPES, VIDEO_TYPES, AUDIO_TYPES } = require('../constants/mediaTypes');
+const { imageQueue, videoQueue } = require('../jobs/queues');
 
 const getAllActivities = async () => {
     return ActivityModel.getAllActivities();
@@ -28,7 +24,7 @@ const getActivityRoutes = async (id) => {
 const signBatch = async (activityId, files) => {
     // Use Promise.all to run all signatures in parallel
     const signedUrls = await Promise.all(files.map(async (file) => {
-        const { fileName, fileType } = file;
+        const { fileName, fileType, fileSize, tempId, lastModified } = file; // Expecting array of { tempId, fileName, fileType, fileSize, lastModified }
         // 1. Validate Type
         if (!ALLOWED_MIME_TYPES.includes(fileType)) {
             return {
@@ -38,11 +34,49 @@ const signBatch = async (activityId, files) => {
             };
         }
 
+        // 2. check for dupes
+        const [existingMoment] = await MomentModel.findDuplicateMoment({
+            activity_id: activityId,
+            original_filename: fileName,
+            file_size_bytes: fileSize
+        });
+        if (existingMoment) {
+            return {
+                tempId,
+                status: 'exists',
+                momentId: existingMoment.id,
+                signedUrl: null,
+                key: existingMoment.s3_key
+            }
+        }
         const { signedUrl, key } = await s3Service.getPresignedUploadUrl({ entityType: 'activities', entityId: activityId, fileName, fileType });
 
+        let type;
+        if (IMAGE_TYPES.includes(fileType)) {
+            type = 'image';
+        } else if (VIDEO_TYPES.includes(fileType)) {
+            type = 'video';
+        } else if (AUDIO_TYPES.includes(fileType)) {
+            type = 'audio';
+        }
+
+        const [newMoment] = await MomentModel.createMoment({
+            activity_id: activityId,
+            status: 'pending',
+            original_filename: fileName,
+            file_size_bytes: fileSize,
+            type,
+            timestamp: new Date(lastModified || Date.now()),
+            metadata: {
+                mime_type: fileType
+            },
+            s3_key: key
+        });
+
         return {
-            originalName: fileName, // Send this back so Frontend can match file to URL
-            fileType: fileType,
+            tempId,
+            status: 'pending',
+            momentId: newMoment.id,
             signedUrl,
             key
         };
@@ -51,78 +85,50 @@ const signBatch = async (activityId, files) => {
     return signedUrls;
 }
 
-async function uploadTrackFile({ file, activityId, name, description }) {
+const confirmBatch = async (activityId, uploads) => {
+    // uploads: [{ momentId, meta: { lat, lon, alt, capturedAt }}, ...]
+    const momentIds = uploads.map(u => u.momentId);
+
     try {
-        // A. Read the file as a simple string
-        const gpxString = fs.readFileSync(file.path, 'utf8');
-        // B. Parse string -> DOM Node (This is the step that usually breaks)
-        const doc = new DOMParser().parseFromString(gpxString, 'text/xml');
-        // C. Convert DOM -> GeoJSON
-        const geoJson = toGeoJSON.gpx(doc);
+        // 2. The "Bulk Commit"
+        // Update ONLY if the photo belongs to this activity (Security Check)
+        // AND currently has status 'pending' (Idempotency Check)
+        const confirmedCount = await MomentModel.confirmBatchUploads(activityId, momentIds);
 
-        // --- Standard Validation Logic ---
-        const trackFeature = geoJson.features.find(f => f.geometry.type === 'LineString');
-        
-        if (!trackFeature) {
-            // Fallback: Some GPX files use 'MultiLineString'
-            const multiTrack = geoJson.features.find(f => f.geometry.type === 'MultiLineString');
-            if (multiTrack) {
-                // If you want to handle complex tracks, you'd merge them here.
-                // For now, we error to keep it simple.
-                throw new Error('Complex GPX (MultiLineString) not yet supported.');
+        // 3. (Optional) Save EXIF/GPS Data
+        // If your frontend sent GPS data, you iterate and update. 
+        // Note: Doing this in a loop is fine for batch size 50.
+        // For higher scale, use a sophisticated bulk upsert or a background job.
+        const metaUpdates = uploads
+            .filter(u => u.meta && (u.meta.lat || u.meta.capturedAt))
+            .map(u => MomentModel.updateMetadata(u.momentId, u.meta));
+        await Promise.all(metaUpdates);
+
+        confirmedCount.forEach(({ id, type, s3_key }) => {
+            if (type === 'image') {
+                imageQueue.add({ momentId: id, s3_key });
+            } else if (type === 'video') {
+                videoQueue.add({ momentId: id, s3_key });
             }
-            throw new Error('No track found in GPX file.');
-        }
-
-        const { geometry, properties} = trackFeature;
-        const fileName = name || properties.name || file.name;
-
-        // --- Transactional Save (Same as before) ---
-        return await db.transaction(async (trx) => {
-            const [track] = await trx('tracks').insert({
-                activity_id: activityId,
-                name: fileName,
-                description: description || null,
-            }).returning('*');
-
-            const [polyline] = await trx('polylines').insert({
-                track_id: track.id,
-                source_type: 'gpx',
-                // source_url: sourceUrl,
-                geom: db.raw(
-                    'ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', 
-                    [JSON.stringify(geometry)]
-                )
-            }).returning('*');
-
-            const s3Key = s3Service.generateS3Key({
-                entityType: 'polylines',
-                entityId: polyline.id,
-                fileName,
-                fileType: 'application/gpx+xml',
-            });
-
-            const sourceUrl = await s3Service.uploadFile({
-                key: s3Key,
-                body: gpxString,
-                contentType: 'application/gpx+xml',
-            });
-
-            await trx('polylines').where({ id: polyline.id }).update({ source_url: sourceUrl });
-            const [updatedTrack] = await trx('tracks').where({ id: track.id }).update({ active_polyline_id: polyline.id }).returning('*');
-
-            return updatedTrack;
         });
+            
+        // 4. Trigger Background Jobs (Thumbnails)
+        // Since this is a map app, you need small images for pins.
+        // Don't await this! Fire and forget.
+        // momentIds.forEach(id => {
+        //     thumbnailQueue.add({ momentId: id });
+        // });
 
+        return res.json({ 
+            success: true, 
+            count: confirmedCount.length
+        });
     } catch (err) {
-        console.error("GPX Parse Error:", err);
-        throw new Error(`Failed to process GPX: ${err.message}`);
-    } finally {
-        if (file) {
-            fs.unlinkSync(file.path);
-        }
+        console.error("Confirmation Failed", err);
+        return res.status(500).json({ error: "Failed to confirm uploads" });
     }
-}
+};
+
 
 module.exports = {
     getAllActivities,
@@ -130,5 +136,4 @@ module.exports = {
     createActivity,
     getActivityRoutes,
     signBatch,
-    uploadTrackFile,
 };
