@@ -1,3 +1,4 @@
+const { uuidv7 } = require('uuidv7');
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> } 
@@ -30,6 +31,7 @@ exports.seed = async function(knex) {
 
   await knex('polylines').insert([
     {
+        id: uuidv7(),
         track_id: PCTTrack.id,
         // Use knex.raw to call the PostGIS function ST_GeomFromText.
         // The '?' is a binding that prevents SQL injection.
@@ -39,42 +41,49 @@ exports.seed = async function(knex) {
         source_type: 'gpx'
     },
     {
+        id: uuidv7(),
         track_id: PCTTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [pacificCrestTrail_v2]),
         source_url: 'http://example.com/pct_v2',
         source_type: 'gpx'
     },
     {
+        id: uuidv7(),
         track_id: OCTTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [oregonCoastTrail_v1]),
         source_url: 'http://example.com/oct_v1',
         source_type: 'gpx'
     },
     {
+        id: uuidv7(),
         track_id: OCTTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [oregonCoastTrail_v2]),
         source_url: 'http://example.com/oct_v1',
         source_type: 'gpx'
     },
     {
+        id: uuidv7(),
         track_id: ATTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [appalachianTrail_v1]),
         source_url: 'http://example.com/at_v1',
         source_type: 'gpx'
     },
     {
+        id: uuidv7(),
         track_id: ATTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [appalachianTrail_v2]),
         source_url: 'http://example.com/at_v1',
         source_type: 'gpx'
     },
     {
+        id: uuidv7(),
         track_id: sierrasTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [sierras_v1]),
         source_url: 'http://example.com/sierras_v1',
         source_type: 'gpx'
     },
     {
+        id: uuidv7(),
         track_id: sierrasTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [sierras_v2]),
         source_url: 'http://example.com/sierras_v2',

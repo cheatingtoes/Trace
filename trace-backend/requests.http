@@ -1,92 +1,30 @@
-### Get all tracks
-get http://localhost:3001/api/v1/moments/presigned-url?activityId=1&fileName=test.jpg&fileType=image/jpeg
-
-### Create a new track
-GET http://localhost:3001/api/v1/activities/4/routes
-
-### Create a new track
-GET http://localhost:3001/api/v1/tracks/14
-
-### Create a new track
-GET http://localhost:3001/api/v1/polylines/31
-
-### 
-POST http://localhost:3001/api/v1/activities/4/upload-track-file
-Content-Type: multipart/form-data; boundary=MyBoundary
-
---MyBoundary
-Content-Disposition: form-data; name="file"; filename="sample.gpx"
-Content-Type: application/gpx+xml
-
-< ./uploads/sample.gpx
---MyBoundary--
+# For more info on the VS Code REST Client, see: https://marketplace.visualstudio.com/items?itemName=humao.rest-client
 
 ###
-# @name signBatchPhotoUpload
-#
-# Get pre-signed URLs for uploading multiple photos to an activity.
-# The server will return a list of URLs that you can then use to
-# PUT the actual image files to S3.
-
-@activityId = 4
-POST http://localhost:3001/api/v1/activities/{{activityId}}/sign-batch
+# @name getSignedUrl
+# Step 1: Get a pre-signed URL from the backend.
+# The response will be captured in a variable named 'getSignedUrl'.
+POST http://localhost:3001/api/v1/moments/sign-batch
 Content-Type: application/json
 
 {
+  "activityId": 1,
   "files": [
     {
-      "filename": "photo-1.jpg",
-      "fileType": "image/jpeg"
-    },
-    {
-      "filename": "photo-2.png",
-      "fileType": "image/png"
-    },
-    {
-      "filename": "selfie.jpg",
-      "fileType": "image/jpeg"
+      "fileName": "ducky.jpg",
+      "fileType": "image/jpeg",
     }
   ]
 }
 
+###
+# @name uploadToS3
+# Step 2: Upload the dummy file to the pre-signed URL from the previous step.
+# NOTE: You must run the "getSignedUrl" request above this one first!
+# The variable {{getSignedUrl.response.body.0.signedUrl}} is automatically
+# populated from the response of the first request.
+PUT {{getSignedUrl.response.body.0.signedUrl}}
+Content-Type: image/jpeg
 
+< ./uploads/ducky.jpg
 
-### Upload GPX file for track ID 1
-# @name uploadGpx
-POST http://localhost:3001/api/v1/activities/1/upload-track-file
-Content-Type: multipart/form-data; boundary=boundary
---boundary
-Content-Disposition: form-data; name="file"; filename="sample.gpx"
-Content-Type: application/gpx+xml
-<gpx version="1.1" creator="Test">
-  <trk>
-    <trkseg>
-      <trkpt lat="40.7128" lon="-74.0060"><ele>10.0</ele></trkpt>
-      <trkpt lat="40.7200" lon="-73.9500"><ele>12.0</ele></trkpt>
-      <trkpt lat="40.7300" lon="-73.9000"><ele>15.0</ele></trkpt>
-      <trkpt lat="40.7400" lon="-73.8500"><ele>15.0</ele></trkpt>
-      <trkpt lat="40.7500" lon="-73.8000"><ele>20.0</ele></trkpt>
-      <trkpt lat="40.7600" lon="-73.7500"><ele>22.0</ele></trkpt>
-      <trkpt lat="40.7700" lon="-73.7000"><ele>25.0</ele></trkpt>
-      <trkpt lat="40.7800" lon="-73.6000"><ele>30.0</ele></trkpt>
-      <trkpt lat="40.7900" lon="-73.5000"><ele>35.0</ele></trkpt>
-      <trkpt lat="40.8000" lon="-73.4000"><ele>40.0</ele></trkpt>
-      <trkpt lat="40.8200" lon="-73.2000"><ele>45.0</ele></trkpt>
-      <trkpt lat="40.8500" lon="-73.0000"><ele>50.0</ele></trkpt>
-      <trkpt lat="40.8800" lon="-72.8000"><ele>40.0</ele></trkpt>
-      <trkpt lat="40.9000" lon="-72.6000"><ele>30.0</ele></trkpt>
-      <trkpt lat="40.9200" lon="-72.4000"><ele>20.0</ele></trkpt>
-      <trkpt lat="40.9500" lon="-72.3000"><ele>15.0</ele></trkpt>
-      <trkpt lat="40.9800" lon="-72.2000"><ele>10.0</ele></trkpt>
-      <trkpt lat="41.0000" lon="-72.1000"><ele>10.0</ele></trkpt>
-      <trkpt lat="41.0200" lon="-72.0000"><ele>5.0</ele></trkpt>
-      <trkpt lat="41.0359" lon="-71.9545"><ele>0.0</ele></trkpt>
-    </trkseg>
-  </trk>
-</gpx>
---boundary--
-
-
-curl -X POST http://localhost:3001/api/v1/activities/4/upload-track-file \
-  -F "file=@./uploads/sample.gpx" \
-  -F "name=Test Track"

@@ -2,7 +2,6 @@ const ActivityService = require('../services/activities.service');
 const TrackService = require('../services/tracks.service');
 
 const MAX_GPX_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
-const ALLOWED_GPX_MIME_TYPES = ['`application/gpx`+xml', '`application/xml`', '`text/xml`'];
 
 const getAllActivities = async (req, res, next) => {
     try {
@@ -44,46 +43,6 @@ const getActivityRoutes = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
-
-const signBatch = async (req, res, next) => {
-    const activityId = req.params.id;
-    const { files } = req.body; // Expecting array of { tempId, fileName, fileType, fileSize, lastModified }
-
-    if (!files || !Array.isArray(files) || files.length === 0) {
-        return res.status(400).json({ error: 'No files provided' });
-    }
-
-    if (files.length > 50) {
-        return res.status(400).json({ error: 'Too many files. Maximum of 50 files allowed' });
-    }
-
-    try {
-        const signedUrls = await ActivityService.signBatch(activityId, files);
-        res.json(signedUrls);
-    } catch (err) {
-        console.error("Batch Signing Error:", err);
-        res.status(500).json({ error: 'Failed to generate signatures' });
-    }
-}
-
-const confirmBatch = async (req, res, next) => {
-    const activityId = req.params.id;
-    const { uploads } = req.body;
-    // uploads: [{ momentId, meta: { lat, lon, alt, capturedAt }}, ...]
-
-    if (!uploads || !Array.isArray(uploads) || uploads.length === 0) {
-        return res.status(400).json({ error: 'No uploads provided' });
-    }
-
-    try {
-        const confirmedUploads = await ActivityService.confirmBatch(activityId, uploads);
-        res.json(confirmedUploads);
-    } catch (err) {
-        console.error("Batch Confirmation Error:", err);
-        res.status(500).json({ error: 'Failed to confirm uploads' });
-    }
-
 }
 
 const uploadTrackFile = async (req, res, next) => {
@@ -138,7 +97,5 @@ module.exports = {
     getActivityById,
     createActivity,
     getActivityRoutes,
-    signBatch,
-    confirmBatch,
     uploadTrackFile,
 }

@@ -1,0 +1,167 @@
+@hostname = localhost
+@port = 3001
+@api_base = http://{{hostname}}:{{port}}/api/v1
+@activityId = 1
+@momentId_1 = 1
+@momentId_2 = 2
+
+
+### (1) Get Presigned URLs for a batch of new moments
+# @name signBatch
+POST {{api_base}}/moments/sign-batch
+Content-Type: application/json
+
+{
+  "activityId": "1",
+  "files": [
+    {
+      "tempId": "temp-id-1231",
+      "fileName": "hike-photo-1.jpg",
+      "fileType": "image/jpeg",
+      "fileSize": 4500013,
+      "lastModified": 1672531200000
+    },
+    {
+      "tempId": "temp-id-4561",
+      "fileName": "hike-video-1.mp4",
+      "fileType": "video/mp4",
+      "fileSize": 25000007,
+      "lastModified": 1672531260000
+    }
+  ]
+}
+
+###
+# The signBatch endpoint will return a list of objects, each containing a `momentId` and a `signedUrl`.
+# After the client successfully uploads the files to S3 using the signed URLs,
+# call confirm-batch with the `momentId`s and any metadata captured on the client.
+###
+
+
+### (2) Confirm a batch of moments have been uploaded
+# @name confirmBatch
+POST {{api_base}}/moments/confirm-batch
+Content-Type: application/json
+
+{
+  "activityId": "1",
+  "uploads": [
+    {
+      "momentId": 93,
+      "meta": {
+        "lat": 34.0522,
+        "lon": -118.2437,
+        "alt": 71,
+        "capturedAt": "2023-01-01T00:01:00.000Z"
+      }
+    },
+    {
+      "momentId": 91,
+      "meta": {
+        "lat": 34.0525,
+        "lon": -118.2440,
+        "alt": 75,
+        "capturedAt": "2023-01-01T00:02:00.000Z"
+      }
+    }
+  ]
+}
+
+
+### Get all tracks
+get http://localhost:3001/api/v1/moments/presigned-url?activityId=1&fileName=test.jpg&fileType=image/jpeg
+
+### Create a new track
+GET http://localhost:3001/api/v1/activities
+
+### Create a new track
+GET http://localhost:3001/api/v1/moments/84
+
+### Create a new track
+GET http://localhost:3001/api/v1/polylines/31
+
+### 
+POST http://localhost:3001/api/v1/activities/4/upload-track-file
+Content-Type: multipart/form-data; boundary=MyBoundary
+
+--MyBoundary
+Content-Disposition: form-data; name="file"; filename="sample.gpx"
+Content-Type: application/gpx+xml
+
+< ./uploads/sample.gpx
+--MyBoundary--
+
+###
+# @name signBatchPhotoUpload
+#
+# Get pre-signed URLs for uploading multiple photos to an activity.
+# The server will return a list of URLs that you can then use to
+# PUT the actual image files to S3.
+
+@activityId = 4
+POST http://localhost:3001/api/v1/activities/{{activityId}}/sign-batch
+Content-Type: application/json
+
+{
+  "files": [
+    {
+      "filename": "photo-1.jpg",
+      "fileType": "image/jpeg"
+    },
+    {
+      "filename": "photo-2.png",
+      "fileType": "image/png"
+    },
+    {
+      "filename": "selfie.jpg",
+      "fileType": "image/jpeg"
+    }
+  ]
+}
+
+
+
+### Upload GPX file for track ID 1
+# @name uploadGpx
+POST http://localhost:3001/api/v1/activities/1/upload-track-file
+Content-Type: multipart/form-data; boundary=boundary
+--boundary
+Content-Disposition: form-data; name="file"; filename="sample.gpx"
+Content-Type: application/gpx+xml
+<gpx version="1.1" creator="Test">
+  <trk>
+    <trkseg>
+      <trkpt lat="40.7128" lon="-74.0060"><ele>10.0</ele></trkpt>
+      <trkpt lat="40.7200" lon="-73.9500"><ele>12.0</ele></trkpt>
+      <trkpt lat="40.7300" lon="-73.9000"><ele>15.0</ele></trkpt>
+      <trkpt lat="40.7400" lon="-73.8500"><ele>15.0</ele></trkpt>
+      <trkpt lat="40.7500" lon="-73.8000"><ele>20.0</ele></trkpt>
+      <trkpt lat="40.7600" lon="-73.7500"><ele>22.0</ele></trkpt>
+      <trkpt lat="40.7700" lon="-73.7000"><ele>25.0</ele></trkpt>
+      <trkpt lat="40.7800" lon="-73.6000"><ele>30.0</ele></trkpt>
+      <trkpt lat="40.7900" lon="-73.5000"><ele>35.0</ele></trkpt>
+      <trkpt lat="40.8000" lon="-73.4000"><ele>40.0</ele></trkpt>
+      <trkpt lat="40.8200" lon="-73.2000"><ele>45.0</ele></trkpt>
+      <trkpt lat="40.8500" lon="-73.0000"><ele>50.0</ele></trkpt>
+      <trkpt lat="40.8800" lon="-72.8000"><ele>40.0</ele></trkpt>
+      <trkpt lat="40.9000" lon="-72.6000"><ele>30.0</ele></trkpt>
+      <trkpt lat="40.9200" lon="-72.4000"><ele>20.0</ele></trkpt>
+      <trkpt lat="40.9500" lon="-72.3000"><ele>15.0</ele></trkpt>
+      <trkpt lat="40.9800" lon="-72.2000"><ele>10.0</ele></trkpt>
+      <trkpt lat="41.0000" lon="-72.1000"><ele>10.0</ele></trkpt>
+      <trkpt lat="41.0200" lon="-72.0000"><ele>5.0</ele></trkpt>
+      <trkpt lat="41.0359" lon="-71.9545"><ele>0.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+--boundary--
+
+
+curl -X POST http://localhost:3001/api/v1/activities/4/upload-track-file \
+  -F "file=@./uploads/sample.gpx" \
+  -F "name=Test Track"
+
+curl -X POST http://localhost:3001/api/v1/activities/4/upload-track-file \
+  -H "Content-Type: image/jpeg" \
+  --upload-file ./dummy-image.jpg
+

@@ -17,12 +17,6 @@ router.post('/', ActivityController.createActivity);
 // GET /api/v1/activities/:id/routes - Get all routes for an activity
 router.get('/:id/routes', ActivityController.getActivityRoutes);
 
-// POST /api/v1/activities/:id/sign-batch - Get presigned URLs for batch media upload
-router.post('/:id/sign-batch', ActivityController.signBatch);
-
-// POST /api/v1/activities/:id/confirm-batch - Confirm batch media upload
-router.post('/:id/confirm-batch', ActivityController.confirmBatch);
-
 // POST /api/v1/activities/:id/upload-track-file - Upload a GPX file to create a track
 router.post('/:id/upload-track-file', upload.single('file'), ActivityController.uploadTrackFile);
 

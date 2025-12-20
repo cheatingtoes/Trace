@@ -1,3 +1,4 @@
+const { uuidv7 } = require('uuidv7');
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
@@ -40,15 +41,19 @@ exports.seed = async function(knex) {
     for (let i = 0; i < photosPerTrack; i++) {
       const fraction = photosPerTrack > 1 ? i / (photosPerTrack - 1) : 0; // interpolates from 0.0 to 1.0
       moments.push({
+        id: uuidv7(),
         activity_id: activity.id,
-        type: 'photo',
-        timestamp: new Date(),
+        status: 'pending',
+        name: `photo_${i}.jpg`,
+        file_size_bytes: Math.floor(Math.random() * (5000000 - 1000000 + 1) + 1000000),
+        type: 'image',
+        occured_at: new Date(new Date().getTime() - Math.random() * 1000 * 60 * 60 * 24 * 30), // random time in the last 30 days
         // Use ST_LineInterpolatePoint to find a point along the polyline and explicitly set SRID.
         geom: knex.raw('ST_SetSRID(ST_LineInterpolatePoint((SELECT geom FROM polylines WHERE id = ?), ?), 4326)', [track.active_polyline_id, fraction]),
         mile_marker: Math.random() * 20, // Placeholder mile marker
         media_url: `https://picsum.photos/seed/${activity.id}${track.id}${i}/800/600`,
         thumbnail_url: `https://picsum.photos/seed/${activity.id}${track.id}${i}/200/150`,
-        text_content: `A photo from the ${track.name}.`,
+        body: `A photo from the ${track.name}.`,
         metadata: {
           camera: 'Virtual Camera',
         },

@@ -8,12 +8,13 @@ const getPolylineById = async (id) => {
     return PolylineModel.getPolylineById(id);
 };
 
-const createUser = async (polyLineData) => {
-    return PolylineModel.createUser(polyLineData);
+const createPolyline = async (polyLineData) => {
+    const id = uuidv7();
+    return PolylineModel.createPolyline({ id, ...polyLineData });
 };
 
 module.exports = {
   getAllPolylines,
   getPolylineById,
-  createUser,
+  createPolyline,
 };

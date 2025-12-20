@@ -1,3 +1,4 @@
+const { uuidv7 } = require('uuidv7');
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> } 

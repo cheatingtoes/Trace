@@ -1,3 +1,4 @@
+const { uuidv7 } = require('uuidv7');
 const UserModel = require('../models/users.model');
 
 const getAllUsers = async () => {
@@ -9,7 +10,8 @@ const getUserById = async (id) => {
 };
 
 const createUser = async (userData) => {
-    return UserModel.createUser(userData);
+    const id = uuidv7();
+    return UserModel.createUser({ id, ...userData });
 };
 
 module.exports = {

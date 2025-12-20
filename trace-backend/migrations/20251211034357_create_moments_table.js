@@ -4,20 +4,20 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('moments', function(table) {
-    table.bigIncrements('id').primary();
+    table.uuid('id').primary();
 
-    table.integer('activity_id').unsigned().notNullable();
+    table.uuid('activity_id').unsigned().notNullable();
     table.foreign('activity_id').references('id').inTable('activities').onDelete('CASCADE');
 
     table.enum('status', ['pending', 'processing', 'active', 'failed']).defaultTo('pending').notNullable();
-    table.string('original_filename').notNullable();
+    table.string('name').notNullable();
     table.bigInteger('file_size_bytes').notNullable();
 
     // type, ENUM,"'image', 'video', 'note', 'audio'"
     table.enum('type', ['image', 'video', 'note', 'audio']).notNullable();
 
-    // timestamp, TIMESTAMP, The master sort key. (Capture time).
-    table.timestamp('timestamp').notNullable();
+    // occured_at, TIMESTAMP, The master sort key. (Capture time).
+    table.timestamp('occured_at', { useTz: true }).notNullable().defaultTo(knex.fn.now());
 
     // geom, GEOMETRY(Point), Location for the map pin.
     // Using 4326 as the SRID for standard geographic coordinates.
@@ -33,8 +33,8 @@ exports.up = function(knex) {
     // thumbnail_url, VARCHAR, Optimized small image for the map (NULL for notes/audio).
     table.string('thumbnail_url');
 
-    // text_content, TEXT,"The body text for a Note, or the caption for a image."
-    table.text('text_content');
+    // body, TEXT,"The body text for a Note, or the caption for a image."
+    table.text('body');
 
     // metadata, JSONB, The Magic Column. Stores type-specific data.
     table.jsonb('metadata');
@@ -43,7 +43,7 @@ exports.up = function(knex) {
     table.timestamps(true, true);
 
     // Add indexes for performance
-    table.index(['activity_id', 'original_filename', 'file_size_bytes', 'timestamp']);
+    table.index(['activity_id', 'name', 'file_size_bytes', 'occured_at']);
   })
   // Add a spatial index for the geom column for fast location-based queries
   .then(() => knex.raw('CREATE INDEX moments_geom_idx ON moments USING GIST (geom)'));

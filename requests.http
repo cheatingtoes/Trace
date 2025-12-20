@@ -1,0 +1,62 @@
+@baseUrl = http://localhost:3001/api/v1
+@fileName = 37F00BAD-2BC0-4C35-BEF5-269EEE0ACC38_1_105_c.jpeg
+@filePath = ./trace-backend/uploads/{{fileName}}
+@activityId = 019b3947-781b-7329-860e-f37673f3ed22
+
+###
+GET {{baseUrl}}/activities
+
+###
+# @name getSignedUrl
+# Before running this, set the FILE_SIZE environment variable in your terminal:
+# export FILE_SIZE=$(stat -f%z {{filePath}})
+# export FILE_SIZE=$(($(stat -f%z ./uploads/37F00BAD-2BC0-4C35-BEF5-269EEE0ACC38_1_105_c.jpeg) + 1))
+# ./uploads/37F00BAD-2BC0-4C35-BEF5-269EEE0ACC38_1_105_c.jpeg
+POST {{baseUrl}}/moments/sign-batch
+Content-Type: application/json
+
+{
+  "activityId": "{{activityId}}",
+  "files": [
+    {
+      "tempId": "temp-id-1",
+      "fileName": "{{fileName}}",
+      "fileType": "image/jpeg",
+      "fileSize": 229060
+    }
+  ]
+}
+
+###
+# ==> These lines dynamically capture the values from the response above <==
+@signedUrl = {{getSignedUrl.response.body.$[0].signedUrl}}
+@momentId = {{getSignedUrl.response.body.$[0].id}}
+
+###
+# @name uploadToS3
+# This is a placeholder for the actual S3 upload.
+# The signed URL from the previous request would be used here.
+PUT {{signedUrl}}
+Content-Type: image/jpeg
+
+< {{filePath}}
+
+###
+# @name confirmBatch
+POST {{baseUrl}}/moments/confirm-batch
+Content-Type: application/json
+
+{
+  "activityId": "{{activityId}}",
+  "uploads": [
+    {
+      "momentId": "{{momentId}}",
+      "meta": {
+        "lat": 34.0522,
+        "lon": -118.2437,
+        "alt": 71,
+        "capturedAt": "2025-12-19T12:00:00.000Z"
+      }
+    }
+  ]
+}

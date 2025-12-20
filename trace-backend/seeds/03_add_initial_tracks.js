@@ -1,3 +1,4 @@
+const { uuidv7 } = require('uuidv7');
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> } 
@@ -19,21 +20,25 @@ exports.seed = async function(knex) {
   await knex('tracks').insert([
     // for user 1 PCT
     {
+        id: uuidv7(),
         activity_id: activityOne.id,
         name: 'PCT Yosemite National Park',
         description: 'trail - too does this need a description? maybe user facing but i think the name is enuf.',
     },
     {
+        id: uuidv7(),
         activity_id: activityOne.id,
         name: 'OCT Samuel H. Boardman Corridor',
     },
     // for user 1 AT
     {
+        id: uuidv7(),
         activity_id: activityOne.id,
         name: 'Appalachian Trail Virginia near McAfee Knob',
     },
     // for user 2 Sierras
     {
+        id: uuidv7(),
         activity_id: activityThree.id,
         name: 'Sierras',
         description: 'hiking the high sierras',

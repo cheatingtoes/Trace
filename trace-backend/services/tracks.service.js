@@ -1,3 +1,4 @@
+const { uuidv7 } = require('uuidv7');
 const fs = require('fs');
 const { DOMParser } = require('@xmldom/xmldom');
 const toGeoJSON = require('@mapbox/togeojson');
@@ -14,7 +15,8 @@ const getTrackById = (id) => {
 };
 
 const createTrack = (trackData) => {
-    return TrackModel.createTrack(trackData);
+    const id = uuidv7();
+    return TrackModel.createTrack({ id, ...trackData });
 };
 
 async function uploadTrackFile({ file, activityId, name, description }) {
@@ -61,12 +63,7 @@ async function uploadTrackFile({ file, activityId, name, description }) {
                 )
             }).returning('*');
 
-            const s3Key = s3Service.generateS3Key({
-                entityType: 'polylines',
-                entityId: polyline.id,
-                fileName,
-                fileType: 'application/gpx+xml',
-            });
+            const s3Key = `/polylines/${polyline.id}/gpx/${polyline.id}.gpx`;
 
             const sourceUrl = await s3Service.uploadFile({
                 key: s3Key,

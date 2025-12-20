@@ -4,8 +4,7 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('users', function(table) {
-    table.increments('id').primary();
-    table.uuid('uuid').defaultTo(knex.raw('gen_random_uuid()')).notNullable().unique();
+    table.uuid('id').primary();
     table.timestamps(true, true);
     table.timestamp('last_login_at');
 
