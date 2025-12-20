@@ -1,5 +1,6 @@
 const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const config = require('../config');
 const { s3Client, BUCKET_NAME } = require('../config/s3');
 const db = require('../config/db');
 const exifr = require('exifr');
@@ -60,7 +61,7 @@ async function processImage(key, momentId) {
 
         // D. Update DB
         const updateData = {
-            thumbnail_url: `${process.env.S3_ENDPOINT || 'http://localhost:9000'}/${BUCKET_NAME}/${thumbKey}`,
+            thumbnail_url: `${config.s3.endpoint}/${BUCKET_NAME}/${thumbKey}`,
             occured_at: exifData?.DateTimeOriginal || new Date()
         };
 

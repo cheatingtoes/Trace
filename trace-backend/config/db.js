@@ -1,14 +1,15 @@
 const knex = require('knex');
+const config = require('../config');
 
 // Configuration uses environment variables defined in docker-compose.yml
 const dbConfig = {
     client: 'pg',
     connection: {
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
-        port: process.env.DB_PORT || 5432,
+        host: config.db.host,
+        user: config.db.user,
+        password: config.db.password,
+        database: config.db.name,
+        port: config.db.port,
     },
     // Ensures the PostGIS extension is installed on connection
     pool: {

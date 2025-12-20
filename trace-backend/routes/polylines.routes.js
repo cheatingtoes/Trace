@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const PolylineController = require('../controllers/polylines.controller');
+const authenticate = require('../middleware/auth');
+
+router.use(authenticate);
 
 // GET /api/v1/polylines - Get all polylines
 router.get('/', PolylineController.getAllPolylines);

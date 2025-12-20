@@ -1,16 +1,18 @@
 const { S3Client } = require('@aws-sdk/client-s3');
+const config = require('../config');
+
 
 const s3Client = new S3Client({
-    region: process.env.AWS_REGION || 'us-east-1',
-    endpoint: process.env.S3_ENDPOINT || 'http://minio:9000',
+    region: config.s3.region,
+    endpoint: config.s3.endpoint,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'minioadmin',
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'minioadmin'
+        accessKeyId: config.s3.accessKeyId,
+        secretAccessKey: config.s3.secretAccessKey,
     },
-    forcePathStyle: true, // Required for MinIO
+    forcePathStyle: config.s3.forcePathStyle, // Required for MinIO
 });
 
-const BUCKET_NAME = process.env.S3_BUCKET_NAME || 'trace-storage';
-const PUBLIC_ENDPOINT = process.env.S3_PUBLIC_ENDPOINT || 'http://localhost:9000';
+const BUCKET_NAME = config.s3.bucketName;
+const PUBLIC_ENDPOINT = config.s3.publicEndpoint;
 
 module.exports = { s3Client, BUCKET_NAME, PUBLIC_ENDPOINT };

@@ -8,15 +8,21 @@ class BaseError extends Error {
   }
 }
 
-class NotFoundError extends BaseError {
-  constructor(message = 'The requested resource was not found.') {
-    super(message, 404);
-  }
-}
-
 class BadRequestError extends BaseError {
   constructor(message = 'The server cannot process the request due to a client error.') {
     super(message, 400);
+  }
+}
+
+class UnauthorizedError extends BaseError {
+  constructor(message = 'Unauthorized access.') {
+    super(message, 401);
+  }
+}
+
+class NotFoundError extends BaseError {
+  constructor(message = 'The requested resource was not found.') {
+    super(message, 404);
   }
 }
 
@@ -34,4 +40,5 @@ module.exports = {
   NotFoundError,
   BadRequestError,
   InternalServerError,
+  UnauthorizedError
 };

@@ -23,7 +23,7 @@ const createMoment = async (momentData) => {
     return MomentModel.createMoment({ id, ...momentData });
 };
 
-const signBatch = async (activityId, files) => {
+const signBatch = async (userId, activityId, files) => {
     try {
         const signedUrls = await Promise.all(files.map(async (file) => {
             try {
@@ -77,7 +77,7 @@ const signBatch = async (activityId, files) => {
                 // const userId = uuidv7();
 
                 const ext = mime.extension(fileType);
-                const s3Key = `/activities/${activityId}/${type}s/${id}.${ext}`
+                const s3Key = `${userId}/activities/${activityId}/${type}s/${id}.${ext}`
 
                 // Get the presigned URL
                 const { signedUrl, key } = await s3Service.getPresignedUploadUrl(s3Key, fileType);
@@ -123,7 +123,7 @@ const signBatch = async (activityId, files) => {
     }
 }
 
-const confirmBatch = async (activityId, uploads) => {
+const confirmBatch = async (userId, activityId, uploads) => {
     // uploads: [{ momentId, meta: { lat, lon, alt, capturedAt }}, ...]
     const momentIds = uploads.map(u => u.momentId);
 
@@ -131,7 +131,7 @@ const confirmBatch = async (activityId, uploads) => {
         // 2. The "Bulk Commit"
         // Update ONLY if the photo belongs to this activity (Security Check)
         // AND currently has status 'pending' (Idempotency Check)
-        const activeMoments = await MomentModel.confirmBatchUploads(activityId, momentIds);
+        const activeMoments = await MomentModel.confirmBatchUploads(userId, activityId, momentIds);
 
         // 3. (Optional) Save EXIF/GPS Data
         // If your frontend sent GPS data, you iterate and update. 

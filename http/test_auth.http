@@ -1,0 +1,54 @@
+@baseUrl = http://localhost:3001/api/v1
+@random = {{$randomInt 1000 9999}}
+@newEmail = testuser{{random}}@example.com
+@password = securePassword123
+
+
+###
+# @name signupUser
+# 1. Signup a new user
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+    "email": "{{newEmail}}",
+    "password": "{{password}}",
+    "name": "Test User"
+}
+
+###
+@newUsertoken = {{signupUser.response.body.token}}
+@newuUserEmail = {{signupUser.response.body.user.email}}
+
+###
+# @name loginUser
+# login User
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+Authorization: Bearer {{newUsertoken}}
+
+{
+    "email": "{{newUserEmail}}",
+    "password": "{{password}}"
+}
+
+###
+GET {{baseUrl}}/moments
+Authorization: Bearer {{token}}
+
+###
+POST {{baseUrl}}/moments/sign-batch
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "activityId": "test_activity_999",
+    "files": [
+        {
+            "tempId": "temp_1",
+            "fileName": "test_photo.jpg",
+            "fileType": "image/jpeg",
+            "fileSize": 50000
+        }
+    ]
+}

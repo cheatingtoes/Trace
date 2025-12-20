@@ -1,9 +1,9 @@
 const IORedis = require('ioredis');
-require('dotenv').config();
+const config = require('../config');
 
 const connection = new IORedis({
-  host: process.env.REDIS_HOST || '127.0.0.1',
-  port: process.env.REDIS_PORT || 6379,
+  host: config.redis.host,
+  port: config.redis.port,
   maxRetriesPerRequest: null,
 });
 

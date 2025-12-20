@@ -11,17 +11,13 @@ exports.seed = async function(knex) {
             id: uuidv7(),
             email: 'etotheric@example.com',
             display_name: 'Cheeto',
-            hashed_password: 'placeholder-hash-1',
-            salt: 'placeholder-salt-1',
-            auth_provider: 'email'
+            password_hash: 'placeholder-hash-1',
         },
         {
             id: uuidv7(),
             email: 'libby@example.com',
             display_name: 'Cherry',
-            hashed_password: 'placeholder-hash-2',
-            salt: 'placeholder-salt-2',
-            auth_provider: 'email'
+            password_hash: 'placeholder-hash-2',
         }
   ]);
 };

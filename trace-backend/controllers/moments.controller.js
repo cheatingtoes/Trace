@@ -29,6 +29,7 @@ const createMoment = async (req, res, next) => {
 }
 
 const signBatch = async (req, res, next) => {
+    const { userId } = req.user;
     const { activityId, files } = req.body; // Expecting array of { tempId, fileName, fileType, fileSize, lastModified }
 
     if (!activityId) {
@@ -42,7 +43,7 @@ const signBatch = async (req, res, next) => {
     }
 
     try {
-        const signedUrls = await MomentService.signBatch(activityId, files);
+        const signedUrls = await MomentService.signBatch(userId, activityId, files);
         res.status(200).json(signedUrls);
     } catch (err) {
         next(err);
@@ -50,6 +51,7 @@ const signBatch = async (req, res, next) => {
 }
 
 const confirmBatch = async (req, res, next) => {
+    const { userId } = req.user;
     const { activityId, uploads } = req.body;
     // uploads: [{ momentId, meta: { lat, lon, alt, capturedAt }}, ...]
 
@@ -58,7 +60,7 @@ const confirmBatch = async (req, res, next) => {
     }
 
     try {
-        const confirmedUploads = await MomentService.confirmBatch(activityId, uploads);
+        const confirmedUploads = await MomentService.confirmBatch(userId, activityId, uploads);
         res.status(200).json(confirmedUploads);
     } catch (err) {
         next(err);

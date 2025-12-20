@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const MomentController = require('../controllers/moments.controller');
+const authenticate = require('../middleware/auth');
+
+router.use(authenticate);
 
 // GET /api/v1/moments - Get all moments
 router.get('/', MomentController.getAllMoments);

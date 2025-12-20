@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const ActivityController = require('../controllers/activities.controller');
+const authenticate = require('../middleware/auth');
+
+router.use(authenticate);
 
 const upload = multer({ dest: 'uploads/' }); // Temp storage
 

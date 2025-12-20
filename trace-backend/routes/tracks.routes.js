@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const TrackController = require('../controllers/tracks.controller');
+const authenticate = require('../middleware/auth');
+
+router.use(authenticate);
 
 // GET /api/v1/users - Get all users
 router.get('/', TrackController.getAllTracks);
