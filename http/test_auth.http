@@ -92,6 +92,7 @@ Content-Type: image/jpeg
 # @name confirmBatch
 POST {{baseUrl}}/moments/confirm-batch
 Content-Type: application/json
+Authorization: Bearer {{loginToken}}
 
 {
   "activityId": "{{activityId}}",

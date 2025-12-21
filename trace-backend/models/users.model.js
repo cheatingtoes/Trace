@@ -71,11 +71,6 @@ const linkProvider = ({ userId, provider, providerId }) => {
     });
 }
 
-const verifyPassword = async (user, plainPassword) => {
-    if (!user.password_hash) return false;
-    return bcrypt.compare(plainPassword, user.password_hash);
-}
-
 const addRefreshToken = (userId, token) => {
     return db(TABLE_NAME)
         .where({ id: userId })
@@ -110,7 +105,6 @@ module.exports = {
     createLocalUser,
     createOAuthUser,
     linkProvider,
-    verifyPassword,
     addRefreshToken,
     removeRefreshToken,
     clearRefreshTokens

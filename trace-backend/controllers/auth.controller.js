@@ -2,7 +2,7 @@ const passport = require('passport');
 const authService = require('../services/auth.service'); // For register logic
 const usersService = require('../services/users.service'); // For saving refresh tokens
 const { BadRequestError, UnauthorizedError } = require('../errors/customErrors');
-
+const config = require('../config');
 
 const loginUser = (req, res, next) => {
     // 1. Pull the Trigger
@@ -124,9 +124,43 @@ const logoutUser = async (req, res, next) => {
     }
 };
 
+const oauthCallback = async (req, res, next) => {
+    try {
+        const user = req.user; // Passport has successfully populated this
+        if (!user) {
+            return res.redirect(`${config.oauth.frontendRedirectUrl}/login?error=auth_failed`);
+        }
+
+        // 1. Generate Tokens (Uses your existing Service logic)
+        const { accessToken, refreshToken } = authService.generateTokens(user);
+
+        // 2. Save Refresh Token to DB
+        await usersService.addRefreshToken(user.id, refreshToken);
+
+        // 3. Set the Refresh Cookie (Secure, HTTP-Only)
+        res.cookie('jwt', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'None',
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        // 4. Redirect to Frontend
+        // We do NOT send the access token in the URL for security (avoiding logs/history).
+        // Instead, we just redirect. The frontend will load, see it has no access token,
+        // and immediately call your '/refresh' endpoint (which uses the cookie we just set)
+        // to get its first Access Token.
+        res.redirect(config.oauth.frontendRedirectUrl);
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     loginUser,
     registerUser,
     refreshToken,
-    logoutUser
+    logoutUser,
+    oauthCallback
 };

@@ -44,6 +44,22 @@ const config = {
         refreshSecret: process.env.JWT_REFRESH_SECRET,
         accessExpiration: '15m',
         refreshExpiration: '7d',
+    },
+    oauth: {
+        google: {
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: process.env.GOOGLE_CALLBACK_URL || '/api/auth/google/callback'
+        },
+        // apple: {
+        //     clientID: process.env.APPLE_CLIENT_ID,
+        //     teamID: process.env.APPLE_TEAM_ID,
+        //     keyID: process.env.APPLE_KEY_ID,
+        //     privateKey: process.env.APPLE_PRIVATE_KEY ? process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n') : null,
+        //     callbackURL: process.env.APPLE_CALLBACK_URL || '/api/auth/apple/callback'
+        // },
+        // Where to send the user after a successful login
+        frontendRedirectUrl: process.env.FRONTEND_URL || 'http://localhost:5173'
     }
 };
 
