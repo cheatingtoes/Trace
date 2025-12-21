@@ -26,19 +26,23 @@ class NotFoundError extends BaseError {
   }
 }
 
+class ConflictError extends BaseError {
+  constructor(message = 'The requested could not be completed due to a conflict with an existing resource.') {
+    super(message, 409);
+  }
+}
+
 class InternalServerError extends BaseError {
     constructor(message = 'An unexpected error occurred on the server.') {
         super(message, 500, false); // This is not an operational error
     }
 }
 
-// TODO other common errors 401 UnauthorizedError, 403 ForbiddenError, 409 ConflictError...
-
-
 module.exports = {
-  BaseError,
-  NotFoundError,
-  BadRequestError,
-  InternalServerError,
-  UnauthorizedError
+    BaseError,
+    BadRequestError,
+    UnauthorizedError,
+    NotFoundError,
+    ConflictError,
+    InternalServerError,
 };

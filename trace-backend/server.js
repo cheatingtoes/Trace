@@ -3,9 +3,11 @@ const config = require('./config');
 require('./config/passport');
 const express = require('express');
 const cors = require('cors');
-const db = require('./config/db'); // Renamed from connectDB for consistency, db is the knex instance
+const cookieParser = require('cookie-parser');
+const db = require('./config/db');
 
 const app = express();
+app.use(cookieParser());
 const port = config.app.port;
 
 // --- Middleware ---

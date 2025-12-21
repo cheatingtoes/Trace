@@ -1,47 +1,67 @@
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const UserModel = require('../models/users.model'); // Adjust path if needed
+const JwtStrategy = require('passport-jwt').Strategy; // 👈 NEW
+const ExtractJwt = require('passport-jwt').ExtractJwt; // 👈 NEW
+const UserModel = require('../models/users.model');
+const config = require('./index');
 
 /**
- * 1. Configure the "Local" Strategy
- * This tells Passport how to handle 'email' + 'password' login attempts.
+ * ==============================================
+ * STRATEGY 1: LOCAL LOGIN (Email + Password)
+ * Used when user tries to sign in.
+ * ==============================================
  */
 const localOptions = { 
-    usernameField: 'email', // We accept 'email', not 'username'
-    passwordField: 'password' // (Default, but good to be explicit)
+    usernameField: 'email',
+    passwordField: 'password'
 };
 
 const localLogin = new LocalStrategy(localOptions, async (email, password, done) => {
     try {
-        // Step 1: Find the user by email
         const user = await UserModel.findByEmail(email);
-        
-        // Edge Case: User not found
-        // done(error, user, info)
         if (!user) {
             return done(null, false, { message: 'Invalid login details' });
         }
 
-        // Step 2: Verify password
         const isMatch = await UserModel.verifyPassword(user, password);
-        
-        // Edge Case: Wrong password
         if (!isMatch) {
             return done(null, false, { message: 'Invalid login details' });
         }
 
-        // Success: Return the user object
-        // This will be passed to your Controller as 'req.user'
         return done(null, user);
-
     } catch (err) {
-        // System Error (DB is down, etc)
         return done(err);
     }
 });
 
-// Register the strategy with Passport
-passport.use(localLogin);
+/**
+ * ==============================================
+ * STRATEGY 2: JWT AUTH (Protected Routes)
+ * Used when user sends an "Authorization: Bearer <token>" header.
+ * ==============================================
+ */
+const jwtOptions = {
+    // Tell Passport to look for the token in the 'Authorization' header
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    // Use the ACCESS secret to verify the signature
+    secretOrKey: config.jwt.accessSecret
+};
 
-// Note: We do NOT need serializeUser/deserializeUser because we are using JWTs.
-// We are not creating a persistent server session.
+const jwtLogin = new JwtStrategy(jwtOptions, async (payload, done) => {
+    try {
+        // payload.userId comes from the token we created in auth.controller
+        const user = await UserModel.getUserById(payload.userId);
+
+        if (user) {
+            return done(null, user); // User found, request is authorized
+        } else {
+            return done(null, false); // User deleted or invalid
+        }
+    } catch (err) {
+        return done(err, false);
+    }
+});
+
+// Register both strategies
+passport.use(localLogin);
+passport.use(jwtLogin);

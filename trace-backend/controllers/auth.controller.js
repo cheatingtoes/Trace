@@ -1,103 +1,132 @@
 const passport = require('passport');
-const jwt = require('jsonwebtoken');
-const config = require('../config');
-const UserModel = require('../models/users.model');
+const authService = require('../services/auth.service'); // For register logic
+const usersService = require('../services/users.service'); // For saving refresh tokens
+const { BadRequestError, UnauthorizedError } = require('../errors/customErrors');
 
-// --- HELPER: Generate JWT ---
-// This creates the "Badge" the user will carry.
-// We only put the userId inside. Keep it small.
-const generateToken = (user) => {
-    // 1. The Payload: Who is this?
-    const payload = { 
-        userId: user.id,
-        email: user.email 
-    };
 
-    // 2. The Settings
-    const options = {
-        expiresIn: '7d' // Token expires in 7 days
-    };
+const loginUser = (req, res, next) => {
+    // 1. Pull the Trigger
+    passport.authenticate('local', { session: false }, async (err, user, info) => {
+        
+        // 2. Handle Errors from Strategy
+        if (err) return next(err); // 500 Error
+        
+        // 3. Handle Failures (User not found / Wrong pass)
+        if (!user) {
+            return res.status(401).json({ 
+                message: info ? info.message : 'Login failed' 
+            });
+        }
 
-    // 3. The Secret (Should be in .env)
-    const secret = config.auth.jwtSecret;
+        // 4. Handle Success
+        try {
+            // Generate tokens
+            // (You can move this helper to auth.service if you want, but it's fine here)
+            const { accessToken, refreshToken } = authService.generateTokens(user);
 
-    return jwt.sign(payload, secret, options);
+            // Save Refresh Token (DB Call)
+            await usersService.setUserRefreshToken(user.id, refreshToken);
+
+            // Set Cookie
+            res.cookie('jwt', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'None',
+                maxAge: 24 * 60 * 60 * 1000
+            });
+
+            // Send Response
+            res.json({
+                message: 'Login successful',
+                accessToken,
+                user: { id: user.id, email: user.email, name: user.display_name }
+            });
+
+        } catch (error) {
+            next(error);
+        }
+        
+    })(req, res, next); // <--- IMPORTANT: Passing req/res to Passport
 };
 
-// --- ACTION: Signup ---
-const signup = async (req, res, next) => {
+const registerUser = async (req, res, next) => {
+    // Register is different! It doesn't need Passport middleware.
+    // It's pure logic, so it stays cleanly in the Service.
     try {
         const { email, password, name } = req.body;
-
-        // 1. Basic Validation
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password are required' });
+        if (!email || !password || !name) {
+            throw new BadRequestError('Email, password, and name are required');
+        }
+        const result = await authService.registerUser(email, password, name);
+        
+        // Handle cookie here if you want auto-login on signup
+        if (result.refreshToken) {
+            res.cookie('jwt', result.refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'None',
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
         }
 
-        // 2. Check for existing user (Prevent duplicates)
-        const existingUser = await UserModel.findByEmail(email);
-        if (existingUser) {
-            return res.status(409).json({ message: 'Email is already in use' });
-        }
-
-        // 3. Create the User (Uses our Model logic)
-        const newUser = await UserModel.createLocalUser({ 
-            email, 
-            password, 
-            name 
-        });
-
-        // 4. Issue Token immediately so they don't have to login again
-        const token = generateToken(newUser);
-
-        // 5. Respond
         res.status(201).json({
-            message: 'Signup successful',
-            token: token,
-            user: {
-                id: newUser.id,
-                email: newUser.email,
-                name: newUser.display_name
-            }
+            accessToken: result.accessToken,
+            user: result.user
         });
-
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 };
 
-// --- ACTION: Login ---
-const login = (req, res, next) => {
-    // We use a custom callback here to have full control over the JSON response
-    // instead of Passport's default behavior.
-    passport.authenticate('local', { session: false }, (err, user, info) => {
-        // 1. System Error (DB down)
-        if (err) { 
-            return next(err); 
+const refreshToken = async (req, res, next) => {
+    try {
+        const cookies = req.cookies;
+        
+        // 1. Check if cookie exists
+        if (!cookies?.jwt) {
+            throw new UnauthorizedError('Unauthorized');
         }
 
-        // 2. Auth Failed (Wrong password / User not found)
-        // 'info' contains the message we set in passport.js ('Invalid login details')
-        if (!user) {
-            return res.status(401).json({ message: info ? info.message : 'Login failed' });
-        }
+        const refreshToken = cookies.jwt;
 
-        // 3. Auth Success: Issue Token
-        const token = generateToken(user);
+        // 2. Delegate to Service
+        // We expect the service to verify the token and return a new Access Token
+        const result = await authService.refreshAccessToken(refreshToken);
 
-        return res.json({
-            message: 'Login successful',
-            token: token,
-            user: {
-                id: user.id,
-                email: user.email,
-                name: user.display_name
-            }
+        // 3. Respond with new Access Token
+        res.json({ accessToken: result.accessToken });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+const logoutUser = async (req, res, next) => {
+    try {
+        const cookies = req.cookies;
+        if (!cookies?.jwt) return res.sendStatus(204); // No content, already logged out
+
+        const refreshToken = cookies.jwt;
+
+        // 1. Service: Remove token from DB
+        await authService.logoutUser(refreshToken);
+
+        // 2. Clear the Cookie
+        res.clearCookie('jwt', { 
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'None'
         });
-    })(req, res, next); // <--- Note: We invoke the middleware function immediately
+
+        res.status(200).json({ message: 'Cookie cleared' });
+    } catch (error) {
+        next(error);
+    }
 };
 
 module.exports = {
-    signup,
-    login
+    loginUser,
+    registerUser,
+    refreshToken,
+    logoutUser
 };

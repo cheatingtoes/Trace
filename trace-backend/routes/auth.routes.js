@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const AuthController = require('../controllers/auth.controller');
 
-// POST /auth/signup
-router.post('/signup', AuthController.signup);
+router.post('/signup', AuthController.registerUser);
 
-// POST /auth/login
-router.post('/login', AuthController.login);
+router.post('/login', AuthController.loginUser);
+
+router.post('/refresh', AuthController.refreshToken);
+
+router.post('/logout', AuthController.logoutUser);
 
 module.exports = router;

@@ -24,7 +24,7 @@ const findByProvider = (provider, providerId) => {
         .first();
 }
 
-const createLocalUser = async ({ email, password, name }) => {
+const createLocalUser = async (email, password, name) => {
     const id = uuidv7();
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -71,12 +71,36 @@ const linkProvider = ({ userId, provider, providerId }) => {
     });
 }
 
-// --- SECURITY ---
-
 const verifyPassword = async (user, plainPassword) => {
     if (!user.password_hash) return false;
     return bcrypt.compare(plainPassword, user.password_hash);
 }
+
+const addRefreshToken = (userId, token) => {
+    return db(TABLE_NAME)
+        .where({ id: userId })
+        .update({
+            // Postgres: append to array
+            refresh_tokens: db.raw('array_append(refresh_tokens, ?)', [token])
+        });
+};
+
+const removeRefreshToken = (userId, token) => {
+    return db(TABLE_NAME)
+        .where({ id: userId })
+        .update({
+            // Postgres: remove element from array
+            refresh_tokens: db.raw('array_remove(refresh_tokens, ?)', [token])
+        });
+};
+
+const clearRefreshTokens = (userId) => {
+    return db(TABLE_NAME)
+        .where({ id: userId })
+        .update({
+            refresh_tokens: '{}' // Reset to empty Postgres array
+        });
+};
 
 module.exports = {
     getAllUsers,
@@ -86,5 +110,8 @@ module.exports = {
     createLocalUser,
     createOAuthUser,
     linkProvider,
-    verifyPassword
+    verifyPassword,
+    addRefreshToken,
+    removeRefreshToken,
+    clearRefreshTokens
 };

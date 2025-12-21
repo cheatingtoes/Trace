@@ -1,7 +1,4 @@
 const { uuidv7 } = require('uuidv7');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const config = require('../config');
 const UserModel = require('../models/users.model');
 const { UnauthorizedError, InternalServerError } = require('../errors/customErrors');
 
@@ -15,44 +12,32 @@ const getUserById = async (id) => {
 };
 
 const createUser = async (userData) => {
-    const id = uuidv7();
-    return UserModel.createUser({ id, ...userData });
+    return UserModel.createLocalUser(userData);
 };
 
-const login = async ({ email, password}) => {
-    const user = await UserModel.findByEmail(email);
-    if (!user) {
-        throw new UnauthorizedError('Invalid email or password.');
-    }
+const findByEmail = async (email) => {
+    return UserModel.findByEmail(email);
+};
 
-    let isValidpassword = false;
-    try {
-        isValidpassword = await bcrypt.compare(password, user.password_hash);
-    } catch (err) {
-        throw new InternalServerError('Something went wrong during authentication.');
-    }
+const addRefreshToken = async (userId, refreshToken) => {
+    return UserModel.addRefreshToken(userId, refreshToken);
+};
 
-    if (!isValidpassword) {
-        throw new UnauthorizedError('Invalid email or password.');
-    }
+const createLocalUser = async (email, password, name) => {
+    return UserModel.createLocalUser({ email, password, name });
+};
 
-    const token = jwt.sign(
-        { userId: user.id, email: user.email },
-        config.auth.jwtSecret,
-        { expiresIn: '7d' } 
-    );
+const removeRefreshToken = async (userId, refreshToken) => {
+    return UserModel.removeRefreshToken(userId, refreshToken);
+};
 
-    return {
-        userId: user.id,
-        email: user.email,
-        token: token
-    };
-
-}
 
 module.exports = {
   getAllUsers,
   getUserById,
   createUser,
-  login,
+  findByEmail,
+  addRefreshToken,
+  createLocalUser,
+  removeRefreshToken,
 };

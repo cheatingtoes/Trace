@@ -12,6 +12,7 @@ exports.up = function(knex) {
     table.string('display_name');
     table.string('avatar_url');
     table.string('password_hash');
+    table.specificType('refresh_tokens', 'TEXT[]').defaultTo('{}');
 
     table.index('email');
   });
