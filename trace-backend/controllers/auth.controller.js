@@ -25,7 +25,7 @@ const loginUser = (req, res, next) => {
             const { accessToken, refreshToken } = authService.generateTokens(user);
 
             // Save Refresh Token (DB Call)
-            await usersService.setUserRefreshToken(user.id, refreshToken);
+            await usersService.addRefreshToken(user.id, refreshToken);
 
             // Set Cookie
             res.cookie('jwt', refreshToken, {

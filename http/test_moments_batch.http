@@ -2,16 +2,13 @@
 @fileName = 37F00BAD-2BC0-4C35-BEF5-269EEE0ACC38_1_105_c.jpeg
 @filePath = ./trace-backend/uploads/{{fileName}}
 @activityId = 019b3947-781b-7329-860e-f37673f3ed22
+@randomFileSize = {{$randomInt 100000 5000000}}
 
 ###
 GET {{baseUrl}}/activities
 
 ###
 # @name getSignedUrl
-# Before running this, set the FILE_SIZE environment variable in your terminal:
-# export FILE_SIZE=$(stat -f%z {{filePath}})
-# export FILE_SIZE=$(($(stat -f%z ./uploads/37F00BAD-2BC0-4C35-BEF5-269EEE0ACC38_1_105_c.jpeg) + 1))
-# ./uploads/37F00BAD-2BC0-4C35-BEF5-269EEE0ACC38_1_105_c.jpeg
 POST {{baseUrl}}/moments/sign-batch
 Content-Type: application/json
 
@@ -22,7 +19,7 @@ Content-Type: application/json
       "tempId": "temp-id-1",
       "fileName": "{{fileName}}",
       "fileType": "image/jpeg",
-      "fileSize": 229060
+      "fileSize": {{randomFileSize}}
     }
   ]
 }

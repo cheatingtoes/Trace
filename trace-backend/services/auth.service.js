@@ -31,11 +31,7 @@ const registerUser = async (email, password, name) => {
             throw new ConflictError('Email is already in use');
         }
 
-        const newUser = await UserService.createLocalUser({ 
-            email, 
-            password, 
-            name 
-        });
+        const newUser = await UserService.createLocalUser( email, password, name );
 
         const { accessToken, refreshToken } = generateTokens(newUser);
 

@@ -29,7 +29,7 @@ const signBatch = async (userId, activityId, files) => {
             try {
                 const { fileName, fileType, fileSize, tempId } = file;
 
-                if (!fileName || !fileType || !fileSize) {
+                if (!fileName || !fileType || !fileSize || !tempId) {
                     return {
                         tempId,
                         status: 'error',
@@ -131,7 +131,7 @@ const confirmBatch = async (userId, activityId, uploads) => {
         // 2. The "Bulk Commit"
         // Update ONLY if the photo belongs to this activity (Security Check)
         // AND currently has status 'pending' (Idempotency Check)
-        const activeMoments = await MomentModel.confirmBatchUploads(userId, activityId, momentIds);
+        const activeMoments = await MomentModel.confirmBatchUploads(activityId, momentIds);
 
         // 3. (Optional) Save EXIF/GPS Data
         // If your frontend sent GPS data, you iterate and update. 

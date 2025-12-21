@@ -1,4 +1,6 @@
 const MomentService = require('../services/moments.service');
+const { BadRequestError, InternalServerError } = require('../errors/customErrors');
+
 
 const getAllMoments = async (req, res, next) => {
     try {
@@ -29,17 +31,20 @@ const createMoment = async (req, res, next) => {
 }
 
 const signBatch = async (req, res, next) => {
-    const { userId } = req.user;
+    const { id: userId } = req.user;
     const { activityId, files } = req.body; // Expecting array of { tempId, fileName, fileType, fileSize, lastModified }
 
+    if (!userId) {
+        throw new InternalServerError('userId not found in request')
+    }
     if (!activityId) {
-        return res.status(400).json({ error: 'No activityId provided' });
+        throw new BadRequestError('No activityId provided')
     }
     if (!files || !Array.isArray(files) || files.length === 0) {
-        return res.status(400).json({ error: 'No files provided' });
+        throw new BadRequestError('No files provided')
     }
     if (files.length > 50) {
-        return res.status(400).json({ error: 'Too many files. Maximum of 50 files allowed' });
+        throw new BadRequestError('Too many files')
     }
 
     try {
@@ -51,12 +56,21 @@ const signBatch = async (req, res, next) => {
 }
 
 const confirmBatch = async (req, res, next) => {
-    const { userId } = req.user;
+    const { id: userId } = req.user;
     const { activityId, uploads } = req.body;
     // uploads: [{ momentId, meta: { lat, lon, alt, capturedAt }}, ...]
 
+    if (!userId) {
+        throw new InternalServerError('userId not found in request')
+    }
     if (!uploads || !Array.isArray(uploads) || uploads.length === 0) {
-        return res.status(400).json({ error: 'No uploads provided' });
+        throw new BadRequestError('No uploads provided')
+    }
+    if (uploads.length > 50) {
+        throw new BadRequestError('Too many uploads')
+    }
+    if (!activityId) {
+        throw new BadRequestError('No activityId provided')
     }
 
     try {

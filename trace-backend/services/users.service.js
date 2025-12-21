@@ -24,7 +24,7 @@ const addRefreshToken = async (userId, refreshToken) => {
 };
 
 const createLocalUser = async (email, password, name) => {
-    return UserModel.createLocalUser({ email, password, name });
+    return UserModel.createLocalUser(email, password, name);
 };
 
 const removeRefreshToken = async (userId, refreshToken) => {
