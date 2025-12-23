@@ -3,6 +3,7 @@
     flex-direction: row;
     height: 100vh;
     width: 100vw;
+    pointer-events: none;
 }
 
 .mainContent {
@@ -27,35 +28,9 @@
     margin-bottom: 20px;
     backdrop-filter: blur(5px);
     flex-shrink: 0; /* Prevent header from shrinking */
+    pointer-events: auto;
 }
 
 .header h1 {
     margin: 0;
-}
-
-.controls {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-    flex-shrink: 0; /* Prevent controls from shrinking */
-}
-
-.controls input[type="file"] {
-    margin-right: 10px;
-}
-
-.message {
-    margin-top: 10px;
-    font-weight: bold;
-}
-
-.photoUpload {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 20px;
-    border-radius: 8px;
-    backdrop-filter: blur(5px);
-    overflow-y: auto;
-    flex-grow: 1; /* Allow photo upload area to grow */
 }
