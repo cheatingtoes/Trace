@@ -61,7 +61,7 @@ const refreshAccessToken = async (refreshToken) => {
     }
 
     const user = await UserService.getUserById(payload.userId);
-    if (!user || user.refresh_tokens.includes(refreshToken)) {
+    if (!user || !user.refresh_tokens.includes(refreshToken)) {
         throw new UnauthorizedError('Invalid Refresh Token');
     }
 

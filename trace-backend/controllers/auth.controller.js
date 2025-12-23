@@ -4,6 +4,15 @@ const usersService = require('../services/users.service'); // For saving refresh
 const { BadRequestError, UnauthorizedError } = require('../errors/customErrors');
 const config = require('../config');
 
+// Centalized cookie options based on environment
+const isProduction = config.app.env === 'production';
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'None' : 'Lax',
+};
+
+
 const loginUser = (req, res, next) => {
     // 1. Pull the Trigger
     passport.authenticate('local', { session: false }, async (err, user, info) => {
@@ -29,10 +38,8 @@ const loginUser = (req, res, next) => {
 
             // Set Cookie
             res.cookie('jwt', refreshToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'None',
-                maxAge: 24 * 60 * 60 * 1000
+                ...cookieOptions,
+                maxAge: config.jwt.refreshMaxAge
             });
 
             // Send Response
@@ -62,10 +69,8 @@ const registerUser = async (req, res, next) => {
         // Handle cookie here if you want auto-login on signup
         if (result.refreshToken) {
             res.cookie('jwt', result.refreshToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'None',
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+                ...cookieOptions,
+                maxAge: config.jwt.refreshMaxAge
             });
         }
 
@@ -112,11 +117,7 @@ const logoutUser = async (req, res, next) => {
         await authService.logoutUser(refreshToken);
 
         // 2. Clear the Cookie
-        res.clearCookie('jwt', { 
-            httpOnly: true, 
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'None'
-        });
+        res.clearCookie('jwt', cookieOptions);
 
         res.status(200).json({ message: 'Cookie cleared' });
     } catch (error) {
@@ -139,10 +140,8 @@ const oauthCallback = async (req, res, next) => {
 
         // 3. Set the Refresh Cookie (Secure, HTTP-Only)
         res.cookie('jwt', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'None',
-            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            ...cookieOptions,
+            maxAge: config.jwt.refreshMaxAge
         });
 
         // 4. Redirect to Frontend

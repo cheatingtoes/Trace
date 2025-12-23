@@ -34,7 +34,7 @@ const processQueue = (error, token = null) => {
 api.interceptors.request.use(
     (config) => {
         if (_accessToken) {
-            config.headers['Authorization'] = `Bearer ${token}`;
+            config.headers['Authorization'] = `Bearer ${_accessToken}`;
         }
         return config;
     },

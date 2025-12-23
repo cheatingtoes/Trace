@@ -8,11 +8,16 @@ const db = require('./config/db');
 const { corsOptions } = require('./config/cors');
 
 const app = express();
-app.use(cookieParser());
 const port = config.app.port;
 
 // --- Middleware ---
+// 1. CORS: Must be first to handle preflight requests.
 app.use(cors(corsOptions)); // Allow cross-origin requests
+
+// 2. Cookie Parser: To read cookies.
+app.use(cookieParser());
+
+// 3. JSON Body Parser: To read JSON bodies.
 app.use(express.json()); // Parse JSON bodies
 
 // --- API Routes ---

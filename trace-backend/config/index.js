@@ -44,6 +44,7 @@ const config = {
         refreshSecret: process.env.JWT_REFRESH_SECRET,
         accessExpiration: '15m',
         refreshExpiration: '7d',
+        refreshMaxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     },
     oauth: {
         google: {
