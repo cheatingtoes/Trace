@@ -26,8 +26,8 @@ const getTrackById = async (req, res, next) => {
 
 const createTrack = async (req, res, next) => {
     try {
-        const { name, description, activity_id } = req.body;
-        const newTrack = await TracksService.createTrack({ name, description, activity_id });
+        const { name, description, activityId } = req.body;
+        const newTrack = await TracksService.createTrack({ name, description, activityId });
         res.status(201).json(newTrack);
     } catch (error) {
         next(error);

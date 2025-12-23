@@ -17,19 +17,19 @@ exports.seed = async function(knex) {
     await knex('activities').insert([
         {
             id: uuidv7(),
-            user_id: userOne.id,
+            userId: userOne.id,
             name: 'PCT Trail',
             description: 'Yosemite National Park',
         },
         {
             id: uuidv7(),
-            user_id: userOne.id,
+            userId: userOne.id,
             name: 'Appalachian Trail',
             description: '2024 thru hike! First time, well second time camping out.',
         },
         {
             id: uuidv7(),
-            user_id: userTwo.id,
+            userId: userTwo.id,
             name: 'High Sierras',
             description: 'Exploring the Sierra Nevada mountains',
         }

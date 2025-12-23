@@ -48,8 +48,8 @@ async function processImage(key, momentId) {
         }));
 
         const updateData = {
-            thumbnail_url: `${config.s3.endpoint}/${BUCKET_NAME}/${thumbKey}`,
-            occured_at: exifData?.DateTimeOriginal || new Date()
+            thumbnailUrl: `${config.s3.endpoint}/${BUCKET_NAME}/${thumbKey}`,
+            occuredAt: exifData?.DateTimeOriginal || new Date()
         };
 
         const lat = exifData?.latitude;

@@ -13,23 +13,23 @@ const createMoment = (moment) => {
     return db(TABLE_NAME).insert(moment).returning('*');
 }
 
-const findDuplicateMoment = ({ activity_id, name, file_size_bytes }) => {
-    return db(TABLE_NAME).where({ activity_id, name, file_size_bytes }).returning(['id', 's3_key']);
+const findDuplicateMoment = ({ activityId, name, fileSizeBytes }) => {
+    return db(TABLE_NAME).where({ activityId, name, fileSizeBytes }).returning(['id', 's3Key']);
 }
 
 const confirmBatchUploads = (activityId, momentIds) => {
     return db(TABLE_NAME).whereIn('id', momentIds)
-        .andWhere('activity_id', activityId)
+        .andWhere('activityId', activityId)
         .andWhere('status', 'pending')
         .update({ status: 'active' })
-        .returning(['id', 'type', 's3_key']);
+        .returning(['id', 'type', 's3Key']);
 }
 
 const updateMetadata = (momentId, meta) => {
     return db(TABLE_NAME).where('id', momentId).update({
         // Update the PostGIS geometry column with the GPS data
         geom: db.raw('ST_SetSRID(ST_MakePoint(?, ?, ?), 4326)', [meta.lon, meta.lat, meta.alt]),
-        occured_at: meta.capturedAt // Correct the timestamp to the actual photo time
+        occuredAt: meta.capturedAt // Correct the timestamp to the actual photo time
     });
 }
 

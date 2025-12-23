@@ -41,7 +41,7 @@ const registerUser = async (email, password, name) => {
             user: {
                 id: newUser.id,
                 email: newUser.email,
-                name: newUser.display_name
+                name: newUser.displayName
             },
             accessToken,
             refreshToken
@@ -64,7 +64,7 @@ const refreshAccessToken = async (refreshToken) => {
     }
 
     const user = await UserService.getUserById(payload.userId);
-    if (!user || !user.refresh_tokens.includes(refreshToken)) {
+    if (!user || !user.refreshTokens.includes(refreshToken)) {
         throw new UnauthorizedError('Invalid Refresh Token.');
     }
 

@@ -24,7 +24,7 @@ const localLogin = new LocalStrategy(localOptions, async (email, password, done)
             return done(null, false, { message: 'Invalid login details' });
         }
 
-        const isMatch = await UserService.verifyPassword(user.password_hash, password);
+        const isMatch = await UserService.verifyPassword(user.passwordHash, password);
         if (!isMatch) {
             return done(null, false, { message: 'Invalid login details' });
         }

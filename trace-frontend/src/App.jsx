@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import MainDisplay from './pages/MainDisplay';
 import Register from './pages/Register';
 import MapLayout from './layouts/MapLayout';
+import ActivityDetail from './pages/ActivityDetail';
 
 const ProtectedRoute = () => {
     const { isAuthenticated } = useAuth();
@@ -25,6 +26,7 @@ const AppRoutes = () => (
             </Route>
             <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<MainDisplay />} />
+                <Route path="/activity/:id" element={<ActivityDetail />} />
             </Route>
         </Route>
     </Routes>

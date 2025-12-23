@@ -43,14 +43,14 @@ async function uploadTrackFile({ file, activityId, name, description }) {
 
         return await db.transaction(async (trx) => {
             const [track] = await trx('tracks').insert({
-                activity_id: activityId,
+                activityId,
                 name: fileName,
                 description: description || null,
             }).returning('*');
 
             const [polyline] = await trx('polylines').insert({
-                track_id: track.id,
-                source_type: 'gpx',
+                trackId: track.id,
+                sourceType: 'gpx',
                 geom: db.raw(
                     'ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', 
                     [JSON.stringify(geometry)]
@@ -65,8 +65,8 @@ async function uploadTrackFile({ file, activityId, name, description }) {
                 contentType: 'application/gpx+xml',
             });
 
-            await trx('polylines').where({ id: polyline.id }).update({ source_url: sourceUrl });
-            const [updatedTrack] = await trx('tracks').where({ id: track.id }).update({ active_polyline_id: polyline.id }).returning('*');
+            await trx('polylines').where({ id: polyline.id }).update({ sourceUrl: sourceUrl });
+            const [updatedTrack] = await trx('tracks').where({ id: track.id }).update({ activePolylineId: polyline.id }).returning('*');
 
             return updatedTrack;
         });

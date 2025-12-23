@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import styles from './Sidebar.module.css';
+import ActivityList from '../features/activities/components/ActivityList';
+import CreateActivity from '../features/activities/components/CreateActivity';
 
-const Sidebar = ({ children, defaultWidth = 25, side = 'left' }) => {
+const Sidebar = ({ defaultWidth = 25, side = 'left' }) => {
   const [width, setWidth] = useState(defaultWidth);
   const sidebarRef = useRef(null);
   const isResizing = useRef(false);
@@ -53,7 +55,8 @@ const Sidebar = ({ children, defaultWidth = 25, side = 'left' }) => {
         onMouseDown={handleMouseDown}
       />
       <div className={styles.content}>
-        {children}
+        <ActivityList />
+        <CreateActivity />
       </div>
     </div>
   );

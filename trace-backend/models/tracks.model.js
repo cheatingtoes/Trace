@@ -15,7 +15,7 @@ const createTrack = (trackData, trx) => {
 }
 
 const getTracksByActivityId = (activityId) => {
-    return db(TABLE_NAME).where({ activity_id: activityId }).select('*');
+    return db(TABLE_NAME).where({ activityId: activityId }).select('*');
 }
 
 module.exports = {

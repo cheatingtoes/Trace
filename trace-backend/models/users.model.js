@@ -15,19 +15,19 @@ const findByEmail = (email) => {
 
 const findByProvider = (provider, providerId) => {
     return db(TABLE_NAME)
-        .join('federated_identities', 'users.id', 'federated_identities.user_id')
+        .join('federated_identities', 'users.id', 'federated_identities.userId')
         .where('federated_identities.provider', provider)
-        .andWhere('federated_identities.provider_id', providerId)
+        .andWhere('federated_identities.providerId', providerId)
         .select('users.*')
         .first();
 }
 
-const createLocalUser = async (id, email, password, name) => {
+const createLocalUser = async (id, email, passwordHash, name) => {
     const [user] = await db(TABLE_NAME).insert({
         id,
         email,
-        display_name: name,
-        password_hash: password
+        displayName: name,
+        passwordHash
     }).returning('*');
     return user;
 }
@@ -38,16 +38,16 @@ const createOAuthUser = async ({ email, name, avatar, provider, providerId }) =>
         const [user] = await trx('users')
             .insert({
                 email,
-                display_name: name,
-                avatar_url: avatar
+                displayName: name,
+                avatarUrl: avatar
             })
             .returning('*');
 
         // Step B: Create the Key
         await trx('federated_identities').insert({
-            user_id: user.id,
+            userId: user.id,
             provider,
-            provider_id: providerId
+            providerId: providerId
         });
 
         return user;
@@ -60,9 +60,9 @@ const createOAuthUser = async ({ email, name, avatar, provider, providerId }) =>
  */
 const linkProvider = ({ userId, provider, providerId }) => {
     return db('federated_identities').insert({
-        user_id: userId,
+        userId: userId,
         provider,
-        provider_id: providerId
+        providerId: providerId
     });
 }
 
@@ -71,7 +71,7 @@ const addRefreshToken = (userId, token) => {
         .where({ id: userId })
         .update({
             // Postgres: append to array
-            refresh_tokens: db.raw('array_append(refresh_tokens, ?)', [token])
+            refreshTokens: db.raw('array_append(??, ?)', ['refreshTokens', token])
         });
 };
 
@@ -80,7 +80,7 @@ const removeRefreshToken = (userId, token) => {
         .where({ id: userId })
         .update({
             // Postgres: remove element from array
-            refresh_tokens: db.raw('array_remove(refresh_tokens, ?)', [token])
+            refreshTokens: db.raw('array_remove(??, ?)', ['refreshTokens', token])
         });
 };
 
@@ -88,7 +88,7 @@ const clearRefreshTokens = (userId) => {
     return db(TABLE_NAME)
         .where({ id: userId })
         .update({
-            refresh_tokens: '{}' // Reset to empty Postgres array
+            refreshTokens: '{}' // Reset to empty Postgres array
         });
 };
 

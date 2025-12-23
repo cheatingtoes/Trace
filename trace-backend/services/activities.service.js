@@ -1,18 +1,19 @@
 const { uuidv7 } = require('uuidv7');
 const ActivityModel = require('../models/activities.model');
 const TrackModel = require('../models/tracks.model');
+const { cleanEmptyStrings } = require('../utils/helpers');
 
-const getAllActivities = async () => {
-    return ActivityModel.getAllActivities();
+const getActivitiesByUserId = async (userId) => {
+    return ActivityModel.getActivitiesByUserId(userId);
 };
 
 const getActivityById = async (id) => {
     return ActivityModel.getActivityById(id);
 };
 
-const createActivity = async (activityData) => {
-    const id = uuidv7();
-    return ActivityModel.createActivity({ id, ...activityData });
+const createActivity = async (activityData, userId) => {
+    const activityToCreate = cleanEmptyStrings({ ...activityData, userId, id: uuidv7() });
+    return ActivityModel.createActivity(activityToCreate);
 };
 
 const getActivityRoutes = async (id) => {
@@ -20,7 +21,7 @@ const getActivityRoutes = async (id) => {
 };
 
 module.exports = {
-    getAllActivities,
+    getActivitiesByUserId,
     getActivityById,
     createActivity,
     getActivityRoutes,

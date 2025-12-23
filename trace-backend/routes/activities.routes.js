@@ -5,8 +5,8 @@ const authenticate = require('../middleware/auth');
 
 router.use(authenticate);
 
-// GET /api/v1/activities - Get all activities
-router.get('/', ActivityController.getAllActivities);
+// GET /api/v1/activities - Get all activities for a user
+router.get('/', ActivityController.getActivities);
 
 // GET /api/v1/activities/:id - Get a single activity by ID
 router.get('/:id', ActivityController.getActivityById);

@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+const { postProcessResponse, wrapIdentifier } = require('./utils/db-converters');
 /**
  * @type { Object.<string, import('knex').Knex.Config> }
  */
@@ -14,11 +14,20 @@ module.exports = {
       database: process.env.DB_NAME,
       port: process.env.DB_PORT || 5432,
     },
+    postProcessResponse,
+    wrapIdentifier,
     migrations: {
       directory: './migrations'
     },
     seeds: {
       directory: './seeds'
-    }
+    },
+    pool: {
+      afterCreate: function (conn, done) {
+        conn.query('CREATE EXTENSION IF NOT EXISTS postgis;', function (err) {
+          done(err, conn);
+        });
+      }
+    },
   }
 };

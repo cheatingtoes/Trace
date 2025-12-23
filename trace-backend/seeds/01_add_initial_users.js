@@ -10,14 +10,14 @@ exports.seed = async function(knex) {
         {
             id: uuidv7(),
             email: 'etotheric@example.com',
-            display_name: 'Cheeto',
-            password_hash: 'placeholder-hash-1',
+            displayName: 'Cheeto',
+            passwordHash: 'placeholder-hash-1',
         },
         {
             id: uuidv7(),
             email: 'libby@example.com',
-            display_name: 'Cherry',
-            password_hash: 'placeholder-hash-2',
+            displayName: 'Cherry',
+            passwordHash: 'placeholder-hash-2',
         }
   ]);
 };

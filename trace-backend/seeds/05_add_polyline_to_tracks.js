@@ -13,10 +13,10 @@ exports.seed = async function(knex) {
       throw new Error('Required tracks not found. Ensure that tracks seed has been run.');
     }
 
-    const ATPolyline = await knex('polylines').where({ track_id: ATTrack.id }).first();
-    const PCTPolyline = await knex('polylines').where({ track_id: PCTTrack.id }).first();
-    const OCTPolyline = await knex('polylines').where({ track_id: OCTTrack.id }).first();
-    const sierrasPolyline = await knex('polylines').where({ track_id: sierrasTrack.id }).first();
+    const ATPolyline = await knex('polylines').where({ trackId: ATTrack.id }).first();
+    const PCTPolyline = await knex('polylines').where({ trackId: PCTTrack.id }).first();
+    const OCTPolyline = await knex('polylines').where({ trackId: OCTTrack.id }).first();
+    const sierrasPolyline = await knex('polylines').where({ trackId: sierrasTrack.id }).first();
 
     if (!ATPolyline || !PCTPolyline || !OCTPolyline || !sierrasPolyline) {
       throw new Error('Required polylines not found. Ensure that polylines seed has been run.');
@@ -25,17 +25,17 @@ exports.seed = async function(knex) {
     // Update tracks to link to one of their polylines
     await knex('tracks')
       .where({ id: ATTrack.id })
-      .update({ active_polyline_id: ATPolyline.id });
+      .update({ activePolylineId: ATPolyline.id });
 
     await knex('tracks')
       .where({ id: PCTTrack.id })
-      .update({ active_polyline_id: PCTPolyline.id });
+      .update({ activePolylineId: PCTPolyline.id });
 
     await knex('tracks')
       .where({ id: OCTTrack.id })
-      .update({ active_polyline_id: OCTPolyline.id });
+      .update({ activePolylineId: OCTPolyline.id });
 
     await knex('tracks')
       .where({ id: sierrasTrack.id })
-      .update({ active_polyline_id: sierrasPolyline.id });
+      .update({ activePolylineId: sierrasPolyline.id });
 };

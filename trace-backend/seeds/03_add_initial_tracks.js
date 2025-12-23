@@ -21,25 +21,25 @@ exports.seed = async function(knex) {
     // for user 1 PCT
     {
         id: uuidv7(),
-        activity_id: activityOne.id,
+        activityId: activityOne.id,
         name: 'PCT Yosemite National Park',
         description: 'trail - too does this need a description? maybe user facing but i think the name is enuf.',
     },
     {
         id: uuidv7(),
-        activity_id: activityOne.id,
+        activityId: activityOne.id,
         name: 'OCT Samuel H. Boardman Corridor',
     },
     // for user 1 AT
     {
         id: uuidv7(),
-        activity_id: activityOne.id,
+        activityId: activityOne.id,
         name: 'Appalachian Trail Virginia near McAfee Knob',
     },
     // for user 2 Sierras
     {
         id: uuidv7(),
-        activity_id: activityThree.id,
+        activityId: activityThree.id,
         name: 'Sierras',
         description: 'hiking the high sierras',
     },

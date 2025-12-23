@@ -29,13 +29,13 @@ const UserMenu = () => {
     return (
         <div className={styles.userMenu} ref={menuRef}>
             <button onClick={toggleMenu} className={styles.userIcon}>
-                {user.display_name ? user.display_name.charAt(0).toUpperCase() : 'U'}
+                {user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'}
             </button>
 
             {isOpen && (
                 <div className={styles.dropdown}>
                     <div className={styles.userInfo}>
-                        <p><strong>{user.display_name}</strong></p>
+                        <p><strong>{user.displayName}</strong></p>
                         <p>{user.email}</p>
                     </div>
                     <ul className={styles.menuItems}>

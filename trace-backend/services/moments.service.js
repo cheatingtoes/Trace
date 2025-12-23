@@ -56,9 +56,9 @@ const signBatch = async (userId, activityId, files) => {
                 }
 
                 const [existingMoment] = await MomentModel.findDuplicateMoment({
-                    activity_id: activityId,
+                    activityId,
                     name: fileName,
-                    file_size_bytes: fileSize
+                    fileSizeBytes: fileSize
                 });
 
                 if (existingMoment) {
@@ -66,9 +66,9 @@ const signBatch = async (userId, activityId, files) => {
                         tempId,
                         // not a real status in DB
                         status: 'duplicate',
-                        activityId: activityId,
+                        activityId,
                         signedUrl: null,
-                        key: existingMoment.s3_key
+                        key: existingMoment.s3Key
                     };
                 }
                 const id = uuidv7();
@@ -78,12 +78,12 @@ const signBatch = async (userId, activityId, files) => {
                 const { signedUrl, key } = await s3Service.getPresignedUploadUrl(s3Key, fileType);
                 const [newMoment] = await MomentModel.createMoment({
                     id,
-                    activity_id: activityId,
+                    activityId,
                     status: 'pending',
                     name: fileName,
-                    file_size_bytes: fileSize,
+                    fileSizeBytes: fileSize,
                     type,
-                    s3_key: key
+                    s3Key: key
                 });
 
                 return {
@@ -121,11 +121,11 @@ const confirmBatch = async (userId, activityId, uploads) => {
 
     try {
         const activeMoments = await MomentModel.confirmBatchUploads(activityId, momentIds);
-        activeMoments.forEach(({ id, type, s3_key }) => {
+        activeMoments.forEach(({ id, type, s3Key }) => {
             if (type === 'image') {
-                imageQueue.add('process-image', { momentId: id, s3_key });
+                imageQueue.add('process-image', { momentId: id, s3Key });
             } else if (type === 'video') {
-                videoQueue.add('process-video', { momentId: id, s3_key });
+                videoQueue.add('process-video', { momentId: id, s3Key });
             }
         });
 

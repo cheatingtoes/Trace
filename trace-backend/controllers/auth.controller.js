@@ -15,6 +15,8 @@ const loginUser = (req, res, next) => {
     passport.authenticate('local', { session: false }, async (err, user, info) => {
         if (err) return next(err);
 
+        console.log('@@@@user', user)
+
         if (!user) {
             return res.status(401).json({ 
                 message: info ? info.message : 'Login failed' 
@@ -32,7 +34,7 @@ const loginUser = (req, res, next) => {
             res.json({
                 message: 'Login successful',
                 accessToken,
-                user: { id: user.id, email: user.email, name: user.display_name }
+                user: { id: user.id, email: user.email, name: user.displayName }
             });
         } catch (error) {
             next(error);

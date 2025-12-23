@@ -1,8 +1,8 @@
 const ActivityService = require('../services/activities.service');
 
-const getAllActivities = async (req, res, next) => {
+const getActivities = async (req, res, next) => {
     try {
-        const activities = await ActivityService.getAllActivities();
+        const activities = await ActivityService.getActivitiesByUserId(req.user.id);
         res.status(200).json(activities);
     } catch (error) {
         next(error);
@@ -25,7 +25,7 @@ const getActivityById = async (req, res, next) => {
 
 const createActivity = async (req, res, next) => {
     try {
-        const newActivity = await ActivityService.createActivity(req.body);
+        const newActivity = await ActivityService.createActivity(req.body, req.user.id);
         res.status(201).json(newActivity);
     } catch (error) {
         next(error);
@@ -43,7 +43,7 @@ const getActivityRoutes = async (req, res, next) => {
 }
 
 module.exports = {
-    getAllActivities,
+    getActivities,
     getActivityById,
     createActivity,
     getActivityRoutes,

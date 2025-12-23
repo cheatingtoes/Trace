@@ -36,7 +36,7 @@ const createLocalUser = async (email, password, name) => {
     const id = uuidv7();
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    return UserModel.createLocalUser(id, email, password, name);
+    return UserModel.createLocalUser(id, email, hashedPassword, name);
 };
 
 const removeRefreshToken = async (userId, refreshToken) => {
