@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import PhotoUpload from '../components/PhotoUpload';
 import LogoutButton from '../features/auth/components/LogoutButton';
+import Sidebar from '../components/Sidebar'; // Import the Sidebar
 import styles from './MainDisplay.module.css'; 
 
 const MainDisplay = () => {
@@ -49,22 +50,28 @@ const MainDisplay = () => {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <h1>TRACE</h1>
-                <LogoutButton />
-            </div>
-            
-            <div className={styles.controls}>
-                <p>Upload and map your trail photos.</p>
-                <input type="file" accept="image/*" onChange={handleFileChange} />
-                <button onClick={handleUpload} disabled={!selectedFile}>
-                    Upload & Map Location
-                </button>
-                {message && <p className={styles.message}>{message}</p>}
-            </div>
+            <Sidebar defaultWidth={25} side="left">
+                <h2>Edit Content</h2>
+                <p>This is the sidebar where you can edit map content.</p>
+            </Sidebar>
+            <div className={styles.mainContent}>
+                <div className={styles.header}>
+                    <h1>TRACE</h1>
+                    <LogoutButton />
+                </div>
+                
+                <div className={styles.controls}>
+                    <p>Upload and map your trail photos.</p>
+                    <input type="file" accept="image/*" onChange={handleFileChange} />
+                    <button onClick={handleUpload} disabled={!selectedFile}>
+                        Upload & Map Location
+                    </button>
+                    {message && <p className={styles.message}>{message}</p>}
+                </div>
 
-            <div className={styles.photoUpload}>
-              <PhotoUpload activityId="1" />
+                <div className={styles.photoUpload}>
+                  <PhotoUpload activityId="1" />
+                </div>
             </div>
         </div>
     );
