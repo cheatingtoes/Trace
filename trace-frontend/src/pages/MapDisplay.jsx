@@ -14,7 +14,7 @@ const MapDisplay = ({ latitude, longitude, date }) => {
     const [geometryData, setGeometryData] = useState(null);
 
     useEffect(() => {
-        fetch('http://localhost:3001/api/v1/polylines/85') // Example polyline ID
+        fetch(`${import.meta.env.VITE_BASE_API_URL}/polylines/85`) // Example polyline ID
             .then(response => response.json())
             .then(data => {
                 setGeometryData(data.geometry);

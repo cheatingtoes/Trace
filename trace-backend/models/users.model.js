@@ -1,6 +1,4 @@
 const db = require('../config/db');
-const bcrypt = require('bcryptjs');
-const { uuidv7 } = require('uuidv7');
 const TABLE_NAME = 'users';
 
 const getAllUsers = () => {
@@ -24,15 +22,12 @@ const findByProvider = (provider, providerId) => {
         .first();
 }
 
-const createLocalUser = async (email, password, name) => {
-    const id = uuidv7();
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+const createLocalUser = async (id, email, password, name) => {
     const [user] = await db(TABLE_NAME).insert({
         id,
         email,
         display_name: name,
-        password_hash: hashedPassword
+        password_hash: password
     }).returning('*');
     return user;
 }

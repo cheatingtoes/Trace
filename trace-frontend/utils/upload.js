@@ -10,7 +10,7 @@ async function uploadBatchMedia(activityId, fileList) {
     };
 
     // Step 2: Get all signatures in ONE request
-    const signRes = await fetch(`http://localhost:3001/api/v1/activities/${activityId}/photos/sign-batch`, {
+    const signRes = await fetch(`${import.meta.env.VITE_BASE_API_URL}activities/${activityId}/photos/sign-batch`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -37,7 +37,7 @@ async function uploadBatchMedia(activityId, fileList) {
         });
 
         // Notify backend "I'm Done" (Can also be batched!)
-        await fetch(`http://localhost:3001/api/v1/activities/${activityId}/photos/finalize`, {
+        await fetch(`${import.meta.env.VITE_BASE_API_URL}activities/${activityId}/photos/finalize`, {
              method: 'POST',
              headers: { 'Content-Type': 'application/json' },
              body: JSON.stringify({ key: sig.key })

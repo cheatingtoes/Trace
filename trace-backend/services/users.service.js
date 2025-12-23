@@ -1,4 +1,5 @@
 const { uuidv7 } = require('uuidv7');
+const bcrypt = require('bcryptjs');
 const UserModel = require('../models/users.model');
 const { BadRequestErrorUnauthorizedError, InternalServerError } = require('../errors/customErrors');
 
@@ -32,7 +33,10 @@ const addRefreshToken = async (userId, refreshToken) => {
 };
 
 const createLocalUser = async (email, password, name) => {
-    return UserModel.createLocalUser(email, password, name);
+    const id = uuidv7();
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    return UserModel.createLocalUser(id, email, password, name);
 };
 
 const removeRefreshToken = async (userId, refreshToken) => {
@@ -40,8 +44,8 @@ const removeRefreshToken = async (userId, refreshToken) => {
 };
 
 const verifyPassword = async (passwordHash, plainPassword) => {
-    if (!user.password_hash || !plainPassword) return false;
-    return bcrypt.compare(plainPassword, password_hash);
+    if (!passwordHash || !plainPassword) return false;
+    return bcrypt.compare(plainPassword, passwordHash);
 };
 
 const linkProvider = async ({ userId, provider, providerId }) => {

@@ -5,13 +5,14 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const db = require('./config/db');
+const { corsOptions } = require('./config/cors');
 
 const app = express();
 app.use(cookieParser());
 const port = config.app.port;
 
 // --- Middleware ---
-app.use(cors()); // Allow cross-origin requests
+app.use(cors(corsOptions)); // Allow cross-origin requests
 app.use(express.json()); // Parse JSON bodies
 
 // --- API Routes ---
