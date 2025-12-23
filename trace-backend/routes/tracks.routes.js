@@ -1,17 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const TrackController = require('../controllers/tracks.controller');
+const multer = require('multer');
+const TracksController = require('../controllers/tracks.controller');
 const authenticate = require('../middleware/auth');
 
 router.use(authenticate);
 
-// GET /api/v1/users - Get all users
-router.get('/', TrackController.getAllTracks);
+const upload = multer({ dest: 'temp_uploads/' });
 
-// GET /api/v1/users/:id - Get a single user by ID
-router.get('/:id', TrackController.getTrackById);
+// GET /api/v1/tracks - Get all tracks
+router.get('/', TracksController.getAllTracks);
 
-// POST /api/v1/users - Create a new user
-router.post('/', TrackController.createTrack);
+// GET /api/v1/tracks/:id - Get a single track by ID
+router.get('/:id', TracksController.getTrackById);
+
+// POST /api/v1/tracks - Create a new track
+router.post('/', TracksController.createTrack);
+
+// POST /api/v1/tracks/upload-track-file - Upload a GPX file to create a track
+router.post('/upload-track-file', upload.single('file'), TracksController.uploadTrackFile);
 
 module.exports = router;
