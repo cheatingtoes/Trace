@@ -60,7 +60,7 @@ const config = {
         //     callbackURL: process.env.APPLE_CALLBACK_URL || '/api/auth/apple/callback'
         // },
         // Where to send the user after a successful login
-        frontendRedirectUrl: process.env.FRONTEND_URL || 'http://localhost:5173'
+        frontendRedirectUrl: process.env.FRONTEND_URL
     }
 };
 

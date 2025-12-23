@@ -36,7 +36,6 @@ export const useRegister = () => {
             login(user, accessToken);
             navigate('/');
         } catch (err) {
-            console.log('errr@@@@', err)
             setError(err.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
             setIsSubmitting(false);

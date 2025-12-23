@@ -48,7 +48,7 @@ const registerUser = async (email, password, name) => {
         };
     } catch (err) {
         if (err instanceof ConflictError) {
-            throw err; // Re-throw the specific error to be handled by the controller
+            throw err;
         }
         console.error('Error registering user:', err);
         throw new InternalServerError('Failed to register user.');

@@ -38,7 +38,6 @@ const signBatch = async (userId, activityId, files) => {
                 }
 
                 if (!ALLOWED_MIME_TYPES.includes(fileType)) {
-                    // how to get frontend to handle this?
                     return {
                         tempId,
                         status: 'error',
@@ -73,15 +72,10 @@ const signBatch = async (userId, activityId, files) => {
                     };
                 }
                 const id = uuidv7();
-                // placeholder userID
-                // const userId = uuidv7();
-
                 const ext = mime.extension(fileType);
                 const s3Key = `${userId}/activities/${activityId}/${type}s/${id}.${ext}`
 
-                // Get the presigned URL
                 const { signedUrl, key } = await s3Service.getPresignedUploadUrl(s3Key, fileType);
-                // Create the moment record in the database
                 const [newMoment] = await MomentModel.createMoment({
                     id,
                     activity_id: activityId,
@@ -112,12 +106,10 @@ const signBatch = async (userId, activityId, files) => {
 
         return signedUrls;
     } catch (err) {
-        // If the error is a client-side error we created, re-throw it so the client gets a 4xx response.
         if (err instanceof BadRequestError) {
             throw err;
         }
         
-        // For any other unexpected error (e.g., S3 or DB failure), log it with context and throw a generic 500-level error.
         console.error(`Error during signBatch for activity ${activityId}:`, err);
         throw new InternalServerError('An unexpected error occurred while processing the batch.');
     }
@@ -128,21 +120,7 @@ const confirmBatch = async (userId, activityId, uploads) => {
     const momentIds = uploads.map(u => u.momentId);
 
     try {
-        // 2. The "Bulk Commit"
-        // Update ONLY if the photo belongs to this activity (Security Check)
-        // AND currently has status 'pending' (Idempotency Check)
         const activeMoments = await MomentModel.confirmBatchUploads(activityId, momentIds);
-
-        // 3. (Optional) Save EXIF/GPS Data
-        // If your frontend sent GPS data, you iterate and update. 
-        // Note: Doing this in a loop is fine for batch size 50.
-        // For higher scale, use a sophisticated bulk upsert or a background job.
-        // TODO we extract EXIF data in the worker so we don't want to do this here?
-        // const metaUpdates = uploads
-        //     .filter(u => u.meta && (u.meta.lat || u.meta.capturedAt))
-        //     .map(u => MomentModel.updateMetadata(u.momentId, u.meta));
-        // await Promise.all(metaUpdates);
-
         activeMoments.forEach(({ id, type, s3_key }) => {
             if (type === 'image') {
                 imageQueue.add('process-image', { momentId: id, s3_key });
@@ -150,22 +128,13 @@ const confirmBatch = async (userId, activityId, uploads) => {
                 videoQueue.add('process-video', { momentId: id, s3_key });
             }
         });
-            
-        // 4. Trigger Background Jobs (Thumbnails)
-        // Since this is a map app, you need small images for pins.
-        // Don't await this! Fire and forget.
-        // momentIds.forEach(id => {
-        //     thumbnailQueue.add({ momentId: id });
-        // });
 
         return { 
             success: true, 
             count: activeMoments.length
         };
     } catch (err) {
-        // Log with context for debugging
         console.error(`Error during confirmBatch for activity ${activityId}:`, err);
-        // Throw a generic error for the client
         throw new InternalServerError('An unexpected error occurred while confirming the batch.');
     }
 };

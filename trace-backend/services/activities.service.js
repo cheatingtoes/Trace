@@ -2,7 +2,6 @@ const { uuidv7 } = require('uuidv7');
 const ActivityModel = require('../models/activities.model');
 const TrackModel = require('../models/tracks.model');
 
-
 const getAllActivities = async () => {
     return ActivityModel.getAllActivities();
 };
