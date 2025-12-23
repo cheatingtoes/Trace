@@ -1,7 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api, { setAccessToken } from '../api/axios';
-
-export const AuthContext = createContext(null);
+import { AuthContext } from './AuthContext';
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
@@ -15,10 +14,11 @@ export const AuthProvider = ({ children }) => {
             try {
                 // We assume you have a /profile or /me endpoint that returns the user
                 // if the session is valid. The axios interceptor handles the token.
-                const response = await api.post(`${import.meta.env.VITE_API_ENDPOINT}auth/refresh`);
+                const response = await api.post(`/auth/refresh`);
                 console.log('response@@@@@', response)
                 setUser(response.data);
             } catch (error) {
+                console.error('Error verifying user:', error);
                 // Any error indicates the user is not logged in.
                 setUser(null);
             } finally {
@@ -35,11 +35,15 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Called to log the user out
-    const logout = () => {
-        setAccessToken(null);
-        setUser(null);
-        // A full page refresh to /login ensures all old state is cleared.
-        window.location.href = '/login';
+    const logout = async () => {
+        try {
+            await api.post(`/auth/logout`);
+        } catch (error) {
+            console.error('Error logging out:', error);
+        } finally {
+            setAccessToken(null);
+            setUser(null);
+        }
     };
 
     const value = { user, isLoading, isAuthenticated: !!user, login, logout };

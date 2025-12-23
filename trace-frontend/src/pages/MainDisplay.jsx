@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import MapDisplay from './MapDisplay';
 import PhotoUpload from '../components/PhotoUpload';
+import LogoutButton from '../features/auth/components/LogoutButton';
 import './MainDisplay.module.css'; 
 
 const MainDisplay = () => {
@@ -49,6 +50,7 @@ const MainDisplay = () => {
 
     return (
         <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
+            <LogoutButton />
             <h1>TRACE: Trail Photo Mapper</h1>
             <input type="file" accept="image/*" onChange={handleFileChange} />
             <button onClick={handleUpload} disabled={!selectedFile} style={{ marginLeft: '10px' }}>

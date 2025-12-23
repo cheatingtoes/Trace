@@ -28,7 +28,7 @@ const registerUser = async (email, password, name) => {
     try {
         const existingUser = await UserService.findByEmail(email);
         if (existingUser) {
-            throw new ConflictError('Email is already in use');
+            throw new ConflictError('Email is already in use.');
         }
 
         const newUser = await UserService.createLocalUser( email, password, name );
@@ -47,8 +47,11 @@ const registerUser = async (email, password, name) => {
             refreshToken
         };
     } catch (err) {
+        if (err instanceof ConflictError) {
+            throw err; // Re-throw the specific error to be handled by the controller
+        }
         console.error('Error registering user:', err);
-        throw new InternalServerError('Failed to register user');
+        throw new InternalServerError('Failed to register user.');
     }
 };
 
@@ -57,12 +60,12 @@ const refreshAccessToken = async (refreshToken) => {
     try {
         payload = jwt.verify(refreshToken, config.jwt.refreshSecret);
     } catch (err) {
-        throw new UnauthorizedError('Invalid Refresh Token'); 
+        throw new UnauthorizedError('Invalid Refresh Token.'); 
     }
 
     const user = await UserService.getUserById(payload.userId);
     if (!user || !user.refresh_tokens.includes(refreshToken)) {
-        throw new UnauthorizedError('Invalid Refresh Token');
+        throw new UnauthorizedError('Invalid Refresh Token.');
     }
 
     const newAccessToken = jwt.sign(
@@ -79,7 +82,7 @@ const logoutUser = async (refreshToken) => {
     try {
         payload = jwt.verify(refreshToken, config.jwt.refreshSecret);
     } catch (err) {
-        throw new UnauthorizedError('Invalid Refresh Token'); 
+        throw new UnauthorizedError('Invalid Refresh Token.'); 
     }
     return UserService.removeRefreshToken(payload.userId, refreshToken);
 }

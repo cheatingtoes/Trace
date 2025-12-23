@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../hooks/useAuth';
 import api from '../../../api/axios';
 
-export const useLogin = () => {
+export const useRegister = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [formState, setFormState] = useState({ email: '', password: '' });
+    const [formState, setFormState] = useState({ name: '', email: '', password: '' });
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -15,24 +15,32 @@ export const useLogin = () => {
         setFormState(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleLocalLogin = async (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
+        if (formState.password.length < 8) {
+            setError('Password must be at least 8 characters long.');
+            return;
+        }
         setError('');
+
+        if (!formState.name || !formState.email || !formState.password) {
+            setError('All fields are required.');
+            return;
+        }
+        
         setIsSubmitting(true);
+
         try {
-            const response = await api.post(`/auth/login`, formState);
+            const response = await api.post(`/auth/register`, formState);
             const { user, accessToken } = response.data;
-            login(user, accessToken); // Update global context
-            navigate('/'); // Navigate to home
+            login(user, accessToken);
+            navigate('/');
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed. Please check credentials.');
+            console.log('errr@@@@', err)
+            setError(err.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const handleGoogleLogin = () => {
-        window.location.href = `/auth/google`;
     };
 
     return {
@@ -40,7 +48,6 @@ export const useLogin = () => {
         error,
         isSubmitting,
         handleChange,
-        handleLocalLogin,
-        handleGoogleLogin,
+        handleRegister,
     };
 };

@@ -55,7 +55,7 @@ app.use((err, req, res, next) => {
     // Use the message from the error, or a generic message
     const message = err.message || 'An unexpected error occurred on the server.';
     
-    res.status(statusCode).json({ error: message });
+    res.status(statusCode).json({ message: message });
 });
 
 // Start server

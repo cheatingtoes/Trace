@@ -13,16 +13,16 @@ L.Icon.Default.mergeOptions({
 const MapDisplay = ({ latitude, longitude, date }) => {
     const [geometryData, setGeometryData] = useState(null);
 
-    useEffect(() => {
-        fetch(`${import.meta.env.VITE_BASE_API_URL}/polylines/85`) // Example polyline ID
-            .then(response => response.json())
-            .then(data => {
-                setGeometryData(data.geometry);
-            })
-            .catch(error => {
-                console.error('Error fetching polyline data:', error);
-            });
-    }, []);
+    // useEffect(() => {
+    //     fetch(`${import.meta.env.VITE_BASE_API_URL}/polylines/85`) // Example polyline ID
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             setGeometryData(data.geometry);
+    //         })
+    //         .catch(error => {
+    //             console.error('Error fetching polyline data:', error);
+    //         });
+    // }, []);
 
     console.log('Geometry Data:', geometryData);
 

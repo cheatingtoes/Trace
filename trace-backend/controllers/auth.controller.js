@@ -64,6 +64,10 @@ const registerUser = async (req, res, next) => {
         if (!email || !password || !name) {
             throw new BadRequestError('Email, password, and name are required');
         }
+        if (password.length < 8) {
+            throw new BadRequestError('Password must be at least 8 characters');
+        }
+
         const result = await authService.registerUser(email, password, name);
         
         // Handle cookie here if you want auto-login on signup
