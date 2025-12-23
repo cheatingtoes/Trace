@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PhotoUpload from '../components/PhotoUpload';
-import LogoutButton from '../features/auth/components/LogoutButton';
 import Sidebar from '../components/Sidebar'; // Import the Sidebar
+import UserMenu from '../components/UserMenu';
 import styles from './MainDisplay.module.css'; 
 
 const MainDisplay = () => {
@@ -57,7 +57,7 @@ const MainDisplay = () => {
             <div className={styles.mainContent}>
                 <div className={styles.header}>
                     <h1>TRACE</h1>
-                    <LogoutButton />
+                    <UserMenu />
                 </div>
                 
                 <div className={styles.controls}>
