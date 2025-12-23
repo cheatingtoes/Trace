@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import MapDisplay from './MapDisplay';
 import PhotoUpload from '../components/PhotoUpload';
 import LogoutButton from '../features/auth/components/LogoutButton';
-import './MainDisplay.module.css'; 
+import styles from './MainDisplay.module.css'; 
 
 const MainDisplay = () => {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -49,26 +48,23 @@ const MainDisplay = () => {
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
-            <LogoutButton />
-            <h1>TRACE: Trail Photo Mapper</h1>
-            <input type="file" accept="image/*" onChange={handleFileChange} />
-            <button onClick={handleUpload} disabled={!selectedFile} style={{ marginLeft: '10px' }}>
-                Upload & Map Location
-            </button>
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <h1>TRACE</h1>
+                <LogoutButton />
+            </div>
+            
+            <div className={styles.controls}>
+                <p>Upload and map your trail photos.</p>
+                <input type="file" accept="image/*" onChange={handleFileChange} />
+                <button onClick={handleUpload} disabled={!selectedFile}>
+                    Upload & Map Location
+                </button>
+                {message && <p className={styles.message}>{message}</p>}
+            </div>
 
-            <p style={{ marginTop: '10px' }}><strong>{message}</strong></p>
-
-            <hr style={{ margin: '30px 0' }} />
-            <PhotoUpload activityId="1" />
-            <hr style={{ margin: '30px 0' }} />
-
-            <div style={{ marginTop: '30px' }}>
-                <MapDisplay 
-                    latitude={photoData?.latitude} 
-                    longitude={photoData?.longitude} 
-                    date={photoData?.date}
-                />
+            <div className={styles.photoUpload}>
+              <PhotoUpload activityId="1" />
             </div>
         </div>
     );

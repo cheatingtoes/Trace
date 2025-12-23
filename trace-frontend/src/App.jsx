@@ -1,26 +1,32 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthProvider';
 import { useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
 import MainDisplay from './pages/MainDisplay';
 import Register from './pages/Register';
+import MapLayout from './layouts/MapLayout';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
     const { isAuthenticated } = useAuth();
-    return isAuthenticated ? children : <Navigate to="/login" replace />;
+    return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-const PublicRoute = ({ children }) => {
+const PublicRoute = () => {
     const { isAuthenticated } = useAuth();
-    return !isAuthenticated ? children : <Navigate to="/" replace />;
+    return !isAuthenticated ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 const AppRoutes = () => (
     <Routes>
-        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-        <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-        <Route path="/" element={<ProtectedRoute><MainDisplay /></ProtectedRoute>} />
-        {/* All other routes go here */}
+        <Route element={<MapLayout />}>
+            <Route element={<PublicRoute />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+            </Route>
+            <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<MainDisplay />} />
+            </Route>
+        </Route>
     </Routes>
 );
 
