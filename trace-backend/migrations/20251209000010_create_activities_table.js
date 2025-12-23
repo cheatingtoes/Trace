@@ -3,6 +3,8 @@ exports.up = function(knex) {
     table.uuid('id').primary();
     table.string('name').notNullable();
     table.text('description');
+    table.timestamp('start_date').nullable();
+    table.timestamp('end_date').nullable();
     table.timestamps(true, true);
 
     table.uuid('user_id').notNullable();
