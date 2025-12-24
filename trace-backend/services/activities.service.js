@@ -13,7 +13,8 @@ const getActivityById = async (id) => {
 
 const createActivity = async (activityData, userId) => {
     const activityToCreate = cleanEmptyStrings({ ...activityData, userId, id: uuidv7() });
-    return ActivityModel.createActivity(activityToCreate);
+    const [newActivity] = await ActivityModel.createActivity(activityToCreate);
+    return newActivity;
 };
 
 const getActivityRoutes = async (id) => {

@@ -1,0 +1,30 @@
+.dashboardContainer {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    height: 100%; /* Occupy full height of the parent sidebar */
+    box-sizing: border-box; /* Include padding in height */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.createActivityButton {
+    /* Styles for the button if needed, CreateActivity component will handle its own styling */
+}
+
+.yourJourneys h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    color: #555;
+}

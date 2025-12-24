@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Outlet } from 'react-router-dom';
 import styles from './Sidebar.module.css';
-import ActivityList from '../features/activities/components/ActivityList';
-import CreateActivity from '../features/activities/components/CreateActivity';
 
 const Sidebar = ({ defaultWidth = 25, side = 'left' }) => {
   const [width, setWidth] = useState(defaultWidth);
@@ -55,8 +54,7 @@ const Sidebar = ({ defaultWidth = 25, side = 'left' }) => {
         onMouseDown={handleMouseDown}
       />
       <div className={styles.content}>
-        <ActivityList />
-        <CreateActivity />
+        <Outlet />
       </div>
     </div>
   );

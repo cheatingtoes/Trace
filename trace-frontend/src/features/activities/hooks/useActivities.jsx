@@ -6,26 +6,27 @@ const useActivities = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchActivities = async () => {
-            try {
-                const response = await api.get('/activities');
-                setActivities(response.data);
-            } catch (err) {
-                setError(err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchActivities = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/activities');
+            setActivities(response.data);
+        } catch (err) {
+            setError(err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchActivities();
     }, []);
 
     const createActivity = async (activityData) => {
         try {
             const response = await api.post('/activities', activityData);
+            setActivities(prevActivities => [response.data, ...prevActivities])
             console.log('createActivity@@response', response)
-            setActivities((prevActivities) => [...prevActivities, response.data[0]]);
             return response.data[0];
         } catch (err) {
             setError(err);
@@ -33,7 +34,7 @@ const useActivities = () => {
         }
     };
 
-    return { activities, loading, error, createActivity };
+    return { activities, loading, error, createActivity, fetchActivities };
 };
 
 export default useActivities;

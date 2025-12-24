@@ -6,7 +6,7 @@ const getAllActivities = () => {
 };
 
 const getActivitiesByUserId = (userId) => {
-    return db(TABLE_NAME).where({ userId });
+    return db(TABLE_NAME).where({ userId }).orderBy('createdAt', 'desc').select('*');
 }
 
 const getActivityById = (id) => {

@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import useActivities from '../hooks/useActivities';
 import styles from './ActivityList.module.css';
 
-const ActivityList = () => {
-    const { activities, loading, error } = useActivities();
+const ActivityList = ({ activities, loading, error }) => {
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredActivities = activities.filter((activity) =>

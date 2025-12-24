@@ -3,9 +3,9 @@ import { AuthProvider } from './context/AuthProvider';
 import { useAuth } from './hooks/useAuth';
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
+import ActivityDashboard from './features/activities/components/ActivityDashboard';
 
 import Login from './pages/Login';
-import MainDisplay from './pages/MainDisplay';
 import Register from './pages/Register';
 import MapLayout from './layouts/MapLayout';
 
@@ -30,7 +30,7 @@ const AppRoutes = () => (
             </Route>
             <Route element={<MainLayout />}>
                 <Route element={<ProtectedRoute />}>
-                    <Route path="/" element={<MainDisplay />} />
+                    <Route path="/" element={<ActivityDashboard />} />
                 </Route>
             </Route>
         </Route>
