@@ -24,7 +24,7 @@ const ActivityEditView = () => {
         // Placeholder for update logic. 
         // You would typically call an updateActivity function from useActivities here.
         console.log('Updating activity:', id, updatedData);
-        navigate(-1);
+        // navigate(-1);
         return true;
     };
 

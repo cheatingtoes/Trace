@@ -1,10 +1,16 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from './ActivityDetail.module.css';
+import ActivityForm from './ActivityForm';
 import SidebarHeader from '../../../components/SidebarHeader';
+
+import useActivity from '../hooks/useActivity';
 
 const ActivityDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { activity, loading, error, fetchActivity, updateActivity } = useActivity(id);
+
+    const isEditing = true;
 
     return (
         <div className={styles.detailContainer}>
@@ -18,12 +24,23 @@ const ActivityDetail = () => {
                 }
                 right={<span style={{ cursor: 'pointer' }}>⚙️</span>}
             />
-            <div className={styles.header}>
-                <h2>ACTIVITY DETAILS</h2>
-            </div>
-            <div className={styles.content}>
-                <p>Details for Activity ID: {id}</p>
-            </div>
+            {isEditing ? (
+                <>
+                    <div className={styles.header}>
+                        <h2>EDIT ACTIVITY</h2>
+                    </div>
+                    <ActivityForm initialValues={activity} onSubmit={updateActivity} isOpen={true} />
+                </>
+            ) : (
+                <>
+                    <div className={styles.header}>
+                        <h2>ACTIVITY DETAILS</h2>
+                    </div>
+                    <div className={styles.content}>
+                        <p>Details for Activity ID: {id}</p>
+                    </div>
+                </>
+            )}
         </div>
     );
 };

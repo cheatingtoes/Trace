@@ -2,19 +2,30 @@ import { useState, useEffect } from 'react';
 import styles from './ActivityForm.module.css';
 
 const ActivityForm = ({ onSubmit, onSuccess, isOpen, onClose, initialValues = {}, buttonText = 'Create Activity' }) => {
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const {
+        name: rawName,
+        description: rawDescription,
+        startDate: rawStartDate,
+        endDate: rawEndDate
+    } = initialValues || {};
 
-    const { name: initialName, description: initialDescription, startDate: initialStartDate, endDate: initialEndDate } = initialValues;
+    const initialName = rawName ?? '';
+    const initialDescription = rawDescription ?? '';
+    const initialStartDate = rawStartDate ?? '';
+    const initialEndDate = rawEndDate ?? '';
+
+    const [name, setName] = useState(initialName);
+    const [description, setDescription] = useState(initialDescription);
+    const [startDate, setStartDate] = useState(initialStartDate);
+    const [endDate, setEndDate] = useState(initialEndDate);
+
 
     useEffect(() => {
         if (isOpen) {
-            setName(initialName || '');
-            setDescription(initialDescription || '');
-            setStartDate(initialStartDate || '');
-            setEndDate(initialEndDate || '');
+            setName(initialName);
+            setDescription(initialDescription);
+            setStartDate(initialStartDate);
+            setEndDate(initialEndDate);
         }
     }, [isOpen, initialName, initialDescription, initialStartDate, initialEndDate]);
 
@@ -31,7 +42,6 @@ const ActivityForm = ({ onSubmit, onSuccess, isOpen, onClose, initialValues = {}
             endDate,
         };
         const success = await onSubmit(newActivity);
-        console.log('success', success)
         if (success) {
             setName('');
             setDescription('');

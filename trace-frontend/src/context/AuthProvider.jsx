@@ -6,8 +6,6 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    console.log('user', user)
-
     useEffect(() => {
         // This effect checks for a valid session on app load.
         const verifyUser = async () => {
@@ -15,7 +13,6 @@ export const AuthProvider = ({ children }) => {
                 // We assume you have a /profile or /me endpoint that returns the user
                 // if the session is valid. The axios interceptor handles the token.
                 const response = await api.post(`/auth/refresh`);
-                console.log('response@@@@@', response)
                 const { user, accessToken } = response.data;
                 setAccessToken(accessToken);
                 setUser(user);
