@@ -16,7 +16,9 @@ export const AuthProvider = ({ children }) => {
                 // if the session is valid. The axios interceptor handles the token.
                 const response = await api.post(`/auth/refresh`);
                 console.log('response@@@@@', response)
-                setUser(response.data);
+                const { user, accessToken } = response.data;
+                setAccessToken(accessToken);
+                setUser(user);
             } catch (error) {
                 console.error('Error verifying user:', error);
                 // Any error indicates the user is not logged in.

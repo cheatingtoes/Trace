@@ -1,9 +1,11 @@
 const ActivityService = require('../services/activities.service');
+const { success } = require('../utils/apiResponse');
+
 
 const getActivities = async (req, res, next) => {
     try {
         const activities = await ActivityService.getActivitiesByUserId(req.user.id);
-        res.status(200).json(activities);
+        res.status(200).json(success(activities));
     } catch (error) {
         next(error);
     }
@@ -14,7 +16,7 @@ const getActivityById = async (req, res, next) => {
         const { id } = req.params;
         const activity = await ActivityService.getActivityById(id);
         if (activity) {
-            res.status(200).json(activity);
+            res.status(200).json(success(activity));
         } else {
             res.status(404).json({ message: 'Activity not found' });
         }
@@ -26,7 +28,7 @@ const getActivityById = async (req, res, next) => {
 const createActivity = async (req, res, next) => {
     try {
         const newActivity = await ActivityService.createActivity(req.body, req.user.id);
-        res.status(201).json(newActivity);
+        res.status(201).json(success(newActivity));
     } catch (error) {
         next(error);
     }
@@ -36,7 +38,7 @@ const getActivityRoutes = async (req, res, next) => {
     try {
         const { id } = req.params;
         const activityRoutes = await ActivityService.getActivityRoutes(id);
-        res.status(200).json(activityRoutes);
+        res.status(200).json(success(activityRoutes));
     } catch (error) {
         next(error);
     }

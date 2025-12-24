@@ -41,21 +41,33 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// 3. RESPONSE INTERCEPTOR: Handle 401s
+// 3. RESPONSE INTERCEPTOR: Handle Data Unwrapping and 401s
 api.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        // If the response has the standardized success format, unwrap the data
+        if (response.data && typeof response.data.success === 'boolean' && response.data.success) {
+            response.data = response.data.data;
+        }
+        return response;
+    },
     async (error) => {
+        // If the API returns a standardized error, make the message easily accessible
+        if (error.response?.data?.success === false && error.response.data.error) {
+            error.response.data.message = error.response.data.error.message;
+        }
+
         const originalRequest = error.config;
 
+        // Don't retry refresh or login failures
         if (originalRequest.url.includes('/auth/refresh') || originalRequest.url.includes('/login')) {
             return Promise.reject(error);
         }
 
-        // If error is 401 and we haven't retried yet
+        // If error is 401 and we haven't retried yet, try to refresh the token
         if (error.response?.status === 401 && !originalRequest._retry) {
             
             if (isRefreshing) {
-                // If already refreshing, queue this request
+                // If a refresh is already in progress, queue this request
                 return new Promise(function(resolve, reject) {
                     failedQueue.push({resolve, reject});
                 }).then(token => {
@@ -70,18 +82,17 @@ api.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                // Call your Refresh Endpoint
-                // Note: We don't send data, the Cookie sends itself!
+                // Call the refresh token endpoint
                 const rs = await api.post('/auth/refresh');
                 
                 const { accessToken } = rs.data;
                 
                 setAccessToken(accessToken);
                 
-                // Update header for this instance
+                // Update the default header for subsequent requests
                 api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
                 
-                // Process any queued requests
+                // Process any queued requests with the new token
                 processQueue(null, accessToken);
                 
                 // Retry the original failed request
@@ -89,7 +100,9 @@ api.interceptors.response.use(
                 return api(originalRequest);
 
             } catch (_error) {
+                // If refresh fails, clear queue and redirect to login
                 processQueue(_error, null);
+                setAccessToken(null); // Clear expired token
                 window.location.href = '/login';
                 return Promise.reject(_error);
             } finally {

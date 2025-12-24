@@ -1,9 +1,11 @@
 const UserService = require('../services/users.service');
+const { success } = require('../utils/apiResponse');
+const { NotFoundError } = require('../errors/customErrors');
 
 const getAllUsers = async (req, res, next) => {
     try {
         const users = await UserService.getAllUsers();
-        res.status(200).json(users);
+        res.status(200).json(success(users));
     } catch (error) {
         next(error);
     }
@@ -14,9 +16,9 @@ const getUserById = async (req, res, next) => {
         const { id } = req.params;
         const user = await UserService.getUserById(id);
         if (user) {
-            res.status(200).json(user);
+            res.status(200).json(success(user));
         } else {
-            res.status(404).json({ message: 'User not found' });
+            throw new NotFoundError('User not found');
         }
     } catch (error) {
         next(error);
@@ -25,9 +27,8 @@ const getUserById = async (req, res, next) => {
 
 const createUser = async (req, res, next) => {
     try {
-        const { name, email } = req.body;
-        const newUser = await UserService.createUser({ name, email });
-        res.status(201).json(newUser);
+        const newUser = await UserService.createUser(req.body);
+        res.status(201).json(success(newUser));
     } catch (error) {
         next(error);
     }

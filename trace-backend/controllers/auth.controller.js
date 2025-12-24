@@ -3,6 +3,7 @@ const authService = require('../services/auth.service');
 const usersService = require('../services/users.service');
 const { BadRequestError, UnauthorizedError } = require('../errors/customErrors');
 const config = require('../config');
+const { success } = require('../utils/apiResponse');
 
 const isProduction = config.app.env === 'production';
 const cookieOptions = {
@@ -14,8 +15,6 @@ const cookieOptions = {
 const loginUser = (req, res, next) => {
     passport.authenticate('local', { session: false }, async (err, user, info) => {
         if (err) return next(err);
-
-        console.log('@@@@user', user)
 
         if (!user) {
             return res.status(401).json({ 
@@ -31,11 +30,10 @@ const loginUser = (req, res, next) => {
                 maxAge: config.jwt.refreshMaxAge
             });
 
-            res.json({
-                message: 'Login successful',
+            res.status(200).json(success({
                 accessToken,
                 user: { id: user.id, email: user.email, name: user.displayName }
-            });
+            }));
         } catch (error) {
             next(error);
         }
@@ -61,10 +59,10 @@ const registerUser = async (req, res, next) => {
             });
         }
 
-        res.status(201).json({
+        res.status(201).json(success({
             accessToken: result.accessToken,
             user: result.user
-        });
+        }));
     } catch (error) {
         next(error);
     }
@@ -79,7 +77,10 @@ const refreshToken = async (req, res, next) => {
 
         const refreshToken = cookies.jwt;
         const result = await authService.refreshAccessToken(refreshToken);
-        res.json({ accessToken: result.accessToken });
+        res.status(200).json(success({ 
+            accessToken: result.accessToken, 
+            user: result.user 
+        }));
     } catch (error) {
         next(error);
     }
@@ -94,7 +95,7 @@ const logoutUser = async (req, res, next) => {
         await authService.logoutUser(refreshToken);
 
         res.clearCookie('jwt', cookieOptions);
-        res.status(200).json({ message: 'Cookie cleared' });
+        res.status(200).json(success({ message: 'Cookie cleared' }));
     } catch (error) {
         next(error);
     }

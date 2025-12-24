@@ -74,7 +74,14 @@ const refreshAccessToken = async (refreshToken) => {
         { expiresIn: config.jwt.accessExpiration }
     );
 
-    return { user, accessToken: newAccessToken };
+    const sanitizedUser = {
+        id: user.id,
+        email: user.email,
+        name: user.displayName,
+        avatarUrl: user.avatarUrl
+    };
+
+    return { user: sanitizedUser, accessToken: newAccessToken };
 };
 
 const logoutUser = async (refreshToken) => {

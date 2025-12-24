@@ -1,11 +1,11 @@
 const MomentService = require('../services/moments.service');
 const { BadRequestError, InternalServerError } = require('../errors/customErrors');
-
+const { success } = require('../utils/apiResponse');
 
 const getAllMoments = async (req, res, next) => {
     try {
         const moments = await MomentService.getAllMoments();
-        res.status(200).json(moments);
+        res.status(200).json(success(moments));
     } catch (error) {
         next(error);
     }
@@ -15,7 +15,7 @@ const getMomentById = async (req, res, next) => {
     try {
         const { id } = req.params;
         const moment = await MomentService.getMomentById(id);
-        res.status(200).json(moment);
+        res.status(200).json(success(moment));
     } catch (error) {
         next(error);
     }
@@ -24,7 +24,7 @@ const getMomentById = async (req, res, next) => {
 const createMoment = async (req, res, next) => {
     try {
         const newMoment = await MomentService.createMoment(req.body);
-        res.status(201).json(newMoment);
+        res.status(201).json(success(newMoment));
     } catch (error) {
         next(error);
     }
@@ -49,7 +49,7 @@ const signBatch = async (req, res, next) => {
 
     try {
         const signedUrls = await MomentService.signBatch(userId, activityId, files);
-        res.status(200).json(signedUrls);
+        res.status(200).json(success(signedUrls));
     } catch (err) {
         next(err);
     }
@@ -75,7 +75,7 @@ const confirmBatch = async (req, res, next) => {
 
     try {
         const confirmedUploads = await MomentService.confirmBatch(userId, activityId, uploads);
-        res.status(200).json(confirmedUploads);
+        res.status(200).json(success(confirmedUploads));
     } catch (err) {
         next(err);
     }

@@ -42,20 +42,39 @@ app.get('/', (req, res) => {
 
 // --- Centralized Error Handling ---
 // This middleware catches all errors passed by next(err)
+const toSnakeCase = (str) => {
+    return str.replace(/([A-Z])/g, (letter) => `_${letter}`).toUpperCase().replace(/^_/, '');
+}
+
 app.use((err, req, res, next) => {
-    console.error(err.stack); // For debugging purposes
+    // For debugging purposes
+    if (config.app.env !== 'test') {
+        console.error(err);
+    }
     
     // If headers have already been sent, delegate to the default handler
     if (res.headersSent) {
         return next(err);
     }
 
-    // Use the status code from the error if it exists, otherwise default to 500
     const statusCode = err.statusCode || 500;
-    // Use the message from the error, or a generic message
+    const errorCode = err.name === 'Error' ? 'INTERNAL_SERVER_ERROR' : toSnakeCase(err.name.replace(/Error$/, ''));
     const message = err.message || 'An unexpected error occurred on the server.';
     
-    res.status(statusCode).json({ message: message });
+    const errorResponse = {
+        success: false,
+        error: {
+            code: errorCode,
+            message: message,
+        }
+    }
+
+    // Add stack trace in non-production environments
+    if (config.app.env !== 'production') {
+        errorResponse.error.details = err.stack;
+    }
+    
+    res.status(statusCode).json(errorResponse);
 });
 
 // Start server
