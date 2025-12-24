@@ -1,0 +1,20 @@
+.detailContainer {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    height: 100%;
+    box-sizing: border-box;
+    color: black;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}

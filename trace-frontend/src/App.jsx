@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth';
 import AuthLayout from './layouts/AuthLayout';
 import MainLayout from './layouts/MainLayout';
 import ActivityDashboard from './features/activities/components/ActivityDashboard';
+import ActivityDetail from './features/activities/components/ActivityDetail';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -31,6 +32,7 @@ const AppRoutes = () => (
             <Route element={<MainLayout />}>
                 <Route element={<ProtectedRoute />}>
                     <Route path="/" element={<ActivityDashboard />} />
+                    <Route path="/activity/:id" element={<ActivityDetail />} />
                 </Route>
             </Route>
         </Route>

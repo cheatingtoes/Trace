@@ -1,25 +1,32 @@
 import { useState } from 'react';
-import CreateActivity from './CreateActivity'; // Assuming CreateActivity is in the same directory
+import ActivityForm from './ActivityForm'; // Assuming CreateActivity is in the same directory
 import ActivityList from './ActivityList';     // Assuming ActivityList is in the same directory
 import styles from './ActivityDashboard.module.css';
-import createActivityStyles from './CreateActivity.module.css';
+import ActivityFormStyles from './ActivityForm.module.css';
 import useActivities from '../hooks/useActivities';
+import SidebarHeader from '../../../components/SidebarHeader';
 
 const ActivityDashboard = () => {
     const { activities, loading, error, createActivity, fetchActivities } = useActivities();
     const [isExpanded, setIsExpanded] = useState(false);
 
+    const handleActivityCreated = () => {
+        setIsExpanded(false);
+    };
+
     return (
         <div className={styles.dashboardContainer}>
-            <div className={styles.header}>
-                <h2>YOUR JOURNEYS</h2>
-                <div className={styles.createActivityButton}>
-                    <button onClick={() => setIsExpanded(!isExpanded)} className={createActivityStyles.expandButton}>
-                        {isExpanded ? '-' : '+'}
-                    </button>
-                </div>
-            </div>
-            <CreateActivity createActivity={createActivity} isOpen={isExpanded} onClose={() => setIsExpanded(false)} />
+            <SidebarHeader
+                left={<h2>YOUR JOURNEYS</h2>}
+                right={
+                    <div className={styles.createActivityButton}>
+                        <button onClick={() => setIsExpanded(!isExpanded)} className={ActivityFormStyles.expandButton}>
+                            {isExpanded ? '-' : '+'}
+                        </button>
+                    </div>
+                }
+            />
+            <ActivityForm onSubmit={createActivity} onSuccess={handleActivityCreated} isOpen={isExpanded} onClose={() => setIsExpanded(false)} />
             <div className={styles.yourJourneys}>
                 <ActivityList activities={activities} loading={loading} error={error} />
             </div>

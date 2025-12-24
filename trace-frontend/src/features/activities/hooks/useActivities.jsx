@@ -26,8 +26,7 @@ const useActivities = () => {
         try {
             const response = await api.post('/activities', activityData);
             setActivities(prevActivities => [response.data, ...prevActivities])
-            console.log('createActivity@@response', response)
-            return response.data[0];
+            return response.data;
         } catch (err) {
             setError(err);
             return null;

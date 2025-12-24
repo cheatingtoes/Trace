@@ -1,11 +1,22 @@
-import { useState } from 'react';
-import styles from './CreateActivity.module.css';
+import { useState, useEffect } from 'react';
+import styles from './ActivityForm.module.css';
 
-const CreateActivity = ({ createActivity, onActivityCreated, isOpen, onClose }) => {
+const ActivityForm = ({ onSubmit, onSuccess, isOpen, onClose, initialValues = {}, buttonText = 'Create Activity' }) => {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+
+    const { name: initialName, description: initialDescription, startDate: initialStartDate, endDate: initialEndDate } = initialValues;
+
+    useEffect(() => {
+        if (isOpen) {
+            setName(initialName || '');
+            setDescription(initialDescription || '');
+            setStartDate(initialStartDate || '');
+            setEndDate(initialEndDate || '');
+        }
+    }, [isOpen, initialName, initialDescription, initialStartDate, initialEndDate]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,14 +30,15 @@ const CreateActivity = ({ createActivity, onActivityCreated, isOpen, onClose }) 
             startDate,
             endDate,
         };
-        const created = await createActivity(newActivity);
-        if (created) {
+        const success = await onSubmit(newActivity);
+        console.log('success', success)
+        if (success) {
             setName('');
             setDescription('');
             setStartDate('');
             setEndDate('');
             onClose();
-            onActivityCreated(); // Notify parent that a new activity was created
+            if (onSuccess) onSuccess();
         }
     };
 
@@ -61,10 +73,10 @@ const CreateActivity = ({ createActivity, onActivityCreated, isOpen, onClose }) 
                     onChange={(e) => setEndDate(e.target.value)}
                     className={styles.input}
                 />
-                <button type="submit" className={styles.submitButton}>Create Activity</button>
+                <button type="submit" className={styles.submitButton}>{buttonText}</button>
             </form>
         </div>
     );
 };
 
-export default CreateActivity;
+export default ActivityForm;
