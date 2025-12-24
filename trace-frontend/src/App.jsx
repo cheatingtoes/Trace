@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthProvider';
 import { useAuth } from './hooks/useAuth';
+import AuthLayout from './layouts/AuthLayout';
+import MainLayout from './layouts/MainLayout';
+
 import Login from './pages/Login';
 import MainDisplay from './pages/MainDisplay';
 import Register from './pages/Register';
@@ -19,12 +22,16 @@ const PublicRoute = () => {
 const AppRoutes = () => (
     <Routes>
         <Route element={<MapLayout />}>
-            <Route element={<PublicRoute />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+            <Route element={<AuthLayout />}>
+                <Route element={<PublicRoute />}>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                </Route>
             </Route>
-            <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<MainDisplay />} />
+            <Route element={<MainLayout />}>
+                <Route element={<ProtectedRoute />}>
+                    <Route path="/" element={<MainDisplay />} />
+                </Route>
             </Route>
         </Route>
     </Routes>

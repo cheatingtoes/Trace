@@ -1,0 +1,26 @@
+.mainLayoutContainer {
+    position: absolute;
+    inset: 0; /* Top, right, bottom, left to 0, covering the whole screen */
+    pointer-events: none; /* Allow clicks to pass through to the map */
+    display: flex; /* Use flexbox for layout of its children (sidebar etc.) */
+    z-index: 10; /* Ensure it's above the map but below any modals or auth overlay */
+}
+
+.sidebar {
+    pointer-events: auto; /* Re-enable pointer events for the sidebar */
+    position: relative; /* Allows positioning of children within the sidebar */
+    height: 100%;
+    /* You might want to add a background color, width, and some padding here */
+    /* background-color: rgba(255, 255, 255, 0.9); */
+    /* width: 25vw; */ /* Example width, adjust as needed */
+    /* padding: 1rem; */
+    /* box-shadow: 2px 0 5px rgba(0,0,0,0.2); */
+}
+
+.userMenu {
+    pointer-events: auto; /* Re-enable pointer events for the user menu */
+    position: absolute;
+    top: 1rem; /* Adjust as needed */
+    right: 1rem; /* Adjust as needed */
+    z-index: 20; /* Ensure it's above the sidebar if there's overlap */
+}

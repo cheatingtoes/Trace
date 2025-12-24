@@ -20,3 +20,4 @@ Thumbs.db
 /yarn-error.log*
 
 http/
+.gemini/

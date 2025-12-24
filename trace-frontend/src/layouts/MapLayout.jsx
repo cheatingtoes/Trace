@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -14,9 +14,6 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapLayout = () => {
-    const location = useLocation();
-    const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-
     const defaultCenter = [39.0, -100.0]; // Center of US
     const zoomLevel = 3;
 
@@ -30,11 +27,9 @@ const MapLayout = () => {
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                {/* Markers can be added here. A child component can listen to the URL/Store to update them. */}
             </MapContainer>
-            {isAuthPage && <div className={styles.mapOverlay} />}
-            <div className={styles.content}>
-                <Outlet />
-            </div>
+            <Outlet />
         </div>
     );
 };
