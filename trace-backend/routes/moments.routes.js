@@ -14,6 +14,8 @@ router.get('/:id', MomentController.getMomentById);
 // POST /api/v1/moments - Create a new moment
 router.post('/', MomentController.createMoment);
 
+router.delete('/:id', MomentController.deleteMoment);
+
 // 1. Sign Batch (Get URLs)
 router.post('/sign-batch', MomentController.signBatch);
 

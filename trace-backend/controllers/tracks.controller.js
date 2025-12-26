@@ -36,6 +36,20 @@ const createTrack = async (req, res, next) => {
     }
 }
 
+const deleteTrack = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deletedTrack = await TracksService.deleteTrack(id);
+        if (deletedTrack) {
+            res.status(200).json(success(deletedTrack));
+        } else {
+            throw new NotFoundError('Track not found');
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
 const uploadTrackFile = async (req, res, next) => {
     try {
         if (!req.file) {
@@ -65,5 +79,6 @@ module.exports = {
     getAllTracks,
     getTrackById,
     createTrack,
+    deleteTrack,
     uploadTrackFile,
 }

@@ -8,20 +8,20 @@ console.log('[Worker] Starting Trace Media Workers...');
 const imageWorker = new Worker('media-image', async (job) => {
   // CRITICAL OPTIMIZATION: Extract momentId directly.
   // Don't rely on 'key' to find the DB row; it's slow.
-  const { momentId, s3_key } = job.data;
+  const { momentId, s3Key } = job.data;
 
-  console.log(`[Image-Worker] Processing Moment #${momentId} (${s3_key})...`);
-  await processUploadedMedia({ momentId, key: s3_key, type: 'image' });
+  console.log(`[Image-Worker] Processing Moment #${momentId} (${s3Key})...`);
+  await processUploadedMedia({ momentId, key: s3Key, type: 'image' });
 
 }, { connection, concurrency: 10 });
 
 
 // 2. Video Worker (Low Concurrency)
 const videoWorker = new Worker('media-video', async (job) => {
-  const { momentId, s3_key } = job.data;
+  const { momentId, s3Key } = job.data;
 
-  console.log(`[Video-Worker] Processing Moment #${momentId} (${s3_key})...`);
-  await processUploadedMedia({ momentId, key: s3_key, type: 'video' });
+  console.log(`[Video-Worker] Processing Moment #${momentId} (${s3Key})...`);
+  await processUploadedMedia({ momentId, key: s3Key, type: 'video' });
 
 }, { connection, concurrency: 1 }); // Strictly 1 video at a time
 

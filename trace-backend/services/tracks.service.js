@@ -19,6 +19,10 @@ const createTrack = (trackData) => {
     return TrackModel.createTrack({ id, ...trackData });
 };
 
+const deleteTrack = (id) => {
+    return TrackModel.deleteTrack(id);
+};
+
 async function uploadTrackFile({ file, activityId, name, description }) {
     try {
         // A. Read the file as a simple string
@@ -43,12 +47,14 @@ async function uploadTrackFile({ file, activityId, name, description }) {
 
         return await db.transaction(async (trx) => {
             const [track] = await trx('tracks').insert({
+                id: uuidv7(),
                 activityId,
                 name: fileName,
                 description: description || null,
             }).returning('*');
 
             const [polyline] = await trx('polylines').insert({
+                id: uuidv7(),
                 trackId: track.id,
                 sourceType: 'gpx',
                 geom: db.raw(
@@ -81,9 +87,15 @@ async function uploadTrackFile({ file, activityId, name, description }) {
     }
 }
 
+const getTracksByActivityId = async (activityId) => {
+    return TrackModel.getTracksByActivityId(activityId);
+};
+
 module.exports = {
     getAllTracks,
     getTrackById,
     createTrack,
+    deleteTrack,
     uploadTrackFile,
+    getTracksByActivityId
 };

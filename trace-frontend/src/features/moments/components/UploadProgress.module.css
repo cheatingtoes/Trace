@@ -1,0 +1,20 @@
+.container {
+    padding: 1rem;
+    background-color: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #333;
+}
+
+.spinner {
+    font-size: 1.2rem;
+}
+
+.subtext {
+    font-size: 0.9rem;
+    color: #666;
+}

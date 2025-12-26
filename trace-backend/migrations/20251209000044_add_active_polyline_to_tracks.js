@@ -1,6 +1,6 @@
 exports.up = function(knex) {
   return knex.schema.table('tracks', function(table) {
-    table.uuid('active_polyline_id').unsigned().nullable();
+    table.uuid('active_polyline_id').nullable();
     table.foreign('active_polyline_id').references('id').inTable('polylines').onDelete('SET NULL');
   });
 };

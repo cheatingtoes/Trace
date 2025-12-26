@@ -17,6 +17,8 @@ router.get('/:id', TracksController.getTrackById);
 // POST /api/v1/tracks - Create a new track
 router.post('/', TracksController.createTrack);
 
+router.delete('/:id', TracksController.deleteTrack);
+
 // POST /api/v1/tracks/upload-track-file - Upload a GPX file to create a track
 router.post('/upload-track-file', upload.single('file'), TracksController.uploadTrackFile);
 

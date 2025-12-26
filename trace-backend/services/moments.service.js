@@ -18,9 +18,25 @@ const getMomentById = async (id) => {
     return moment;
 };
 
+const getMomentsByActivityId = async (activityId) => {
+    return MomentModel.getMomentsByActivityId(activityId);
+};
+
 const createMoment = async (momentData) => {
     const id = uuidv7();
     return MomentModel.createMoment({ id, ...momentData });
+};
+
+const updateStatus = async (id, status) => {
+    return MomentModel.updateStatus(id, status);
+};
+
+const deleteMoment = async (id) => {
+    const moment = await MomentModel.deleteMoment(id);
+    if (!moment) {
+        throw new NotFoundError('Moment not found');
+    }
+    return moment;
 };
 
 const signBatch = async (userId, activityId, files) => {
@@ -61,15 +77,18 @@ const signBatch = async (userId, activityId, files) => {
                     fileSizeBytes: fileSize
                 });
 
+                console.error('existingMoment', existingMoment)
+
                 if (existingMoment) {
-                    return {
-                        tempId,
-                        // not a real status in DB
-                        status: 'duplicate',
-                        activityId,
-                        signedUrl: null,
-                        key: existingMoment.s3Key
-                    };
+                    if (existingMoment.status === 'processing' || existingMoment.status === 'active') {
+                        return {
+                            tempId,
+                            // not a real status in DB
+                            status: 'duplicate',
+                            activityId,
+                            signedUrl: null,
+                        };
+                    }
                 }
                 const id = uuidv7();
                 const ext = mime.extension(fileType);
@@ -129,10 +148,7 @@ const confirmBatch = async (userId, activityId, uploads) => {
             }
         });
 
-        return { 
-            success: true, 
-            count: activeMoments.length
-        };
+        return activeMoments.map(m => m.id);
     } catch (err) {
         console.error(`Error during confirmBatch for activity ${activityId}:`, err);
         throw new InternalServerError('An unexpected error occurred while confirming the batch.');
@@ -142,7 +158,10 @@ const confirmBatch = async (userId, activityId, uploads) => {
 module.exports = {
   getAllMoments,
   getMomentById,
+  getMomentsByActivityId,
   createMoment,
+  updateStatus,
+  deleteMoment,
   signBatch,
   confirmBatch,
 };

@@ -9,8 +9,16 @@ const getMomentById = (id) => {
     return db(TABLE_NAME).where({ id }).first();
 };
 
+const getMomentsByActivityId = (activityId) => {
+    return db(TABLE_NAME).where({ activityId }).whereIn('status', ['active', 'processing']).select('*');
+}
+
 const createMoment = (moment) => {
     return db(TABLE_NAME).insert(moment).returning('*');
+}
+
+const deleteMoment = (id) => {
+    return db(TABLE_NAME).where({ id }).del();
 }
 
 const findDuplicateMoment = ({ activityId, name, fileSizeBytes }) => {
@@ -21,7 +29,7 @@ const confirmBatchUploads = (activityId, momentIds) => {
     return db(TABLE_NAME).whereIn('id', momentIds)
         .andWhere('activityId', activityId)
         .andWhere('status', 'pending')
-        .update({ status: 'active' })
+        .update({ status: 'processing' })
         .returning(['id', 'type', 's3Key']);
 }
 
@@ -33,12 +41,18 @@ const updateMetadata = (momentId, meta) => {
     });
 }
 
+const updateStatus = (momentId, status) => {
+    return db(TABLE_NAME).where('id', momentId).update({ status });
+}
 
 module.exports = {
     getAllMoments,
     getMomentById,
+    getMomentsByActivityId,
     createMoment,
+    deleteMoment,
     findDuplicateMoment,
     confirmBatchUploads,
-    updateMetadata
+    updateMetadata,
+    updateStatus
 };

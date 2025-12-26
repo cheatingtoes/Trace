@@ -14,6 +14,10 @@ const createTrack = (trackData, trx) => {
     return queryBuilder(TABLE_NAME).insert(trackData);
 }
 
+const deleteTrack = (id) => {
+    return db(TABLE_NAME).where({ id }).del();
+}
+
 const getTracksByActivityId = (activityId) => {
     return db(TABLE_NAME).where({ activityId: activityId }).select('*');
 }
@@ -22,5 +26,6 @@ module.exports = {
     getAllTracks,
     getTrackById,
     createTrack,
+    deleteTrack,
     getTracksByActivityId
 };

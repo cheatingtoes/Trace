@@ -15,7 +15,7 @@ async function processUploadedMedia({ key, momentId, type }) {
 }
 
 async function processImage(key, momentId) {
-    console.log(`[MediaService] Downloading: ${key}`);
+    console.log(`[MediaService] Downloading: ${key} for moment: ${momentId}`);
 
     try {
         const response = await s3Client.send(new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key }));
@@ -49,7 +49,8 @@ async function processImage(key, momentId) {
 
         const updateData = {
             thumbnailUrl: `${config.s3.endpoint}/${BUCKET_NAME}/${thumbKey}`,
-            occuredAt: exifData?.DateTimeOriginal || new Date()
+            occuredAt: exifData?.DateTimeOriginal || new Date(),
+            status: 'active'
         };
 
         const lat = exifData?.latitude;

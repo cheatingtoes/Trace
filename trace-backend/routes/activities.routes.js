@@ -6,7 +6,7 @@ const authenticate = require('../middleware/auth');
 router.use(authenticate);
 
 // GET /api/v1/activities - Get all activities for a user
-router.get('/', ActivityController.getActivities);
+router.get('/', ActivityController.getActivitiesForUser);
 
 // GET /api/v1/activities/:id - Get a single activity by ID
 router.get('/:id', ActivityController.getActivityById);
@@ -14,7 +14,10 @@ router.get('/:id', ActivityController.getActivityById);
 // POST /api/v1/activities - Create a new activity
 router.post('/', ActivityController.createActivity);
 
-// GET /api/v1/activities/:id/routes - Get all routes for an activity
-router.get('/:id/routes', ActivityController.getActivityRoutes);
+// GET /api/v1/activities/:id/tracks - Get all tracks for an activity
+router.get('/:id/tracks', ActivityController.getTracksByActivityId);
+
+// GET /api/v1/activities/:id/moments - Get all moments for an activity
+router.get('/:id/moments', ActivityController.getMomentsByActivityId);
 
 module.exports = router;

@@ -1,8 +1,10 @@
 const ActivityService = require('../services/activities.service');
+const TracksService = require('../services/tracks.service');
+const MomentsService = require('../services/moments.service');
 const { success } = require('../utils/apiResponse');
 
 
-const getActivities = async (req, res, next) => {
+const getActivitiesForUser = async (req, res, next) => {
     try {
         const activities = await ActivityService.getActivitiesByUserId(req.user.id);
         res.status(200).json(success(activities));
@@ -34,19 +36,30 @@ const createActivity = async (req, res, next) => {
     }
 }
 
-const getActivityRoutes = async (req, res, next) => {
+const getTracksByActivityId = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const activityRoutes = await ActivityService.getActivityRoutes(id);
+        const activityRoutes = await TracksService.getTracksByActivityId(id);
         res.status(200).json(success(activityRoutes));
     } catch (error) {
         next(error);
     }
 }
 
+const getMomentsByActivityId = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const activityMoments = await MomentsService.getMomentsByActivityId(id);
+        res.status(200).json(success(activityMoments));
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
-    getActivities,
+    getActivitiesForUser,
     getActivityById,
     createActivity,
-    getActivityRoutes,
+    getTracksByActivityId,
+    getMomentsByActivityId
 }

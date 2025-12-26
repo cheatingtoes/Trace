@@ -17,13 +17,8 @@ const createActivity = async (activityData, userId) => {
     return newActivity;
 };
 
-const getActivityRoutes = async (id) => {
-    return TrackModel.getTracksByActivityId(id);
-};
-
 module.exports = {
     getActivitiesByUserId,
     getActivityById,
     createActivity,
-    getActivityRoutes,
 };

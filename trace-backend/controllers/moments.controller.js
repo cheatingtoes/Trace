@@ -30,6 +30,16 @@ const createMoment = async (req, res, next) => {
     }
 }
 
+const deleteMoment = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deletedMoment = await MomentService.deleteMoment(id);
+        res.status(200).json(success(deletedMoment));
+    } catch (error) {
+        next(error);
+    }
+}
+
 const signBatch = async (req, res, next) => {
     const { id: userId } = req.user;
     const { activityId, files } = req.body; // Expecting array of { tempId, fileName, fileType, fileSize, lastModified }
@@ -85,6 +95,7 @@ module.exports = {
     getAllMoments,
     getMomentById,
     createMoment,
+    deleteMoment,
     signBatch,
     confirmBatch,
 }
