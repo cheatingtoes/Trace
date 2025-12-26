@@ -1,6 +1,7 @@
 const { Worker } = require('bullmq');
 const connection = require('./connection');
 const { processUploadedMedia } = require('../services/media.service');
+const { processGpxStream } = require('../services/gpx.processor');
 
 console.log('[Worker] Starting Trace Media Workers...');
 
@@ -25,9 +26,24 @@ const videoWorker = new Worker('media-video', async (job) => {
 
 }, { connection, concurrency: 1 }); // Strictly 1 video at a time
 
+// 3. GPX Worker (Single Concurrency to save DB CPU)
+const gpxWorker = new Worker('media-gpx', async (job) => {
+  const { trackId, s3Key } = job.data;
+  
+  console.log(`[GPX-Worker] Processing Track #${trackId}...`);
+  
+  // Update status to 'processing'
+  // await updateTrackStatus(trackId, 'processing'); 
+
+  await processGpxStream({ s3Key, trackId });
+
+  // Update status to 'ready'
+  // await updateTrackStatus(trackId, 'ready');
+
+}, { connection, concurrency: 1 });
 
 // --- Lifecycle & Error Handling ---
-const workers = [imageWorker, videoWorker];
+const workers = [imageWorker, videoWorker, gpxWorker];
 
 workers.forEach(worker => {
   worker.on('completed', (job) => console.log(`[${worker.name}] Job ${job.id} finished.`));

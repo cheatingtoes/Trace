@@ -10,8 +10,12 @@ exports.up = function(knex) {
     table.foreign('activity_id').references('id').inTable('activities').onDelete('CASCADE');
 
     table.enum('status', ['pending', 'processing', 'active', 'failed']).defaultTo('pending').notNullable();
-    table.string('name').notNullable();
-    table.bigInteger('file_size_bytes').notNullable();
+    table.string('name')
+    table.bigInteger('file_size_bytes');
+    table.string('storage_key');
+    table.string('storage_thumb_key');
+    table.string('storage_web_key');
+    table.string('mime_type');
 
     // type, ENUM,"'image', 'video', 'note', 'audio'"
     table.enum('type', ['image', 'video', 'note', 'audio']).notNullable();
@@ -26,23 +30,16 @@ exports.up = function(knex) {
     // mile_marker, NUMERIC, Calculated distance on trail.
     table.decimal('mile_marker');
 
-    // media_url, VARCHAR, S3 URL for the image/video/audio file (NULL for notes).
-    table.string('s3_key');
-    table.string('media_url');
-
     // thumbnail_url, VARCHAR, Optimized small image for the map (NULL for notes/audio).
     table.string('thumbnail_url');
 
-    // body, TEXT,"The body text for a Note, or the caption for a image."
     table.text('body');
 
     // metadata, JSONB, The Magic Column. Stores type-specific data.
     table.jsonb('metadata');
 
-    // Add default created_at and updated_at
     table.timestamps(true, true);
 
-    // Add indexes for performance
     table.index(['activity_id', 'name', 'file_size_bytes', 'occured_at']);
   })
   // Add a spatial index for the geom column for fast location-based queries

@@ -37,57 +37,57 @@ exports.seed = async function(knex) {
         // The '?' is a binding that prevents SQL injection.
         // 4326 is the SRID for standard GPS coordinates (WGS 84).
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [pacificCrestTrail_v1]),
-        sourceUrl: 'http://example.com/pct_v1',
-        sourceType: 'gpx'
+        storage_key: 'http://example.com/pct_v1',
+        mime_type: 'gpx'
     },
     {
         id: uuidv7(),
         trackId: PCTTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [pacificCrestTrail_v2]),
-        sourceUrl: 'http://example.com/pct_v2',
-        sourceType: 'gpx'
+        storage_key: 'http://example.com/pct_v2',
+        mime_type: 'gpx'
     },
     {
         id: uuidv7(),
         trackId: OCTTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [oregonCoastTrail_v1]),
-        sourceUrl: 'http://example.com/oct_v1',
-        sourceType: 'gpx'
+        storage_key: 'http://example.com/oct_v1',
+        mime_type: 'gpx'
     },
     {
         id: uuidv7(),
         trackId: OCTTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [oregonCoastTrail_v2]),
-        sourceUrl: 'http://example.com/oct_v1',
-        sourceType: 'gpx'
+        storage_key: 'http://example.com/oct_v1',
+        mime_type: 'gpx'
     },
     {
         id: uuidv7(),
         trackId: ATTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [appalachianTrail_v1]),
-        sourceUrl: 'http://example.com/at_v1',
-        sourceType: 'gpx'
+        storage_key: 'http://example.com/at_v1',
+        mime_type: 'gpx'
     },
     {
         id: uuidv7(),
         trackId: ATTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [appalachianTrail_v2]),
-        sourceUrl: 'http://example.com/at_v1',
-        sourceType: 'gpx'
+        storage_key: 'http://example.com/at_v1',
+        mime_type: 'gpx'
     },
     {
         id: uuidv7(),
         trackId: sierrasTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [sierras_v1]),
-        sourceUrl: 'http://example.com/sierras_v1',
-        sourceType: 'gpx'
+        storage_key: 'http://example.com/sierras_v1',
+        mime_type: 'gpx'
     },
     {
         id: uuidv7(),
         trackId: sierrasTrack.id,
         geom: knex.raw('ST_Force3D(ST_GeomFromText(?, 4326))', [sierras_v2]),
-        sourceUrl: 'http://example.com/sierras_v2',
-        sourceType: 'gpx'
+        storage_key: 'http://example.com/sierras_v2',
+        mime_type: 'gpx'
     }
   ]);
 };

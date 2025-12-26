@@ -16,11 +16,22 @@ const imageQueue = new Queue('media-image', {
 const videoQueue = new Queue('media-video', { 
   connection,
   defaultJobOptions: {
-    attempts: 5,
+    attempts: 3,
     backoff: { type: 'exponential', delay: 5000 },
     removeOnComplete: true,
     removeOnFail: 100
   }
 });
 
-module.exports = { imageQueue, videoQueue };
+// 3. GPX Queue (Medium Priority, CPU Intensive)
+const gpxQueue = new Queue('media-gpx', { 
+  connection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 }, // Wait 2s, 4s, 8s on fail
+    removeOnComplete: true,
+    removeOnFail: 1000 
+  }
+});
+
+module.exports = { imageQueue, videoQueue, gpxQueue };

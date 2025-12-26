@@ -17,6 +17,8 @@ router.post('/', ActivityController.createActivity);
 // GET /api/v1/activities/:id/tracks - Get all tracks for an activity
 router.get('/:id/tracks', ActivityController.getTracksByActivityId);
 
+router.delete('/:id/tracks', ActivityController.deleteTracksByActivityId);
+
 // GET /api/v1/activities/:id/moments - Get all moments for an activity
 router.get('/:id/moments', ActivityController.getMomentsByActivityId);
 

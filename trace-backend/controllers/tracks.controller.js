@@ -1,7 +1,8 @@
 const TracksService = require('../services/tracks.service');
-const { isGpx, MAX_GPX_SIZE_BYTES } = require('../constants/mediaTypes');
+const { gpxQueue } = require('../jobs/queues');
 const { success } = require('../utils/apiResponse');
-const { BadRequestError, NotFoundError } = require('../errors/customErrors');
+const { getPresignedUploadUrl } = require('../services/s3.service');
+const { NotFoundError } = require('../errors/customErrors');
 
 const getAllTracks = async (req, res, next) => {
     try {
@@ -52,16 +53,6 @@ const deleteTrack = async (req, res, next) => {
 
 const uploadTrackFile = async (req, res, next) => {
     try {
-        if (!req.file) {
-            throw new BadRequestError('No file uploaded. Check field name is "file".');
-        }
-        if (!isGpx(req.file.mimetype, req.file.originalname)) {
-            throw new BadRequestError('File not valid. Please upload a gpx file.');
-        }
-        if (req.file.size > MAX_GPX_SIZE_BYTES) {
-            throw new BadRequestError(`File is too large. Maximum size is ${MAX_GPX_SIZE_BYTES / 1024 / 1024} MB.`);
-        }
-        
         const newTrack = await TracksService.uploadTrackFile({
           file: req.file,
           activityId: req.body.activityId,
@@ -75,10 +66,58 @@ const uploadTrackFile = async (req, res, next) => {
     }
 }
 
+// 1. GET /tracks/upload-url
+const getTrackUploadUrl = async (req, res, next) => {
+    try {
+        const { id } = req.user;
+        const { activityId, file } = req.body;
+        
+        const payload = await TracksService.getTrackUploadUrl(id, activityId, file);
+        res.json(success(payload));
+    } catch (err) {
+        next(err);
+    }
+};
+
+// 2. POST /tracks/finalize-upload
+const confirmUpload = async (req, res, next) => {
+    try {
+        const { s3Key, trackId, polylineId } = req.body;
+
+        // A. Create the Track entry in DB (Status: 'processing')
+        // const newTrack = await TracksService.createTrack({ 
+        //    name, description, activityId, status: 'processing' 
+        // });
+        
+        // B. Add to Queue
+        const track = await TracksService.confirmUpload(trackId, polylineId, s3Key);
+
+        res.status(202).json(success({ 
+            message: 'Track is processing', 
+            track,
+        }));
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getTracksByStatus = async (req, res, next) => {
+    try {
+        const { ids } = req.body;
+        const tracks = await TracksService.getTracksByStatus(ids);
+        res.status(200).json(success(tracks));
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getAllTracks,
     getTrackById,
     createTrack,
     deleteTrack,
     uploadTrackFile,
+    getTrackUploadUrl,
+    confirmUpload,
+    getTracksByStatus
 }

@@ -112,9 +112,9 @@ const signBatch = async (userId, activityId, files) => {
                 }
                 const id = uuidv7();
                 const ext = mime.extension(fileType);
-                const s3Key = `${userId}/activities/${activityId}/${type}s/${id}.${ext}`
+                const key = `${userId}/activities/${activityId}/${type}s/${id}.${ext}`
 
-                const { signedUrl, key } = await s3Service.getPresignedUploadUrl(s3Key, fileType);
+                const signedUrl = await s3Service.getPresignedUploadUrl(key, fileType);
                 const [newMoment] = await MomentModel.createMoment({
                     id,
                     activityId,
@@ -122,7 +122,7 @@ const signBatch = async (userId, activityId, files) => {
                     name: fileName,
                     fileSizeBytes: fileSize,
                     type,
-                    s3Key: key
+                    storage_key: key
                 });
 
                 return {

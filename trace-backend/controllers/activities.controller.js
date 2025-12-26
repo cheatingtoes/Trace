@@ -46,6 +46,16 @@ const getTracksByActivityId = async (req, res, next) => {
     }
 }
 
+const deleteTracksByActivityId = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deletedTracks = await TracksService.deleteTracksByActivityId(id);
+        res.status(200).json(success(deletedTracks));
+    } catch (error) {
+        next(error);
+    }
+}
+
 const getMomentsByActivityId = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -71,6 +81,7 @@ module.exports = {
     getActivityById,
     createActivity,
     getTracksByActivityId,
+    deleteTracksByActivityId,
     getMomentsByActivityId,
     deleteMomentsByActivityId,
 }

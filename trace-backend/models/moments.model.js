@@ -44,7 +44,7 @@ const deleteMoment = (id) => {
 }
 
 const findDuplicateMoment = ({ activityId, name, fileSizeBytes }) => {
-    return db(TABLE_NAME).where({ activityId, name, fileSizeBytes }).returning(['id', 's3Key']);
+    return db(TABLE_NAME).where({ activityId, name, fileSizeBytes }).returning(['id', 'storageKey']);
 }
 
 const confirmBatchUploads = (activityId, momentIds) => {
@@ -52,7 +52,7 @@ const confirmBatchUploads = (activityId, momentIds) => {
         .andWhere('activityId', activityId)
         .andWhere('status', 'pending')
         .update({ status: 'processing' })
-        .returning(['id', 'type', 's3Key']);
+        .returning(['id', 'type', 'storage_key']);
 }
 
 const updateMetadata = (momentId, meta) => {

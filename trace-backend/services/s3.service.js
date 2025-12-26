@@ -42,8 +42,7 @@ async function getPresignedUploadUrl(key, fileType) {
         Key: key,
         ContentType: fileType,
     });
-    const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 600 });
-    return { signedUrl, key };
+    return getSignedUrl(s3Client, command, { expiresIn: 600 });
 }
 
 module.exports = {

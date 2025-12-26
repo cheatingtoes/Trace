@@ -37,7 +37,7 @@ const ALLOWED_MIME_TYPES = [
     ...AUDIO_TYPES
 ];
 
-const MAX_GPX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+const MAX_GPX_SIZE_BYTES = 100 * 1024 * 1024; // 50 MB
 
 const isGpx = (mimeType, fileName) => {
     const lowerCaseFileName = fileName.toLowerCase();

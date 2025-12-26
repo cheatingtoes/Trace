@@ -44,15 +44,13 @@ exports.seed = async function(knex) {
         id: uuidv7(),
         activityId: activity.id,
         status: 'pending',
+        type: 'image',
         name: `photo_${i}.jpg`,
         fileSizeBytes: Math.floor(Math.random() * (5000000 - 1000000 + 1) + 1000000),
-        type: 'image',
-        occured_at: new Date(new Date().getTime() - Math.random() * 1000 * 60 * 60 * 24 * 30), // random time in the last 30 days
+        occuredAt: new Date(new Date().getTime() - Math.random() * 1000 * 60 * 60 * 24 * 30), // random time in the last 30 days
         // Use ST_LineInterpolatePoint to find a point along the polyline and explicitly set SRID.
-        geom: knex.raw('ST_SetSRID(ST_LineInterpolatePoint((SELECT geom FROM polylines WHERE id = ?), ?), 4326)', [track.active_polyline_id, fraction]),
-        mile_marker: Math.random() * 20, // Placeholder mile marker
-        mediaUrl: `https://picsum.photos/seed/${activity.id}${track.id}${i}/800/600`,
-        thumbnailUrl: `https://picsum.photos/seed/${activity.id}${track.id}${i}/200/150`,
+        geom: knex.raw('ST_SetSRID(ST_LineInterpolatePoint((SELECT geom FROM polylines WHERE id = ?), ?), 4326)', [track.activePolylineId, fraction]),
+        mileMarker: Math.random() * 20, // Placeholder mile marker
         body: `A photo from the ${track.name}.`,
         metadata: {
           camera: 'Virtual Camera',

@@ -5,6 +5,10 @@ const toGeoJSON = require('@mapbox/togeojson');
 const db = require('../config/db');
 const s3Service = require('../services/s3.service');
 const TrackModel = require('../models/tracks.model');
+const { BadRequestError } = require('../errors/customErrors');
+const { isGpx, MAX_GPX_SIZE_BYTES } = require('../constants/mediaTypes');
+const { gpxQueue } = require('../jobs/queues');
+
 
 const getAllTracks = () => {
     return TrackModel.getAllTracks();
@@ -23,8 +27,21 @@ const deleteTrack = (id) => {
     return TrackModel.deleteTrack(id);
 };
 
+const deleteTracksByActivityId = async (activityId) => {
+    return TrackModel.deleteTracksByActivityId(activityId);
+}
+
 async function uploadTrackFile({ file, activityId, name, description }) {
     try {
+        if (!file) {
+            throw new BadRequestError('No file uploaded. Check field name is "file".');
+        }
+        if (!isGpx(file.mimetype, file.originalname)) {
+            throw new BadRequestError('File not valid. Please upload a gpx file.');
+        }
+        if (file.size > MAX_GPX_SIZE_BYTES) {
+            throw new BadRequestError(`File is too large. Maximum size is ${MAX_GPX_SIZE_BYTES / 1024 / 1024} MB.`);
+        }
         // A. Read the file as a simple string
         const gpxString = fs.readFileSync(file.path, 'utf8');
         // B. Parse string -> DOM Node (This is the step that usually breaks)
@@ -45,7 +62,7 @@ async function uploadTrackFile({ file, activityId, name, description }) {
         const { geometry, properties} = trackFeature;
         const fileName = name || properties.name || file.originalname;
 
-        return await db.transaction(async (trx) => {
+        const updatedTrack = await db.transaction(async (trx) => {
             const [track] = await trx('tracks').insert({
                 id: uuidv7(),
                 activityId,
@@ -56,26 +73,36 @@ async function uploadTrackFile({ file, activityId, name, description }) {
             const [polyline] = await trx('polylines').insert({
                 id: uuidv7(),
                 trackId: track.id,
-                sourceType: 'gpx',
+                mimeType: 'application/gpx+xml',
+                fileSizeBytes: file.size,
                 geom: db.raw(
                     'ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', 
                     [JSON.stringify(geometry)]
                 )
             }).returning('*');
 
-            const s3Key = `/polylines/${polyline.id}/gpx/${polyline.id}.gpx`;
+            const s3Key = `${userId}/activities/${activityId}/polylines/${polyline.id}.gpx`
 
-            const sourceUrl = await s3Service.uploadFile({
+            await s3Service.uploadFile({
                 key: s3Key,
                 body: gpxString,
                 contentType: 'application/gpx+xml',
             });
 
-            await trx('polylines').where({ id: polyline.id }).update({ sourceUrl: sourceUrl });
-            const [updatedTrack] = await trx('tracks').where({ id: track.id }).update({ activePolylineId: polyline.id }).returning('*');
+            await trx('polylines').where({ id: polyline.id }).update({ storageKey: s3Key });
+            await trx('tracks').where({ id: track.id }).update({ activePolylineId: polyline.id });
 
-            return updatedTrack;
+            // Return the ID so we can fetch the full object outside the transaction (or inside if model supports trx)
+            return track.id;
         });
+
+        // Fetch the full track with polyline structure
+        const fullTrack = await TrackModel.getTrackWithPolyline(updatedTrack);
+        
+        return {
+            ...fullTrack,
+            polyline: fullTrack.polyline ? JSON.parse(fullTrack.polyline) : null
+        };
 
     } catch (err) {
         console.error("GPX Parse Error:", err);
@@ -88,14 +115,72 @@ async function uploadTrackFile({ file, activityId, name, description }) {
 }
 
 const getTracksByActivityId = async (activityId) => {
-    const tracks = await db('tracks')
-        .leftJoin('polylines', 'tracks.activePolylineId', 'polylines.id')
-        .where('tracks.activityId', activityId)
-        .select(
-            'tracks.*',
-            db.raw('ST_AsGeoJSON(polylines.geom) as polyline')
-        );
+    const tracks = await TrackModel.getTracksByActivityId(activityId);
+    return tracks.map(track => ({
+        ...track,
+        polyline: track.polyline ? JSON.parse(track.polyline) : null
+    }));
+};
 
+const getTrackUploadUrl = async (userId, activityId, file) => {
+    if (!userId || !activityId || !file) {
+        throw new BadRequestError('Missing required fields');
+    }
+    const mimeType = 'application/gpx+xml'; // Standardize on this
+    // Simple validation, though the real check is on the file content later
+    if (!file.originalname.toLowerCase().endsWith('.gpx')) {
+         throw new BadRequestError('File not valid. Please upload a gpx file.');
+    }
+    // Note: file.size might not be available if this is just a request for a URL before upload
+    // If 'file' here is just metadata (name, type, size) from the frontend:
+    const fileSize = file.size || 0; 
+
+    if (fileSize > MAX_GPX_SIZE_BYTES) {
+        throw new BadRequestError(`File is too large. Maximum size is ${MAX_GPX_SIZE_BYTES / 1024 / 1024} MB.`);
+    }
+
+    const { signedUrl, key, trackId, polylineId } = await db.transaction(async (trx) => {
+        const [track] = await trx('tracks').insert({
+            id: uuidv7(),
+            activityId,
+            status: 'pending',
+            name: file.originalname || 'Untitled Track',
+        }).returning('*');
+
+        const [polyline] = await trx('polylines').insert({
+            id: uuidv7(),
+            trackId: track.id,
+            mimeType: mimeType,
+            fileSizeBytes: fileSize,
+            // storageKey will be updated after upload confirmation
+        }).returning('*');
+
+        const s3Key = `${userId}/activities/${activityId}/polylines/${polyline.id}.gpx`;
+        const signedUrl = await s3Service.getPresignedUploadUrl(s3Key, mimeType);
+        await trx('tracks').where({ id: track.id }).update({ activePolylineId: polyline.id });
+
+        return { signedUrl, key: s3Key, trackId: track.id, polylineId: polyline.id };
+    });
+    
+    return { signedUrl, key, trackId, polylineId };
+};
+
+const confirmUpload = async (trackId, polylineId, s3Key) => {
+    if (!trackId || !polylineId || !s3Key) {
+        throw new BadRequestError('Missing required fields');
+    }
+    gpxQueue.add('process-gpx', {
+        trackId,
+        polylineId,
+        s3Key
+    });
+    
+    return TrackModel.updateStatus(trackId, 'processing');
+};
+
+const getTracksByStatus = async (ids) => {
+    if (!ids || ids.length === 0) return [];
+    const tracks = await TrackModel.getTracksByIds(ids);
     return tracks.map(track => ({
         ...track,
         polyline: track.polyline ? JSON.parse(track.polyline) : null
@@ -107,6 +192,10 @@ module.exports = {
     getTrackById,
     createTrack,
     deleteTrack,
+    deleteTracksByActivityId,
     uploadTrackFile,
-    getTracksByActivityId
+    getTracksByActivityId,
+    getTrackUploadUrl,
+    confirmUpload,
+    getTracksByStatus
 };

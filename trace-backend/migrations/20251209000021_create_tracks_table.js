@@ -8,6 +8,7 @@ exports.up = function(knex) {
     table.timestamps(true, true);
     table.string('name').notNullable();
     table.text('description');
+    table.enum('status', ['pending', 'processing', 'active', 'failed']).defaultTo('pending').notNullable();
     
     table.uuid('activity_id').notNullable();
     table.foreign('activity_id').references('id').inTable('activities').onDelete('CASCADE');

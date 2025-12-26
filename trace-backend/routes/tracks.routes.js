@@ -22,4 +22,8 @@ router.delete('/:id', TracksController.deleteTrack);
 // POST /api/v1/tracks/upload-track-file - Upload a GPX file to create a track
 router.post('/upload-track-file', upload.single('file'), TracksController.uploadTrackFile);
 
+router.post('/upload-url', TracksController.getTrackUploadUrl);
+router.post('/confirm-upload', TracksController.confirmUpload);
+router.post('/status-batch', TracksController.getTracksByStatus);
+
 module.exports = router;
