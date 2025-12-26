@@ -1,14 +1,16 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import styles from './MomentsEditView.module.css';
 
 const MomentsEditView = ({ 
     moments = [], 
     onUpload, 
-    onDelete, 
-    onNameChange 
+    onDelete,
+    onNameChange,
+    onMomentHover
 }) => {
     const fileInputRef = useRef(null);
     const folderInputRef = useRef(null);
+    const [isDragOver, setIsDragOver] = useState(false);
 
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files || []);
@@ -23,6 +25,7 @@ const MomentsEditView = ({
         e.preventDefault();
         e.stopPropagation();
         const files = Array.from(e.dataTransfer.files || []);
+        setIsDragOver(false);
         if (files.length > 0 && onUpload) {
             onUpload(files);
         }
@@ -31,6 +34,13 @@ const MomentsEditView = ({
     const handleDragOver = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (!isDragOver) setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
     };
 
     return (
@@ -43,17 +53,26 @@ const MomentsEditView = ({
                 className={styles.uploadZone}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
-                onClick={() => fileInputRef.current?.click()}
+                onDragLeave={handleDragLeave}
+                style={isDragOver ? { backgroundColor: 'rgba(0, 123, 255, 0.1)', borderColor: '#007bff' } : {}}
+                onClick={(e) => {
+                    // If the click target or any of its ancestors is a button, do nothing.
+                    // This prevents the zone's click handler from firing when a button is clicked.
+                    if (e.target.closest('button') || e.target.tagName === 'INPUT') {
+                        return;
+                    }
+                    fileInputRef.current?.click();
+                }}
             >
                 <div className={styles.uploadActions}>
                     <button 
-                        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }} 
+                        onClick={() => fileInputRef.current?.click()}
                         className={styles.uploadBtn}
                     >
                         [ + Upload Files ]
                     </button>
                     <button 
-                        onClick={(e) => { e.stopPropagation(); folderInputRef.current?.click(); }} 
+                        onClick={() => folderInputRef.current?.click()}
                         className={styles.uploadBtn}
                     >
                         [ + Upload Folder ]
@@ -83,9 +102,15 @@ const MomentsEditView = ({
 
             <ul className={styles.momentList}>
                 {moments.map((moment, index) => (
-                    <li key={moment.id || index} className={styles.momentItem}>
+                    <li 
+                        key={moment.id || index} 
+                        className={styles.momentItem}
+                        onMouseEnter={() => onMomentHover && onMomentHover(moment.id)}
+                        onMouseLeave={() => onMomentHover && onMomentHover(null)}
+                    >
                         <div className={styles.leftGroup}>
                             <span className={styles.index}>{index + 1}.</span>
+                            <img src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageWebKey}`} />
                             <input 
                                 type="text" 
                                 value={moment.name || moment.filename || ''} 

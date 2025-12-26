@@ -57,7 +57,8 @@ const uploadTrackFile = async (req, res, next) => {
           file: req.file,
           activityId: req.body.activityId,
           name: req.body.name,
-          description: req.body.description
+          description: req.body.description,
+          userId: req.user.id
         });
         
         res.status(201).json(success(newTrack));
@@ -82,7 +83,7 @@ const getTrackUploadUrl = async (req, res, next) => {
 // 2. POST /tracks/finalize-upload
 const confirmUpload = async (req, res, next) => {
     try {
-        const { s3Key, trackId, polylineId } = req.body;
+        const { key, trackId, polylineId } = req.body;
 
         // A. Create the Track entry in DB (Status: 'processing')
         // const newTrack = await TracksService.createTrack({ 
@@ -90,7 +91,7 @@ const confirmUpload = async (req, res, next) => {
         // });
         
         // B. Add to Queue
-        const track = await TracksService.confirmUpload(trackId, polylineId, s3Key);
+        const track = await TracksService.confirmUpload(trackId, polylineId, key);
 
         res.status(202).json(success({ 
             message: 'Track is processing', 

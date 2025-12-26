@@ -31,7 +31,7 @@ const deleteTracksByActivityId = async (activityId) => {
     return TrackModel.deleteTracksByActivityId(activityId);
 }
 
-async function uploadTrackFile({ file, activityId, name, description }) {
+async function uploadTrackFile({ file, activityId, name, description, userId }) {
     try {
         if (!file) {
             throw new BadRequestError('No file uploaded. Check field name is "file".');
@@ -81,15 +81,15 @@ async function uploadTrackFile({ file, activityId, name, description }) {
                 )
             }).returning('*');
 
-            const s3Key = `${userId}/activities/${activityId}/polylines/${polyline.id}.gpx`
+            const key = `${userId}/activities/${activityId}/polylines/${polyline.id}.gpx`
 
             await s3Service.uploadFile({
-                key: s3Key,
+                key: key,
                 body: gpxString,
                 contentType: 'application/gpx+xml',
             });
 
-            await trx('polylines').where({ id: polyline.id }).update({ storageKey: s3Key });
+            await trx('polylines').where({ id: polyline.id }).update({ storageKey: key });
             await trx('tracks').where({ id: track.id }).update({ activePolylineId: polyline.id });
 
             // Return the ID so we can fetch the full object outside the transaction (or inside if model supports trx)
@@ -139,6 +139,21 @@ const getTrackUploadUrl = async (userId, activityId, file) => {
         throw new BadRequestError(`File is too large. Maximum size is ${MAX_GPX_SIZE_BYTES / 1024 / 1024} MB.`);
     }
 
+    // Check for duplicates
+    const duplicate = await TrackModel.findDuplicateTrack({
+        activityId,
+        name: file.originalname,
+        fileSizeBytes: fileSize
+    });
+
+    if (duplicate) {
+        return {
+            status: 'duplicate',
+            trackId: duplicate.id,
+            message: 'File already exists for this activity.'
+        };
+    }
+
     const { signedUrl, key, trackId, polylineId } = await db.transaction(async (trx) => {
         const [track] = await trx('tracks').insert({
             id: uuidv7(),
@@ -155,24 +170,24 @@ const getTrackUploadUrl = async (userId, activityId, file) => {
             // storageKey will be updated after upload confirmation
         }).returning('*');
 
-        const s3Key = `${userId}/activities/${activityId}/polylines/${polyline.id}.gpx`;
-        const signedUrl = await s3Service.getPresignedUploadUrl(s3Key, mimeType);
+        const key = `${userId}/activities/${activityId}/polylines/${polyline.id}.gpx`;
+        const signedUrl = await s3Service.getPresignedUploadUrl(key, mimeType);
         await trx('tracks').where({ id: track.id }).update({ activePolylineId: polyline.id });
 
-        return { signedUrl, key: s3Key, trackId: track.id, polylineId: polyline.id };
+        return { signedUrl, key, trackId: track.id, polylineId: polyline.id };
     });
     
     return { signedUrl, key, trackId, polylineId };
 };
 
-const confirmUpload = async (trackId, polylineId, s3Key) => {
-    if (!trackId || !polylineId || !s3Key) {
+const confirmUpload = async (trackId, polylineId, key) => {
+    if (!trackId || !polylineId || !key) {
         throw new BadRequestError('Missing required fields');
     }
     gpxQueue.add('process-gpx', {
         trackId,
         polylineId,
-        s3Key
+        storageKey: key
     });
     
     return TrackModel.updateStatus(trackId, 'processing');

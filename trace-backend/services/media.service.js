@@ -66,14 +66,34 @@ async function processImage(key, momentId) {
             ContentType: 'image/jpeg'
         }));
 
+        let occuredAt = exifData?.DateTimeOriginal || new Date();
+        if (exifData?.DateTimeOriginal && exifData?.OffsetTimeOriginal) {
+            const { DateTimeOriginal, OffsetTimeOriginal } = exifData;
+            const year = DateTimeOriginal.getFullYear();
+            const month = String(DateTimeOriginal.getMonth() + 1).padStart(2, '0');
+            const day = String(DateTimeOriginal.getDate()).padStart(2, '0');
+            const hours = String(DateTimeOriginal.getHours()).padStart(2, '0');
+            const minutes = String(DateTimeOriginal.getMinutes()).padStart(2, '0');
+            const seconds = String(DateTimeOriginal.getSeconds()).padStart(2, '0');
+
+            // Reconstruct ISO 8601 string with the correct offset.
+            const isoStringWithOffset = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${OffsetTimeOriginal}`;
+            const dateWithOffset = new Date(isoStringWithOffset);
+            if (!isNaN(dateWithOffset.getTime())) {
+                occuredAt = dateWithOffset;
+            }
+        }
+
         const updateData = {
             storageKey: key,
             storageThumbKey: thumbKey,
             storageWebKey: webKey,
             mimeType: 'image/jpeg',
-            occuredAt: exifData?.DateTimeOriginal || new Date(),
+            occuredAt,
             status: 'active'
         };
+
+        console.log('exif data', exifData)
 
         const lat = exifData?.latitude;
         const lon = exifData?.longitude;

@@ -9,6 +9,7 @@ const useMoments = (activityId = null) => {
     const [uploadingFiles, setUploadingFiles] = useState(new Map()); // Map<tempId, File>
     const [processingIds, setProcessingIds] = useState(new Set());   // Set<momentId>
     const [failedUploads, setFailedUploads] = useState(new Map());  // Map<tempId, File>
+    const [duplicates, setDuplicates] = useState(new Map());        // Map<tempId, File>
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -40,6 +41,7 @@ const useMoments = (activityId = null) => {
     const uploadMoments = async (filesInput) => {
         if (error) setError(null);
         setLoading(true);
+        setDuplicates(new Map()); // Clear previous duplicates on new upload
 
         if (filesInput instanceof Map) {
              setFailedUploads(prev => {
@@ -55,6 +57,19 @@ const useMoments = (activityId = null) => {
                     case 'UPLOADING': {
                         const { tempId, file } = event.payload;
                         setUploadingFiles(prev => new Map(prev).set(tempId, file));
+                        break;
+                    }
+                    case 'DUPLICATE': {
+                        const { tempId, momentId, file } = event.payload;
+                        console.log(`Duplicate file detected. Temp ID: ${tempId}, Existing Moment ID: ${momentId}`);
+                        // Remove from uploading files state
+                        setUploadingFiles(prev => {
+                            const next = new Map(prev);
+                            next.delete(tempId);
+                            return next;
+                        });
+                        // Add to duplicates state
+                        setDuplicates(prev => new Map(prev).set(tempId, file));
                         break;
                     }
                     case 'PROCESSING': {
@@ -132,6 +147,6 @@ const useMoments = (activityId = null) => {
         });
     }, []);
 
-    return { moments, uploadingFiles, processingIds: Array.from(processingIds), failedUploads, loading, error, fetchMoments, uploadMoments, deleteMoment, updateMoment, updateMomentsState };
+    return { moments, uploadingFiles, processingIds: Array.from(processingIds), failedUploads, duplicates, loading, error, fetchMoments, uploadMoments, deleteMoment, updateMoment, updateMomentsState };
 };
 export default useMoments;

@@ -32,7 +32,8 @@ export const useLogin = () => {
     };
 
     const handleGoogleLogin = () => {
-        window.location.href = `/auth/google`;
+        const baseURL = import.meta.env.VITE_API_ENDPOINT || '';
+        window.location.href = `${baseURL}/auth/google`;
     };
 
     return {

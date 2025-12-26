@@ -160,11 +160,11 @@ const confirmBatch = async (userId, activityId, uploads) => {
 
     try {
         const activeMoments = await MomentModel.confirmBatchUploads(activityId, momentIds);
-        activeMoments.forEach(({ id, type, s3Key }) => {
+        activeMoments.forEach(({ id, type, storageKey }) => {
             if (type === 'image') {
-                imageQueue.add('process-image', { momentId: id, s3Key });
+                imageQueue.add('process-image', { momentId: id, storageKey });
             } else if (type === 'video') {
-                videoQueue.add('process-video', { momentId: id, s3Key });
+                videoQueue.add('process-video', { momentId: id, storageKey });
             }
         });
 

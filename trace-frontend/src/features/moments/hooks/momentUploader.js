@@ -1,21 +1,5 @@
 import api from '../../../api/axios';
-
-// Helper: Generic Retry Logic with Exponential Backoff
-const retryOperation = async (operation, maxRetries = 3, baseDelay = 1000) => {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            return await operation();
-        } catch (err) {
-            // If it's a 4xx error (User Error), usually don't retry.
-            if (err.response && err.response.status >= 400 && err.response.status < 500) {
-                throw err;
-            }
-            if (i === maxRetries - 1) throw err;
-            const delay = baseDelay * Math.pow(2, i);
-            await new Promise(res => setTimeout(res, delay));
-        }
-    }
-};
+import { retryOperation, uploadToS3 } from '../../../utils/upload';
 
 /**
  * An async generator function that orchestrates the multi-step upload process
@@ -65,28 +49,35 @@ export async function* uploadMomentFiles({ activityId, filesInput }) {
 
             // --- STEP 2: UPLOAD TO S3 ---
             const uploadResults = await Promise.all(signedFiles.map(async (signedData) => {
-                const { tempId, signedUrl } = signedData;
+                const { tempId, signedUrl, status } = signedData;
+
+                if (status === 'duplicate') {
+                    // The backend returns the existing moment's ID.
+                    return { tempId, success: true, status: 'duplicate', momentId: signedData.id };
+                }
+
                 if (!signedUrl) return { tempId, success: false, reason: 'Signing failed' };
 
                 const originalFile = fileMap.get(tempId);
                 try {
-                    await retryOperation(() => fetch(signedUrl, {
-                        method: 'PUT',
-                        body: originalFile,
-                        headers: { 'Content-Type': originalFile.type }
-                    }).then(res => { if (!res.ok) throw new Error('S3 Upload failed'); }));
+                    await retryOperation(() => uploadToS3(signedUrl, originalFile));
                     return { ...signedData, success: true };
                 } catch (err) {
                     return { tempId, success: false, reason: err.message, file: originalFile };
                 }
             }));
 
-            // --- STEP 3: CONFIRM BATCH ---
-            const successfulUploads = uploadResults.filter(r => r.success);
-            const failedInUpload = uploadResults.filter(r => !r.success);
+            // --- STEP 3: PROCESS UPLOAD RESULTS & CONFIRM ---
+            const successfulUploads = [];
 
-            for (const failed of failedInUpload) {
-                yield { type: 'FAILED', payload: { tempId: failed.tempId, file: failed.file, reason: failed.reason } };
+            for (const result of uploadResults) {
+                if (!result.success) {
+                    yield { type: 'FAILED', payload: { tempId: result.tempId, file: result.file, reason: result.reason } };
+                } else if (result.status === 'duplicate') {
+                    yield { type: 'DUPLICATE', payload: { tempId: result.tempId, momentId: result.momentId, file: fileMap.get(result.tempId) } };
+                } else {
+                    successfulUploads.push(result);
+                }
             }
 
             if (successfulUploads.length > 0) {

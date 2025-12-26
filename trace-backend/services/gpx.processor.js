@@ -11,13 +11,13 @@ const BATCH_SIZE = 50000;
  * This approach avoids OOM errors for large files (e.g., 500MB) by offloading geometry construction to PostGIS.
  * 
  * @param {Object} params
- * @param {string} params.s3Key - The S3 key of the GPX file.
+ * @param {string} params.key - The S3 key of the GPX file.
  * @param {string} params.trackId - The ID of the track to associate with.
  */
-async function processGpxStream({ s3Key, trackId }) {
+async function processGpxStream({ storageKey, trackId }) {
     console.log(`[GPX-Stream] Starting for Track ${trackId}...`);
 
-    const command = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: s3Key });
+    const command = new GetObjectCommand({ Bucket: BUCKET_NAME, Key: storageKey });
     const s3Item = await s3Client.send(command);
     const fileStream = s3Item.Body;
 
@@ -29,14 +29,14 @@ async function processGpxStream({ s3Key, trackId }) {
         throw new Error('No valid track points found in GPX file.');
     }
 
-    // Extract polylineId from s3Key
-    const polylineIdMatch = s3Key.match(/polylines\/([^/]+)\.gpx$/);
+    // Extract polylineId from key
+    const polylineIdMatch = storageKey.match(/polylines\/([^/]+)\.gpx$/);
     let polylineId;
     if (polylineIdMatch && polylineIdMatch[1]) {
         polylineId = polylineIdMatch[1];
     } else {
-         console.warn(`[GPX-Stream] Could not extract polylineId from key: ${s3Key}.`);
-         throw new Error(`Invalid S3 Key format: ${s3Key}`);
+         console.warn(`[GPX-Stream] Could not extract polylineId from key: ${storageKey}.`);
+         throw new Error(`Invalid S3 Key format: ${storageKey}`);
     }
 
     // 2. Construct GeoJSON
@@ -53,7 +53,7 @@ async function processGpxStream({ s3Key, trackId }) {
                 geom: db.raw('ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', [JSON.stringify(geoJsonGeometry)]),
                 // We skip server-side simplification (simplified_geom) to avoid DB OOM.
                 // It can be generated lazily or by a more powerful worker if needed.
-                storage_key: s3Key
+                storage_key: storageKey
             });
 
         await trx('tracks')

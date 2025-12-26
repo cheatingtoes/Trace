@@ -57,6 +57,17 @@ const updateStatus = (id, status) => {
     return db(TABLE_NAME).where({ id }).update({ status });
 };
 
+const findDuplicateTrack = ({ activityId, name, fileSizeBytes }) => {
+    return db(TABLE_NAME)
+        .join('polylines', 'tracks.activePolylineId', 'polylines.id')
+        .where({
+            'tracks.activityId': activityId,
+            'tracks.name': name,
+            'polylines.fileSizeBytes': fileSizeBytes
+        })
+        .first();
+};
+
 module.exports = {
     getAllTracks,
     getTrackById,
@@ -66,5 +77,6 @@ module.exports = {
     deleteTracksByActivityId,
     getTracksByActivityId,
     getTracksByIds,
-    updateStatus
+    updateStatus,
+    findDuplicateTrack
 };
