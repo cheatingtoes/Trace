@@ -48,7 +48,7 @@ async function processImage(key, momentId) {
         }));
 
         const updateData = {
-            thumbnailUrl: `${config.s3.endpoint}/${BUCKET_NAME}/${thumbKey}`,
+            thumbnailUrl: `${config.s3.publicEndpoint}/${BUCKET_NAME}/${thumbKey}`,
             occuredAt: exifData?.DateTimeOriginal || new Date(),
             status: 'active'
         };
@@ -58,7 +58,7 @@ async function processImage(key, momentId) {
         const alt = exifData?.altitude || 0;
 
         if (lat && lon) {
-            updateData.geom = db.raw('ST_SetSRID(ST_MakePoint(?, ?, ?), 4326)', [lat, lon, alt]);
+            updateData.geom = db.raw('ST_SetSRID(ST_MakePoint(?, ?, ?), 4326)', [lon, lat, alt]);
         }
 
         await db('moments')

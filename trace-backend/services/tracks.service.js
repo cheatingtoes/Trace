@@ -88,7 +88,18 @@ async function uploadTrackFile({ file, activityId, name, description }) {
 }
 
 const getTracksByActivityId = async (activityId) => {
-    return TrackModel.getTracksByActivityId(activityId);
+    const tracks = await db('tracks')
+        .leftJoin('polylines', 'tracks.activePolylineId', 'polylines.id')
+        .where('tracks.activityId', activityId)
+        .select(
+            'tracks.*',
+            db.raw('ST_AsGeoJSON(polylines.geom) as polyline')
+        );
+
+    return tracks.map(track => ({
+        ...track,
+        polyline: track.polyline ? JSON.parse(track.polyline) : null
+    }));
 };
 
 module.exports = {

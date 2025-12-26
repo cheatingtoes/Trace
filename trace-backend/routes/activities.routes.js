@@ -20,4 +20,6 @@ router.get('/:id/tracks', ActivityController.getTracksByActivityId);
 // GET /api/v1/activities/:id/moments - Get all moments for an activity
 router.get('/:id/moments', ActivityController.getMomentsByActivityId);
 
+router.delete('/:id/moments', ActivityController.deleteMomentsByActivityId);
+
 module.exports = router;

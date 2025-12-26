@@ -39,7 +39,7 @@ export async function* uploadMomentFiles({ activityId, filesInput }) {
         yield { type: 'UPLOADING', payload: { tempId, file } };
     }
 
-    const BATCH_SIZE = 50;
+    const BATCH_SIZE = 1;
     const entries = Array.from(fileMap.entries());
 
     for (let i = 0; i < entries.length; i += BATCH_SIZE) {
@@ -98,10 +98,10 @@ export async function* uploadMomentFiles({ activityId, filesInput }) {
                 const confirmedMoments = confirmResponse.data;
                 if (Array.isArray(confirmedMoments)) {
                     const successfulUploadsMap = new Map(successfulUploads.map(u => [u.id, u]));
-                    for (const moment of confirmedMoments) {
-                        const uploadRecord = successfulUploadsMap.get(moment.id);
+                    for (const momentId of confirmedMoments) {
+                        const uploadRecord = successfulUploadsMap.get(momentId);
                         if (uploadRecord) {
-                            yield { type: 'PROCESSING', payload: { tempId: uploadRecord.tempId, moment } };
+                            yield { type: 'PROCESSING', payload: { tempId: uploadRecord.tempId, momentId } };
                         }
                     }
                 }

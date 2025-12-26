@@ -19,7 +19,7 @@ const useMomentPoller = (momentIds, onUpdate, interval = 3000) => {
     }, [onUpdate]);
 
     // Serialize IDs to avoid resetting the interval on every render if the array reference changes but content is the same
-    const serializedIds = JSON.stringify(momentIds ? momentIds.sort() : []);
+    const serializedIds = JSON.stringify(momentIds ? [...momentIds].sort() : []);
 
     useEffect(() => {
         // If there are no IDs to poll, clear any existing interval and stop.
@@ -34,19 +34,8 @@ const useMomentPoller = (momentIds, onUpdate, interval = 3000) => {
         const idsToPoll = JSON.parse(serializedIds);
         const pollStatuses = async () => {
             try {
-                // --- FOR POLLER TESTING ---
-                // To test the poller, we simulate the API call instead of hitting the backend.
-                // This code simulates receiving an 'active' status after a short delay.
-
-                // const response = await api.post('/moments/status-batch', { momentIds: idsToPoll });
-                // const updatedMoments = response.data;
-
-                console.log('Simulating polling for moments:', idsToPoll);
-                await new Promise(resolve => setTimeout(resolve, 2500)); // Simulate network delay
-                
-                const updatedMoments = idsToPoll.map(id => ({ id, status: 'active' }));
-                console.log('Simulating poller received updates:', updatedMoments);
-                // --- END TESTING CODE ---
+                const response = await api.post('/moments/status-batch', { ids: idsToPoll });
+                const updatedMoments = response.data || [];
 
                 if (updatedMoments && updatedMoments.length > 0) {
                     onUpdateRef.current(updatedMoments);

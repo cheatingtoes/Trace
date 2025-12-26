@@ -21,6 +21,29 @@ const getMomentById = async (req, res, next) => {
     }
 }
 
+const getMomentByIds = async (req, res, next) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            throw new BadRequestError('No ids provided');
+        }
+        const moments = await MomentService.getMomentByIds(ids);
+        res.status(200).json(success(moments));
+    } catch (error) {
+        next(error);
+    }
+}
+
+const getMomentsByStatus = async (req, res, next) => {
+    try {
+        const { ids } = req.body;
+        const moments = await MomentService.getMomentsByStatus(ids);
+        res.status(200).json(success(moments));
+    } catch (error) {
+        next(error);
+    }
+}
+
 const createMoment = async (req, res, next) => {
     try {
         const newMoment = await MomentService.createMoment(req.body);
@@ -94,6 +117,8 @@ const confirmBatch = async (req, res, next) => {
 module.exports = {
     getAllMoments,
     getMomentById,
+    getMomentByIds,
+    getMomentsByStatus,
     createMoment,
     deleteMoment,
     signBatch,

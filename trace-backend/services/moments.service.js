@@ -18,6 +18,20 @@ const getMomentById = async (id) => {
     return moment;
 };
 
+const getMomentByIds = async (ids) => {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        throw new BadRequestError('No ids provided');
+    }
+    return MomentModel.getMomentByIds(ids);
+};
+
+const getMomentsByStatus = async (ids) => {
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        throw new BadRequestError('No ids provided');
+    }
+    return MomentModel.getMomentsByStatus(ids);
+};
+
 const getMomentsByActivityId = async (activityId) => {
     return MomentModel.getMomentsByActivityId(activityId);
 };
@@ -39,21 +53,29 @@ const deleteMoment = async (id) => {
     return moment;
 };
 
+const deleteMomentsByActivityId = async (activityId) => {
+    return MomentModel.deleteMomentsByActivityId(activityId);
+}
+
 const signBatch = async (userId, activityId, files) => {
     try {
         const signedUrls = await Promise.all(files.map(async (file) => {
             try {
-                const { fileName, fileType, fileSize, tempId } = file;
+                const { fileName = '', fileType, fileSize, tempId } = file;
 
-                if (!fileName || !fileType || !fileSize || !tempId) {
+                const missingFields = ['fileName', 'fileType', 'fileSize', 'tempId'].filter(field => !file[field]);
+
+                if (missingFields.length > 0) {
+                    console.error(`File ${fileName} is missing required fields: ${missingFields.join(', ')}`);
                     return {
                         tempId,
                         status: 'error',
-                        message: 'Missing required fields'
+                        message: `Missing required fields: ${missingFields.join(', ')}`
                     }
                 }
 
                 if (!ALLOWED_MIME_TYPES.includes(fileType)) {
+                    console.error(`Unsupported type: ${fileType}`)
                     return {
                         tempId,
                         status: 'error',
@@ -76,8 +98,6 @@ const signBatch = async (userId, activityId, files) => {
                     name: fileName,
                     fileSizeBytes: fileSize
                 });
-
-                console.error('existingMoment', existingMoment)
 
                 if (existingMoment) {
                     if (existingMoment.status === 'processing' || existingMoment.status === 'active') {
@@ -158,10 +178,13 @@ const confirmBatch = async (userId, activityId, uploads) => {
 module.exports = {
   getAllMoments,
   getMomentById,
+  getMomentByIds,
   getMomentsByActivityId,
+  getMomentsByStatus,
   createMoment,
   updateStatus,
   deleteMoment,
+  deleteMomentsByActivityId,
   signBatch,
   confirmBatch,
 };

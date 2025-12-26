@@ -8,6 +8,8 @@ router.use(authenticate);
 // GET /api/v1/moments - Get all moments
 router.get('/', MomentController.getAllMoments);
 
+router.post('/', MomentController.getMomentByIds);
+
 // GET /api/v1/moments/:id - Get a single moment by ID
 router.get('/:id', MomentController.getMomentById);
 
@@ -21,5 +23,8 @@ router.post('/sign-batch', MomentController.signBatch);
 
 // 2. Confirm Batch (Trigger Workers)
 router.post('/confirm-batch', MomentController.confirmBatch);
+
+// 3. Get status of Ids
+router.post('/status-batch', MomentController.getMomentsByStatus);
 
 module.exports = router;

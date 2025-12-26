@@ -56,10 +56,21 @@ const getMomentsByActivityId = async (req, res, next) => {
     }
 }
 
+const deleteMomentsByActivityId = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deletedMoments = await MomentsService.deleteMomentsByActivityId(id);
+        res.status(200).json(success(deletedMoments));
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getActivitiesForUser,
     getActivityById,
     createActivity,
     getTracksByActivityId,
-    getMomentsByActivityId
+    getMomentsByActivityId,
+    deleteMomentsByActivityId,
 }

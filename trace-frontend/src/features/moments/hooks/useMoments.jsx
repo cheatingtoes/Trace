@@ -32,7 +32,7 @@ const useMoments = (activityId = null) => {
     useEffect(() => {
         fetchMoments();
     }, [fetchMoments]);
-
+    
     /**
      * Consumes the `uploadMomentFiles` async generator to orchestrate uploads
      * and update the component's state based on yielded events.
@@ -55,11 +55,11 @@ const useMoments = (activityId = null) => {
                     case 'UPLOADING': {
                         const { tempId, file } = event.payload;
                         setUploadingFiles(prev => new Map(prev).set(tempId, file));
-                        // const tempMoment = { id: tempId, name: file.name, status: 'uploading' };
-                        // setMoments(prev => [...prev, tempMoment]);
                         break;
                     }
                     case 'PROCESSING': {
+                        const { tempId, momentId } = event.payload;
+
                         // A. Remove from Uploading
                         setUploadingFiles(prev => {
                             const next = new Map(prev);
@@ -70,7 +70,7 @@ const useMoments = (activityId = null) => {
                         // B. Add to Processing (For Poller)
                         setProcessingIds(prev => {
                             const next = new Set(prev);
-                            next.add(moment.id);
+                            next.add(momentId);
                             return next;
                         });
                         break;
@@ -123,16 +123,15 @@ const useMoments = (activityId = null) => {
     const updateMomentsState = useCallback((updatedMoments) => {
         if (!updatedMoments || updatedMoments.length === 0) return;
 
-        setMoments(prevMoments => {
-            const updatesMap = new Map(updatedMoments.map(m => [m.id, m]));
-            return prevMoments.map(m => {
-                const update = updatesMap.get(m.id);
-                return update ? { ...m, ...update } : m;
-            });
+        setMoments(prevMoments => [...prevMoments, ...updatedMoments]);
+
+        setProcessingIds(prevIds => {
+            const next = new Set(prevIds);
+            updatedMoments.forEach(m => next.delete(m.id));
+            return next;
         });
     }, []);
 
-    return { moments, failedUploads, loading, error, fetchMoments, uploadMoments, deleteMoment, updateMoment, updateMomentsState };
+    return { moments, uploadingFiles, processingIds: Array.from(processingIds), failedUploads, loading, error, fetchMoments, uploadMoments, deleteMoment, updateMoment, updateMomentsState };
 };
-
 export default useMoments;
