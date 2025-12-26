@@ -21,7 +21,8 @@ const getMomentsByActivityId = (activityId) => {
             '*',
             db.raw('ST_X(geom::geometry) as lon'),
             db.raw('ST_Y(geom::geometry) as lat')
-        );
+        )
+        .orderBy('occuredAt', 'asc');
 }
 
 const getMomentsByStatus = (ids) => {
