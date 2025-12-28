@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, useEffect } from 'react';
 import api from '../../../api/axios';
 import styles from './MomentsEditView.module.css';
 import MomentsRow from './MomentsRow';
@@ -14,7 +14,9 @@ const MomentsEditView = ({
     onMomentHover,
     onMomentSelect,
     onFetchMoments,
-    activityId
+    activityId,
+    scrollToMomentId,
+    onScrollComplete
 }) => {
     const fileInputRef = useRef(null);
     const folderInputRef = useRef(null);
@@ -26,6 +28,22 @@ const MomentsEditView = ({
     
     // Modal State
     const [isTimeShiftOpen, setIsTimeShiftOpen] = useState(false);
+
+    // Scroll Effect
+    useEffect(() => {
+        if (scrollToMomentId) {
+            const element = document.getElementById(`moment-item-${scrollToMomentId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Optional: Flash the element or highlight it temporarily
+                element.classList.add(styles.flashHighlight);
+                setTimeout(() => {
+                    element.classList.remove(styles.flashHighlight);
+                    if (onScrollComplete) onScrollComplete();
+                }, 2000);
+            }
+        }
+    }, [scrollToMomentId, onScrollComplete]);
 
     // Grouping Logic
     const momentGroups = useMemo(() => {

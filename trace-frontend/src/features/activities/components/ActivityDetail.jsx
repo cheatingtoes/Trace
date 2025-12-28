@@ -20,6 +20,7 @@ const ActivityDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [hoveredMomentId, setHoveredMomentId] = useState(null);
+    const [scrollToMomentId, setScrollToMomentId] = useState(null);
     const { activity, loading: activityLoading, error: activityError, fetchActivity, updateActivity } = useActivity(id);
     const { 
         tracks, 
@@ -122,6 +123,7 @@ const ActivityDetail = () => {
                             key={`moment-${moment.id}`} 
                             position={[moment.lat, moment.lon]}
                             icon={isHovered ? highlightedIcon : defaultIcon}
+                            eventHandlers={{ click: () => setScrollToMomentId(moment.id) }}
                         >
                             <Popup><img src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`} />{`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`}</Popup>
                         </Marker>
@@ -168,6 +170,8 @@ const ActivityDetail = () => {
                         onUpdateMoment={updateMoment}
                         onFetchMoments={fetchMoments}
                         activityId={id}
+                        scrollToMomentId={scrollToMomentId}
+                        onScrollComplete={() => setScrollToMomentId(null)}
                     />
                     <UploadProgress failedUploads={allFailedUploads} uploadingFiles={allUploadingFiles} processingIds={allProcessingIds} duplicates={momentDuplicates} />
                 </>

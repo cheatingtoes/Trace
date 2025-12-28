@@ -1,11 +1,27 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
+import { useMap } from '../context/MapProvider';
 import styles from './Sidebar.module.css';
 
 const Sidebar = ({ defaultWidth = 25, side = 'left' }) => {
   const [width, setWidth] = useState(defaultWidth);
   const sidebarRef = useRef(null);
   const isResizing = useRef(false);
+  const { setMapPadding } = useMap();
+
+  const updateMapPadding = useCallback(() => {
+    const widthPx = (window.innerWidth * width) / 100;
+    setMapPadding(prev => ({
+        ...prev,
+        [side]: widthPx
+    }));
+  }, [width, side, setMapPadding]);
+
+  useEffect(() => {
+    updateMapPadding();
+    window.addEventListener('resize', updateMapPadding);
+    return () => window.removeEventListener('resize', updateMapPadding);
+  }, [updateMapPadding]);
 
   const handleMouseDown = (e) => {
     e.preventDefault();

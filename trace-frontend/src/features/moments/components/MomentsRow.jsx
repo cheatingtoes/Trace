@@ -102,6 +102,7 @@ const MomentsRow = ({
                     return (
                         <div 
                             key={moment.id} 
+                            id={`moment-item-${moment.id}`}
                             className={`${styles.momentItem} ${isSelected ? styles.momentItemSelected : ''}`}
                             onMouseEnter={() => onMomentHover && onMomentHover(moment.id)}
                             onMouseLeave={() => onMomentHover && onMomentHover(null)}

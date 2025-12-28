@@ -16,16 +16,36 @@ L.Icon.Default.mergeOptions({
 
 const MapController = () => {
     const map = useLeafletMap();
-    const { mapViewport } = useMap();
+    const { mapViewport, mapPadding } = useMap();
 
     useEffect(() => {
         if (mapViewport) {
             const { center, zoom } = mapViewport;
             if (center) {
-                map.flyTo(center, zoom || map.getZoom());
+                const targetZoom = zoom || map.getZoom();
+                
+                // Calculate offset in pixels
+                // If left padding > right padding, visible center is to the right.
+                // We want target (center) to be at visible center.
+                // So we need to shift the map center to the left (negative X).
+                // Offset = (Left - Right) / 2
+                
+                const xOffset = (mapPadding.left - mapPadding.right) / 2;
+                const yOffset = (mapPadding.top - mapPadding.bottom) / 2;
+
+                if (xOffset === 0 && yOffset === 0) {
+                     map.flyTo(center, targetZoom);
+                } else {
+                     // Project to pixel coordinates, apply offset, unproject
+                     const targetPoint = map.project(center, targetZoom);
+                     const newTargetPoint = targetPoint.subtract([xOffset, yOffset]);
+                     const newCenter = map.unproject(newTargetPoint, targetZoom);
+                     
+                     map.flyTo(newCenter, targetZoom);
+                }
             }
         }
-    }, [mapViewport, map]);
+    }, [mapViewport, map, mapPadding]);
 
     return null;
 };

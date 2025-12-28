@@ -4,9 +4,10 @@ import MapContext from './MapContext';
 export const MapProvider = ({ children }) => {
     const [mapLayers, setMapLayers] = useState([]);
     const [mapViewport, setMapViewport] = useState(null);
+    const [mapPadding, setMapPadding] = useState({ left: 0, right: 0, top: 0, bottom: 0 }); // Padding in px
 
     return (
-        <MapContext.Provider value={{ mapLayers, setMapLayers, mapViewport, setMapViewport }}>
+        <MapContext.Provider value={{ mapLayers, setMapLayers, mapViewport, setMapViewport, mapPadding, setMapPadding }}>
             {children}
         </MapContext.Provider>
     );

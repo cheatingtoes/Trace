@@ -65,3 +65,12 @@
     flex-direction: column;
     gap: 1.5rem;
 }
+
+@keyframes highlightFade {
+    0% { background-color: rgba(255, 235, 59, 0.5); }
+    100% { background-color: transparent; }
+}
+
+.flashHighlight {
+    animation: highlightFade 2s ease-out;
+}
