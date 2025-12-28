@@ -10,14 +10,66 @@
 
 .rowHeader {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: space-between;
     gap: 1rem;
+}
+
+.headerLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.clusterTitleInput {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    border-radius: 4px;
+}
+
+.clusterTitleInput:hover,
+.clusterTitleInput:focus {
+    border-color: #ccc;
+    background-color: #fff;
+    outline: none;
+    padding: 4px;
+    margin: -4px; /* Offset padding to prevent layout shift */
+}
+
+.clusterDescriptionInput {
+    border: none;
+    border-bottom: 1px dashed #ccc;
+    background: transparent;
+    padding: 4px 0;
+    font-size: 0.9rem;
+    color: #555;
+    width: 200px;
+    transition: width 0.3s ease, border-color 0.3s ease;
+}
+
+.clusterDescriptionInput:hover {
+    border-bottom-color: #999;
+}
+
+.clusterDescriptionInput:focus {
+    width: 100%;
+    outline: none;
+    border-bottom: 1px solid #007bff;
+    color: #333;
 }
 
 .headerCheckbox {
     width: 1.2rem;
     height: 1.2rem;
     cursor: pointer;
+    margin-top: 0.2rem; /* Align with title roughly */
 }
 
 .headerText {

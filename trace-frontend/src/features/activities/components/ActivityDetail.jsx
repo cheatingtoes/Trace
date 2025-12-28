@@ -49,7 +49,7 @@ const ActivityDetail = () => {
         updateMomentsState 
     } = useMoments(id);
     
-    const { setMapLayers } = useMap();
+    const { setMapLayers, setMapViewport } = useMap();
 
     const isEditing = true;
 
@@ -79,6 +79,16 @@ const ActivityDetail = () => {
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
         shadowSize: [41, 41]
     }), []);
+
+    const handleMomentSelect = (momentId) => {
+        const moment = moments.find(m => m.id === momentId);
+        if (moment && moment.lat != null && moment.lon != null) {
+            setMapViewport({
+                center: [moment.lat, moment.lon],
+                zoom: 10 // Close zoom for specific moment
+            });
+        }
+    };
 
     // Update Map Layers
     useEffect(() => {
@@ -153,6 +163,7 @@ const ActivityDetail = () => {
                         onUpload={uploadMoments} 
                         onDelete={deleteMoment} 
                         onMomentHover={setHoveredMomentId}
+                        onMomentSelect={handleMomentSelect}
                         onNameChange={(id, name) => updateMoment(id, { name })}
                         onUpdateMoment={updateMoment}
                         onFetchMoments={fetchMoments}

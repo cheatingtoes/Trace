@@ -5,13 +5,14 @@ import MomentsRow from './MomentsRow';
 import FloatingActionBar from './FloatingActionBar';
 import TimeShiftModal from './TimeShiftModal';
 
-const MomentsEditView = ({ 
+const MomentsEditView = ({
     moments = [], 
     onUpload, 
     onDelete,
     onNameChange,
     onUpdateMoment,
     onMomentHover,
+    onMomentSelect,
     onFetchMoments,
     activityId
 }) => {
@@ -66,6 +67,7 @@ const MomentsEditView = ({
                 if (currentGroup) groups.push(currentGroup);
                 currentGroup = {
                     clusterId: momentClusterId,
+                    clusterDescription: moment.cluster_description,
                     moments: [moment]
                 };
             } else {
@@ -97,6 +99,15 @@ const MomentsEditView = ({
     };
 
     // Handlers
+    const handleClusterUpdate = async (clusterId, updates) => {
+        try {
+            await api.patch(`/clusters/${clusterId}`, updates);
+            if (onFetchMoments) onFetchMoments();
+        } catch (err) {
+            console.error('Failed to update cluster', err);
+        }
+    };
+
     const handleFileChange = (e) => {
         const files = Array.from(e.target.files || []);
         if (files.length > 0 && onUpload) onUpload(files);
@@ -146,16 +157,20 @@ const MomentsEditView = ({
                 for (let i = start; i <= end; i++) {
                     newSelected.add(moments[i].id);
                 }
+                if (onMomentSelect) onMomentSelect(id);
             } else {
                 // Toggle
-                if (newSelected.has(id)) newSelected.delete(id);
-                else newSelected.add(id);
+                if (newSelected.has(id)) {
+                    newSelected.delete(id);
+                } else {
+                    newSelected.add(id);
+                    if (onMomentSelect) onMomentSelect(id);
+                }
             }
             setLastClickedId(id);
         }
         setSelectedIds(newSelected);
     };
-
     const handleDeselectAll = () => {
         setSelectedIds(new Set());
         setLastClickedId(null);
@@ -333,6 +348,9 @@ const MomentsEditView = ({
                             onNameChange={onNameChange}
                             onDelete={onDelete}
                             onMomentHover={onMomentHover}
+                            clusterId={group.clusterId}
+                            clusterDescription={group.clusterDescription}
+                            onClusterUpdate={handleClusterUpdate}
                         />
                     );
                 })}

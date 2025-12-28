@@ -21,6 +21,7 @@ const getMomentsByActivityId = (activityId) => {
         .select(
             'moments.*',
             'clusters.name as cluster_name',
+            'clusters.description as cluster_description',
             db.raw('ST_X(moments.geom::geometry) as lon'),
             db.raw('ST_Y(moments.geom::geometry) as lat')
         )

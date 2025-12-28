@@ -31,29 +31,30 @@ const createCluster = async (req, res, next) => {
     // return await ClustersService.create(clusterData);
 };
 
-const updateCluster = async (id, data) => {
-    const { lat, lon, alt, ...rest } = data;
-    const updateData = { ...rest };
+const updateCluster = async (req, res, next) => {
+    const { id } = req.params;
 
-    if (lat !== undefined && lon !== undefined) {
-        const altitude = alt || 0;
-        updateData.geom = db.raw('ST_SetSRID(ST_MakePoint(?, ?, ?), 4326)', [lon, lat, altitude]);
-    }
-
-    return await ClustersService.update(id, updateData);
+    const cluster = await ClustersService.updateCluster(id, req.body);
+    res.status(200).json(success(cluster));
 };
 
 const deleteCluster = async (id) => {
     return await ClustersService.remove(id);
 };
 
-const getCluster = async (id) => {
-    return await ClustersService.findById(id);
+const findById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const cluster = await ClustersService.findById(id);
+        res.status(200).json(success(cluster));
+    } catch (error) {
+        next(error);
+    }
 };
 
 module.exports = {
     createCluster,
     updateCluster,
     deleteCluster,
-    getCluster
+    findById
 };

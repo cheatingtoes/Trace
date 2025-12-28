@@ -7,7 +7,7 @@ const authenticate = require('../middleware/auth');
 router.use(authenticate);
 
 router.post('/', ClustersController.createCluster);
-router.get('/:id', ClustersController.getCluster);
+router.get('/:id', ClustersController.findById);
 router.patch('/:id', ClustersController.updateCluster);
 router.delete('/:id', ClustersController.deleteCluster);
 

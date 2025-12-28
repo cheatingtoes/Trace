@@ -3,9 +3,10 @@ import MapContext from './MapContext';
 
 export const MapProvider = ({ children }) => {
     const [mapLayers, setMapLayers] = useState([]);
+    const [mapViewport, setMapViewport] = useState(null);
 
     return (
-        <MapContext.Provider value={{ mapLayers, setMapLayers }}>
+        <MapContext.Provider value={{ mapLayers, setMapLayers, mapViewport, setMapViewport }}>
             {children}
         </MapContext.Provider>
     );

@@ -18,7 +18,6 @@ const createCluster = async (data) => {
     }
 
     const [cluster] = await ClustersModel.createCluster(clusterData);
-    console.log('new cluster', cluster)
     return cluster
 
 };
@@ -39,7 +38,7 @@ const deleteCluster = async (id) => {
     return await ClustersModel.remove(id);
 };
 
-const getCluster = async (id) => {
+const findById = async (id) => {
     return await ClustersModel.findById(id);
 };
 
@@ -47,5 +46,5 @@ module.exports = {
     createCluster,
     updateCluster,
     deleteCluster,
-    getCluster
+    findById
 };
