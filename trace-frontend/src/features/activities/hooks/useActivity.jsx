@@ -40,7 +40,19 @@ const useActivity = (activityId) => {
         }
     };
 
-    return { activity, loading, error, fetchActivity, updateActivity };
+    const deleteActivity = async () => {
+        try {
+            await api.delete(`/activities/${activityId}`);
+            setActivity(null);
+            return true;
+        } catch (err) {
+            console.error("Failed to delete activity", err);
+            setError(err);
+            return false;
+        }
+    };
+
+    return { activity, loading, error, fetchActivity, updateActivity, deleteActivity };
 };
 
 export default useActivity;

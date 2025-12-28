@@ -47,3 +47,14 @@
   background-color: var(--primary);
   opacity: 0.5;
 }
+
+.floatingRoot {
+  position: absolute;
+  bottom: 2rem;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+}

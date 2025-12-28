@@ -22,7 +22,7 @@ const updateActivity = (id, activity) => {
 }
 
 const deleteActivity = (id) => {
-    return db(TABLE_NAME).where({ id }).del();
+    return db(TABLE_NAME).where({ id }).del().returning('*');
 }
 
 module.exports = {

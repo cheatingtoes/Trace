@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import styles from './FloatingActionBar.module.css';
 
 const FloatingActionBar = ({ 
@@ -10,7 +11,10 @@ const FloatingActionBar = ({
 }) => {
     if (selectedCount === 0) return null;
 
-    return (
+    const portalRoot = document.getElementById('sidebar-floating-root');
+    if (!portalRoot) return null;
+
+    return createPortal(
         <div className={styles.container}>
             <div className={styles.leftGroup}>
                 <span className={styles.count}>{selectedCount} Selected</span>
@@ -47,7 +51,8 @@ const FloatingActionBar = ({
                     🗑️
                 </button>
             </div>
-        </div>
+        </div>,
+        portalRoot
     );
 };
 

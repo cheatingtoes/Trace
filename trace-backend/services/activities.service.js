@@ -28,6 +28,15 @@ const updateActivity = async (id, activityData) => {
     }
 };
 
+const deleteActivity = async (id) => {
+    const [deletedActivity] = await ActivityModel.deleteActivity(id);
+    if (deletedActivity) {
+        return deleteActivity;
+    } else {
+        throw new NotFoundError('Activity not found');
+    }
+};
+
 
 
 module.exports = {
@@ -35,4 +44,5 @@ module.exports = {
     getActivityById,
     createActivity,
     updateActivity,
+    deleteActivity,
 };

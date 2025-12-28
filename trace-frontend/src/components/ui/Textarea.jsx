@@ -28,7 +28,7 @@ const Textarea = ({ label, error, ...props }) => {
         ref={textareaRef}
         className={`${styles.input} ${error ? styles.error : ''}`} 
         rows={1}
-        style={{ resize: 'none' }} 
+        style={{ resize: 'none', overflow: 'hidden' }} 
         {...props}
       />
       {error && <span className={styles.errorMessage}>{error}</span>}

@@ -21,7 +21,7 @@ const ActivityDetail = () => {
     const navigate = useNavigate();
     const [hoveredMomentId, setHoveredMomentId] = useState(null);
     const [scrollToMomentId, setScrollToMomentId] = useState(null);
-    const { activity, loading: activityLoading, error: activityError, fetchActivity, updateActivity } = useActivity(id);
+    const { activity, loading: activityLoading, error: activityError, fetchActivity, updateActivity, deleteActivity } = useActivity(id);
     const { 
         tracks, 
         processingIds: trackProcessingIds, 
@@ -92,6 +92,15 @@ const ActivityDetail = () => {
         }
     };
 
+    const handleDeleteActivity = async () => {
+        if (window.confirm("Are you sure you want to delete this activity?")) {
+            const success = await deleteActivity();
+            if (success) {
+                navigate(-1);
+            }
+        }
+    };
+
     // Update Map Layers
     useEffect(() => {
         const layers = [];
@@ -150,7 +159,7 @@ const ActivityDetail = () => {
                         </button>
                     </>
                 }
-                right={<span style={{ cursor: 'pointer' }}>⚙️</span>}
+                right={<span onClick={handleDeleteActivity} style={{ cursor: 'pointer' }}>🗑️</span>}
             />
             {isEditing ? (
                 <>

@@ -18,7 +18,9 @@ const ActivityEditView = ({ activity, updateActivity }) => {
 
     const handleBlur = (field, value) => {
         if (value !== (activity?.[field] || '')) {
-            updateActivity({ [field]: value });
+            if (field === 'name' && value !== '') {
+                updateActivity({ [field]: value });
+            }
         }
     };
 
@@ -38,6 +40,7 @@ const ActivityEditView = ({ activity, updateActivity }) => {
                 onKeyDown={handleKeyDown}
                 className={styles.titleInput}
                 placeholder="Activity Name"
+                error={!localName && 'Title is required'}
             />
             <Textarea
                 value={localDescription}

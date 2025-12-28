@@ -17,6 +17,9 @@ router.get('/:id', ActivityController.getActivityById);
 // PUT /api/v1/activities/:id - Get a single activity by ID
 router.put('/:id', ActivityController.updateActivity);
 
+// DELETE /api/v1/activities/:id - Get a single activity by ID
+router.delete('/:id', ActivityController.deleteActivity);
+
 // GET /api/v1/activities/:id/tracks - Get all tracks for an activity
 router.get('/:id/tracks', ActivityController.getTracksByActivityId);
 

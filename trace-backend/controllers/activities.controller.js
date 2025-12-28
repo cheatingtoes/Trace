@@ -46,6 +46,16 @@ const createActivity = async (req, res, next) => {
     }
 }
 
+const deleteActivity = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deletedActivity = await ActivityService.deleteActivity(id);
+        res.status(200).json(success(deletedActivity));
+    } catch (error) {
+        next(error);
+    }
+};
+
 const getTracksByActivityId = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -90,6 +100,7 @@ module.exports = {
     getActivitiesForUser,
     getActivityById,
     createActivity,
+    deleteActivity,
     updateActivity,
     getTracksByActivityId,
     deleteTracksByActivityId,

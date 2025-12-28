@@ -72,6 +72,7 @@ const Sidebar = ({ defaultWidth, side = 'left' }) => {
       <div className={styles.content}>
         <Outlet />
       </div>
+      <div id="sidebar-floating-root" className={styles.floatingRoot} />
     </div>
   );
 };
