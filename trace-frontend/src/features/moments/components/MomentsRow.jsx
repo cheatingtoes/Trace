@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './MomentsRow.module.css';
+import Textarea from '../../../components/ui/Textarea';
+import Input from '../../../components/ui/Input';
 
 const MomentsRow = ({ 
     title, 
@@ -59,13 +61,13 @@ const MomentsRow = ({
                 <div className={styles.headerLeft}>
                     <div className={styles.headerText}>
                         {clusterId ? (
-                            <input
+                            <Textarea
                                 type="text"
                                 className={styles.clusterTitleInput}
                                 value={localTitle}
                                 onChange={(e) => setLocalTitle(e.target.value)}
                                 onBlur={handleTitleBlur}
-                                onKeyDown={(e) => handleKeyDown(e, 'title')}
+                                onKeyDown={(e) => handleKeyDown(e, 'name')}
                                 placeholder="Cluster Name"
                             />
                         ) : (
@@ -75,7 +77,7 @@ const MomentsRow = ({
                     </div>
                     
                     {clusterId && (
-                        <input 
+                        <Textarea
                             type="text" 
                             className={styles.clusterDescriptionInput}
                             placeholder="Add description..."
@@ -135,7 +137,7 @@ const MomentsRow = ({
                                     }}
                                     title="Delete Moment"
                                 >
-                                    [Trash]
+                                    🗑️
                                 </button>
                             </div>
                         </div>

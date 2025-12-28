@@ -85,7 +85,7 @@ const MomentsEditView = ({
                 if (currentGroup) groups.push(currentGroup);
                 currentGroup = {
                     clusterId: momentClusterId,
-                    clusterDescription: moment.cluster_description,
+                    clusterDescription: moment.clusterDescription,
                     moments: [moment]
                 };
             } else {
@@ -119,6 +119,7 @@ const MomentsEditView = ({
     // Handlers
     const handleClusterUpdate = async (clusterId, updates) => {
         try {
+            debugger;
             await api.patch(`/clusters/${clusterId}`, updates);
             if (onFetchMoments) onFetchMoments();
         } catch (err) {
@@ -346,11 +347,9 @@ const MomentsEditView = ({
                     const firstMoment = group.moments[0];
                     const dateStr = formatDate(firstMoment.occuredAt);
                     
-                    let title = 'Unclustered Moments';
+                    let title = 'Moments';
                     if (group.clusterId) {
                         title = firstMoment.clusterName || 'Cluster';
-                    } else {
-                        title = `Unclustered Moments - ${dateStr}`;
                     }
                     
                     const subheader = getGroupDateRange(group.moments);

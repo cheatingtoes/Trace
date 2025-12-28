@@ -1,11 +1,17 @@
 .sidebar {
   position: relative;
-  background-color: #f0f0f0;
+  background-color: var(--bg-card);
   height: 100%;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   pointer-events: auto;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.sidebar.right {
+    border-right: none;
+    border-left: 1px solid var(--border-subtle);
 }
 
 .right {
@@ -14,7 +20,7 @@
 
 .content {
   flex-grow: 1;
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
 }
 
@@ -24,8 +30,9 @@
   width: 4px;
   height: 100%;
   cursor: col-resize;
-  background-color: #ddd;
+  background-color: transparent;
   z-index: 10;
+  transition: background-color 0.2s;
 }
 
 .resizer:not(.resizerRight) {
@@ -37,5 +44,6 @@
 }
 
 .resizer:hover {
-  background-color: #ccc;
+  background-color: var(--primary);
+  opacity: 0.5;
 }

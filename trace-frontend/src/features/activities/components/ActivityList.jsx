@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './ActivityList.module.css';
+import Input from '../../../components/ui/Input';
 
 const ActivityList = ({ activities, loading, error }) => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -9,18 +10,18 @@ const ActivityList = ({ activities, loading, error }) => {
         activity.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (loading) return <p>Loading activities...</p>;
-    if (error) return <p>Error loading activities.</p>;
+    if (loading) return <p className={styles.loading}>Loading activities...</p>;
+    if (error) return <p className={styles.error}>Error loading activities.</p>;
 
     return (
         <div className={styles.container}>
-            <input
-                type="text"
-                placeholder="Search activities..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={styles.searchBar}
-            />
+            <div className={styles.searchWrapper}>
+                <Input
+                    placeholder="Search activities..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
             <ul className={styles.activityList}>
                 {filteredActivities.map((activity) => (
                     <li key={activity.id} className={styles.activityItem}>

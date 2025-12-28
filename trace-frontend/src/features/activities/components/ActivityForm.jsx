@@ -60,7 +60,7 @@ const ActivityForm = ({ onSubmit, onSuccess, isOpen, onClose, initialValues = {}
     return (
         <div className={styles.container}>
             <form onSubmit={handleSubmit} className={styles.form}>
-                <Input
+                <Textarea
                     label="Activity Name"
                     type="text"
                     value={name}

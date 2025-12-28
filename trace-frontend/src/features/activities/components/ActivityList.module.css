@@ -1,31 +1,48 @@
 .container {
-    padding: 1rem;
+    padding: 0;
 }
 
-.searchBar {
-    width: 100%;
-    padding: 0.5rem;
+.searchWrapper {
     margin-bottom: 1rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+}
+
+.loading, .error {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 1rem;
+    text-align: center;
 }
 
 .activityList {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .activityItem {
-    padding: 0.5rem;
-    border-bottom: 1px solid #eee;
+    padding: 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background-color: var(--bg-card);
+    transition: all 0.2s;
+}
+
+.activityItem:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .activityItem a {
     text-decoration: none;
-    color: #333;
+    color: var(--text-main);
+    display: block;
+    padding: 0.75rem 1rem;
+    font-weight: 500;
 }
 
 .activityItem a:hover {
-    color: #007bff;
+    color: var(--primary);
 }
