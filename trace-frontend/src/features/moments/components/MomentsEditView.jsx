@@ -1,5 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import styles from './MomentsEditView.module.css';
+import MomentsRow from './MomentsRow';
 
 const MomentsEditView = ({ 
     moments = [], 
@@ -43,6 +44,50 @@ const MomentsEditView = ({
         setIsDragOver(false);
     };
 
+    // Group moments by cluster_id
+    const momentGroups = useMemo(() => {
+        if (!moments || moments.length === 0) return [];
+
+        const groups = [];
+        let currentGroup = {
+            clusterId: moments[0].cluster_id,
+            moments: [moments[0]]
+        };
+
+        for (let i = 1; i < moments.length; i++) {
+            const moment = moments[i];
+            if (moment.cluster_id !== currentGroup.clusterId) {
+                groups.push(currentGroup);
+                currentGroup = {
+                    clusterId: moment.cluster_id,
+                    moments: [moment]
+                };
+            } else {
+                currentGroup.moments.push(moment);
+            }
+        }
+        groups.push(currentGroup);
+        return groups;
+    }, [moments]);
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
+    const getGroupDateRange = (groupMoments) => {
+        if (!groupMoments || groupMoments.length === 0) return '';
+        const first = groupMoments[0].occuredAt;
+        const last = groupMoments[groupMoments.length - 1].occuredAt;
+        
+        if (!first) return '';
+        const start = formatDate(first);
+        if (!last || first === last) return start;
+        
+        const end = formatDate(last);
+        return start === end ? start : `${start} - ${end}`;
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.header}>
@@ -56,8 +101,6 @@ const MomentsEditView = ({
                 onDragLeave={handleDragLeave}
                 style={isDragOver ? { backgroundColor: 'rgba(0, 123, 255, 0.1)', borderColor: '#007bff' } : {}}
                 onClick={(e) => {
-                    // If the click target or any of its ancestors is a button, do nothing.
-                    // This prevents the zone's click handler from firing when a button is clicked.
                     if (e.target.closest('button') || e.target.tagName === 'INPUT') {
                         return;
                     }
@@ -80,7 +123,6 @@ const MomentsEditView = ({
                 </div>
                 <span className={styles.uploadText}>or Drop Files Here</span>
 
-                {/* Standard File Input */}
                 <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -90,7 +132,6 @@ const MomentsEditView = ({
                     style={{ display: 'none' }} 
                 />
                 
-                {/* Folder Input (non-standard attributes handled via spread or direct props) */}
                 <input 
                     type="file" 
                     ref={folderInputRef} 
@@ -100,37 +141,29 @@ const MomentsEditView = ({
                 />
             </div>
 
-            <ul className={styles.momentList}>
-                {moments.map((moment, index) => (
-                    <li 
-                        key={moment.id || index} 
-                        className={styles.momentItem}
-                        onMouseEnter={() => onMomentHover && onMomentHover(moment.id)}
-                        onMouseLeave={() => onMomentHover && onMomentHover(null)}
-                    >
-                        <div className={styles.leftGroup}>
-                            <span className={styles.index}>{index + 1}.</span>
-                            <img src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageWebKey}`} />
-                            <input 
-                                type="text" 
-                                value={moment.name || moment.filename || ''} 
-                                onChange={(e) => onNameChange && onNameChange(moment.id, e.target.value)}
-                                className={styles.momentNameInput}
-                                placeholder="Untitled Moment"
-                            />
-                        </div>
-                        <div className={styles.rightGroup}>
-                            <button 
-                                className={styles.iconButton} 
-                                onClick={() => onDelete && onDelete(moment.id)}
-                                title="Delete Moment"
-                            >
-                                [Trash]
-                            </button>
-                        </div>
-                    </li>
-                ))}
-            </ul>
+            <div className={styles.groupsContainer}>
+                {momentGroups.map((group, index) => {
+                    // Try to get title from the first moment if it has populated cluster info
+                    // Otherwise default based on clusterId presence
+                    const title = group.clusterId 
+                        ? (group.moments[0].cluster?.title || 'Cluster') 
+                        : 'Unclustered Moments';
+                    
+                    const subheader = getGroupDateRange(group.moments);
+
+                    return (
+                        <MomentsRow
+                            key={group.clusterId || `unclustered-${index}`}
+                            title={title}
+                            subheader={subheader}
+                            moments={group.moments}
+                            onNameChange={onNameChange}
+                            onDelete={onDelete}
+                            onMomentHover={onMomentHover}
+                        />
+                    );
+                })}
+            </div>
         </div>
     );
 };
