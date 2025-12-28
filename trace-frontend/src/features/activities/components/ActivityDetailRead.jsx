@@ -3,67 +3,35 @@ import { useMemo, useEffect, useState } from 'react';
 import L from 'leaflet';
 import { Polyline, Marker, Popup } from 'react-leaflet';
 import styles from './ActivityDetail.module.css';
-import ActivityEditView from './ActivityEditView';
-import TracksEditView from '../../tracks/components/TracksEditView';
-import MomentsEditView from '../../moments/components/MomentsEditView';
-import UploadProgress from '../../moments/components/UploadProgress';
+import ActivityReadView from './ActivityReadView';
+import TracksReadView from '../../tracks/components/TracksReadView';
+import MomentsReadView from '../../moments/components/MomentsReadView';
 import SidebarHeader from '../../../components/SidebarHeader';
-import ActivityDetailRead from './ActivityDetailRead';
 
 import useActivity from '../hooks/useActivity';
 import useTracks from '../../tracks/hooks/useTracks';
 import useMoments from '../../moments/hooks/useMoments';
-import useMomentPoller from '../../moments/hooks/useMomentPoller';
-import useTrackPoller from '../../tracks/hooks/useTrackPoller';
 import { useMap } from '../../../context/MapProvider';
 
-const ActivityDetail = () => {
+const ActivityDetailRead = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [hoveredMomentId, setHoveredMomentId] = useState(null);
     const [scrollToMomentId, setScrollToMomentId] = useState(null);
-    const { activity, loading: activityLoading, error: activityError, fetchActivity, updateActivity, deleteActivity } = useActivity(id);
+    const { activity, loading: activityLoading, error: activityError } = useActivity(id);
     const { 
         tracks, 
-        processingIds: trackProcessingIds, 
-        uploadingFiles: trackUploadingFiles, 
-        failedUploads: trackFailedUploads, 
-        updateTracksState, 
         loading: tracksLoading, 
-        error: tracksError, 
-        fetchTracks, 
-        uploadTrack, 
-        deleteTrack,
-        updateTrack
+        error: tracksError 
     } = useTracks(id);
     
     const { 
         moments, 
-        failedUploads: momentFailedUploads, 
-        duplicates: momentDuplicates,
-        uploadingFiles: momentUploadingFiles, 
-        processingIds: momentProcessingIds, 
         loading: momentsLoading, 
         error: momentsError, 
-        fetchMoments, 
-        uploadMoments, 
-        deleteMoment, 
-        updateMoment, 
-        updateMomentsState 
     } = useMoments(id);
     
     const { setMapLayers, setMapViewport } = useMap();
-
-    const isEditing = true;
-
-    // Poller will automatically pick up new IDs as they are added to the moments list
-    useMomentPoller(momentProcessingIds, updateMomentsState);
-    useTrackPoller(trackProcessingIds, updateTracksState);
-
-    // Merge upload states for the progress indicator
-    const allProcessingIds = [...momentProcessingIds, ...trackProcessingIds];
-    const allUploadingFiles = new Map([...momentUploadingFiles, ...trackUploadingFiles]);
-    const allFailedUploads = new Map([...momentFailedUploads, ...trackFailedUploads]);
 
     const defaultIcon = useMemo(() => new L.Icon({
         iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -90,15 +58,6 @@ const ActivityDetail = () => {
                 center: [moment.lat, moment.lon],
                 zoom: 10 // Close zoom for specific moment
             });
-        }
-    };
-
-    const handleDeleteActivity = async () => {
-        if (window.confirm("Are you sure you want to delete this activity?")) {
-            const success = await deleteActivity();
-            if (success) {
-                navigate(-1);
-            }
         }
     };
 
@@ -160,47 +119,32 @@ const ActivityDetail = () => {
                         </button>
                     </>
                 }
-                right={<span onClick={handleDeleteActivity} style={{ cursor: 'pointer' }}>🗑️</span>}
+                right={
+                    <button 
+                        onClick={() => navigate('edit')} 
+                        style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '1.2rem' }}
+                        title="Edit Activity"
+                    >
+                        ✏️
+                    </button>
+                }
             />
-            {isEditing ? (
-                <>
-                    <div className={styles.header}>
-                        <h2>Edit Activity</h2>
-                    </div>
-                    <ActivityEditView activity={activity} updateActivity={updateActivity}/>
-                    <TracksEditView 
-                        tracks={tracks} 
-                        loading={tracksLoading} 
-                        error={tracksError} 
-                        onUpload={uploadTrack} 
-                        onDelete={deleteTrack}
-                        onColorChange={(id, color) => updateTrack(id, { color })}
-                        onNameChange={(id, name) => updateTrack(id, { name })}
-                    />
-                    <MomentsEditView 
-                        moments={moments} 
-                        loading={momentsLoading} 
-                        error={momentsError} 
-                        onUpload={uploadMoments} 
-                        onDelete={deleteMoment} 
-                        onMomentHover={setHoveredMomentId}
-                        onMomentSelect={handleMomentSelect}
-                        onNameChange={(id, name) => updateMoment(id, { name })}
-                        onUpdateMoment={updateMoment}
-                        onFetchMoments={fetchMoments}
-                        activityId={id}
-                        scrollToMomentId={scrollToMomentId}
-                        onScrollComplete={() => setScrollToMomentId(null)}
-                    />
-                    <UploadProgress failedUploads={allFailedUploads} uploadingFiles={allUploadingFiles} processingIds={allProcessingIds} duplicates={momentDuplicates} />
-                </>
-            ) : (
-                <>
-                    <ActivityDetailRead />
-                </>
-            )}
+            <div className={styles.header}>
+                <h2>Activity Details</h2>
+            </div>
+            <ActivityReadView activity={activity} />
+            <TracksReadView 
+                tracks={tracks} 
+            />
+            <MomentsReadView 
+                moments={moments} 
+                onMomentHover={setHoveredMomentId}
+                onMomentSelect={handleMomentSelect}
+                scrollToMomentId={scrollToMomentId}
+                onScrollComplete={() => setScrollToMomentId(null)}
+            />
         </div>
     );
 };
 
-export default ActivityDetail;
+export default ActivityDetailRead;

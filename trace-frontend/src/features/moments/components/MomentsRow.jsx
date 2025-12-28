@@ -9,12 +9,14 @@ const MomentsRow = ({
     moments = [], 
     selectedIds = new Set(),
     onSelect,
+    onMomentSelect,
     onNameChange, 
     onDelete,
     onMomentHover,
     clusterId,
     clusterDescription,
-    onClusterUpdate
+    onClusterUpdate,
+    readOnly = false
 }) => {
     // Local state for inputs to prevent re-render issues and optimize API calls
     const [localTitle, setLocalTitle] = useState(title);
@@ -60,7 +62,7 @@ const MomentsRow = ({
             <div className={styles.rowHeader}>
                 <div className={styles.headerLeft}>
                     <div className={styles.headerText}>
-                        {clusterId ? (
+                        {clusterId && !readOnly ? (
                             <Textarea
                                 type="text"
                                 className={styles.clusterTitleInput}
@@ -76,30 +78,44 @@ const MomentsRow = ({
                         <span className={styles.rowSubheader}>{subheader}</span>
                     </div>
                     {clusterId && (
-                        <Textarea
-                            type="text" 
-                            className={styles.clusterDescriptionInput}
-                            placeholder="Add description..."
-                            value={localDescription}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => setLocalDescription(e.target.value)}
-                            onBlur={handleDescriptionBlur}
-                            onKeyDown={(e) => handleKeyDown(e, 'description')}
-                        />
+                        !readOnly ? (
+                            <Textarea
+                                type="text" 
+                                className={styles.clusterDescriptionInput}
+                                placeholder="Add description..."
+                                value={localDescription}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => setLocalDescription(e.target.value)}
+                                onBlur={handleDescriptionBlur}
+                                onKeyDown={(e) => handleKeyDown(e, 'description')}
+                            />
+                        ) : (
+                             localDescription && <div style={{ fontSize: '0.95rem', color: '#555', marginTop: '0.2rem' }}>{localDescription}</div>
+                        )
                     )}
                 </div>
                 
-                <input 
-                    type="checkbox" 
-                    className={styles.headerCheckbox}
-                    checked={allSelected}
-                    onChange={handleHeaderCheckboxChange}
-                />
+                {!readOnly && (
+                    <input 
+                        type="checkbox" 
+                        className={styles.headerCheckbox}
+                        checked={allSelected}
+                        onChange={handleHeaderCheckboxChange}
+                    />
+                )}
             </div>
             
             <div className={styles.momentsGrid}>
                 {moments.map((moment) => {
                     const isSelected = selectedIds.has(moment.id);
+                    const handleClick = (e) => {
+                        if (readOnly) {
+                            onMomentSelect && onMomentSelect(moment);
+                        } else {
+                            onSelect && onSelect(moment.id, e.shiftKey);
+                        }
+                    };
+
                     return (
                         <div 
                             key={moment.id} 
@@ -107,9 +123,10 @@ const MomentsRow = ({
                             className={`${styles.momentItem} ${isSelected ? styles.momentItemSelected : ''}`}
                             onMouseEnter={() => onMomentHover && onMomentHover(moment.id)}
                             onMouseLeave={() => onMomentHover && onMomentHover(null)}
-                            onClick={(e) => onSelect && onSelect(moment.id, e.shiftKey)}
+                            onClick={handleClick}
+                            style={{ cursor: readOnly ? (onMomentSelect ? 'pointer' : 'default') : 'pointer' }}
                         >
-                            {isSelected && (
+                            {!readOnly && isSelected && (
                                 <div className={styles.selectionCheck}>✓</div>
                             )}
                             <div className={styles.thumbnailContainer}>
@@ -120,24 +137,32 @@ const MomentsRow = ({
                                 />
                             </div>
                             <div className={styles.momentMeta}>
-                                <input 
-                                    type="text" 
-                                    value={moment.name || moment.filename || ''} 
-                                    onChange={(e) => onNameChange && onNameChange(moment.id, e.target.value)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className={styles.momentNameInput}
-                                    placeholder="Untitled"
-                                />
-                                <button 
-                                    className={styles.deleteButton} 
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete && onDelete(moment.id);
-                                    }}
-                                    title="Delete Moment"
-                                >
-                                    🗑️
-                                </button>
+                                {!readOnly ? (
+                                    <input 
+                                        type="text" 
+                                        value={moment.name || moment.filename || ''} 
+                                        onChange={(e) => onNameChange && onNameChange(moment.id, e.target.value)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={styles.momentNameInput}
+                                        placeholder="Untitled"
+                                    />
+                                ) : (
+                                    <span style={{ fontSize: '0.9rem', padding: '4px', color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {moment.name || moment.filename || 'Untitled'}
+                                    </span>
+                                )}
+                                {!readOnly && (
+                                    <button 
+                                        className={styles.deleteButton} 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete && onDelete(moment.id);
+                                        }}
+                                        title="Delete Moment"
+                                    >
+                                        🗑️
+                                    </button>
+                                )}
                             </div>
                         </div>
                     );
