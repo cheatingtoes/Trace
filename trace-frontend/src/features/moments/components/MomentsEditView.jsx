@@ -119,7 +119,6 @@ const MomentsEditView = ({
     // Handlers
     const handleClusterUpdate = async (clusterId, updates) => {
         try {
-            debugger;
             await api.patch(`/clusters/${clusterId}`, updates);
             if (onFetchMoments) onFetchMoments();
         } catch (err) {

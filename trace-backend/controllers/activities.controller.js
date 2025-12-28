@@ -27,6 +27,16 @@ const getActivityById = async (req, res, next) => {
     }
 }
 
+const updateActivity = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const updatedActivity = await ActivityService.updateActivity(id, req.body);
+        res.status(200).json(success(updatedActivity));
+    } catch (error) {
+        next(error);
+    }
+};
+
 const createActivity = async (req, res, next) => {
     try {
         const newActivity = await ActivityService.createActivity(req.body, req.user.id);
@@ -80,6 +90,7 @@ module.exports = {
     getActivitiesForUser,
     getActivityById,
     createActivity,
+    updateActivity,
     getTracksByActivityId,
     deleteTracksByActivityId,
     getMomentsByActivityId,

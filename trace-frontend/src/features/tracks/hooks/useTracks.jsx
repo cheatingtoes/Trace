@@ -110,6 +110,18 @@ const useTracks = (activityId = null) => {
         }
     };
 
+    const updateTrack = async (trackId, data) => {
+        try {
+            const response = await api.put(`/tracks/${trackId}`, data);
+            const updated = response.data;
+            setTracks(prev => prev.map(t => t.id === trackId ? updated : t));
+            return updated;
+        } catch (err) {
+            setError(err);
+            return null;
+        }
+    };
+
     const updateTracksState = useCallback((updatedTracks) => {
         if (!updatedTracks || updatedTracks.length === 0) return;
 
@@ -148,6 +160,7 @@ const useTracks = (activityId = null) => {
         fetchTracks, 
         uploadTrack, 
         deleteTrack,
+        updateTrack,
         updateTracksState 
     };
 };

@@ -8,7 +8,7 @@ const MainLayout = () => {
     return (
         <div className={styles.mainLayoutContainer}>
             {/* Sidebar containing the nested route content (Activities, Photos, etc.) */}
-                <Sidebar defaultWidth={25} side="left">
+                <Sidebar defaultWidth={30} side="left">
                     <Outlet />
                 </Sidebar>
 

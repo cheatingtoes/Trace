@@ -1,13 +1,75 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import styles from './TracksEditView.module.css';
 import Input from '../../../components/ui/Input';
+import Textarea from '../../../components/ui/Textarea';
+
+const TrackItem = ({ track, index, onColorChange, onNameChange, onDelete }) => {
+    const [localName, setLocalName] = useState(track.name || '');
+    const [localColor, setLocalColor] = useState(track.color || '#FF0000');
+
+    useEffect(() => {
+        setLocalName(track.name || '');
+        setLocalColor(track.color || '#FF0000');
+    }, [track.name, track.color]);
+
+    const handleNameBlur = () => {
+        if (localName !== (track.name || '')) {
+            onNameChange(track.id, localName);
+        }
+    };
+
+    const handleColorBlur = () => {
+        if (localColor !== (track.color || '#FF0000')) {
+            onColorChange(track.id, localColor);
+        }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.target.blur();
+        }
+    };
+
+    return (
+        <li className={styles.trackItem}>
+            <div className={styles.leftGroup}>
+                <span className={styles.index}>{index + 1}.</span>
+                <Input 
+                    type="color" 
+                    value={localColor} 
+                    onChange={(e) => setLocalColor(e.target.value)}
+                    onBlur={handleColorBlur}
+                    className={styles.colorInput}
+                    title="Track Color"
+                />
+                <div className={styles.nameInput}>
+                    <Textarea 
+                        value={localName} 
+                        onChange={(e) => setLocalName(e.target.value)}
+                        onBlur={handleNameBlur}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Track Name"
+                    />
+                </div>
+            </div>
+            <div className={styles.rightGroup}>
+                <button 
+                    className={styles.iconButton} 
+                    onClick={() => onDelete && onDelete(track.id)}
+                    title="Delete Track"
+                >
+                    🗑️
+                </button>
+            </div>
+        </li>
+    );
+};
 
 const TracksEditView = ({ 
     tracks = [], 
     onUpload, 
     onDelete, 
     onColorChange,
-    onVisibilityChange,
     onNameChange
 }) => {
     const fileInputRef = useRef(null);
@@ -60,38 +122,14 @@ const TracksEditView = ({
 
             <ul className={styles.trackList}>
                 {tracks.map((track, index) => (
-                    <li key={track.id || index} className={styles.trackItem}>
-                        <div className={styles.leftGroup}>
-                            <span className={styles.index}>{index + 1}.</span>
-                            <Input 
-                                type="checkbox" 
-                                checked={track.isVisible ?? true} 
-                                onChange={(e) => onVisibilityChange && onVisibilityChange(track.id, e.target.checked)}
-                                className={styles.checkbox}
-                            />
-                            <Input 
-                                type="text" 
-                                value={track.name || ''} 
-                                onChange={(e) => onNameChange && onNameChange(track.id, e.target.value)}
-                            />
-                        </div>
-                        <div className={styles.rightGroup}>
-                            <button 
-                                className={styles.iconButton} 
-                                onClick={() => onDelete && onDelete(track.id)}
-                                title="Delete Track"
-                            >
-                                [Trash]
-                            </button>
-                            <Input 
-                                type="color" 
-                                value={track.color || '#FF0000'} 
-                                onChange={(e) => onColorChange && onColorChange(track.id, e.target.value)}
-                                className={styles.colorInput}
-                                title="Track Color"
-                            />
-                        </div>
-                    </li>
+                    <TrackItem 
+                        key={track.id || index} 
+                        track={track} 
+                        index={index} 
+                        onColorChange={onColorChange} 
+                        onNameChange={onNameChange} 
+                        onDelete={onDelete} 
+                    />
                 ))}
             </ul>
         </div>

@@ -7,15 +7,17 @@ const authenticate = require('../middleware/auth');
 router.use(authenticate);
 
 const upload = multer({ dest: 'temp_uploads/' });
+// POST /api/v1/tracks - Create a new track
+router.post('/', TracksController.createTrack);
 
 // GET /api/v1/tracks - Get all tracks
 router.get('/', TracksController.getAllTracks);
 
+// PUT /api/v1/tracks - Create a new track
+router.put('/:id', TracksController.updateTrack);
+
 // GET /api/v1/tracks/:id - Get a single track by ID
 router.get('/:id', TracksController.getTrackById);
-
-// POST /api/v1/tracks - Create a new track
-router.post('/', TracksController.createTrack);
 
 router.delete('/:id', TracksController.deleteTrack);
 

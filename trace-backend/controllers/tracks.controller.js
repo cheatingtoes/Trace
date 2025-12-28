@@ -37,6 +37,16 @@ const createTrack = async (req, res, next) => {
     }
 }
 
+const updateTrack = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const updatedTrack = await TracksService.updateTrack(id, req.body);
+        res.status(200).json(success(updatedTrack));
+    } catch (error) {
+        next(error);
+    }
+};
+
 const deleteTrack = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -116,6 +126,7 @@ module.exports = {
     getAllTracks,
     getTrackById,
     createTrack,
+    updateTrack,
     deleteTrack,
     uploadTrackFile,
     getTrackUploadUrl,

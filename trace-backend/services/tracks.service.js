@@ -27,6 +27,18 @@ const deleteTrack = (id) => {
     return TrackModel.deleteTrack(id);
 };
 
+const updateTrack = async (id, updates) => {
+    const [updatedTrack] = await TrackModel.updateTrack(id, updates);
+    if (!updatedTrack) {
+        throw new NotFoundError(`Track with ID ${id} not found.`);
+    }
+    const fullTrack = await TrackModel.getTrackWithPolyline(id);
+    return {
+        ...fullTrack,
+        polyline: fullTrack.polyline ? JSON.parse(fullTrack.polyline) : null
+    };
+};
+
 const deleteTracksByActivityId = async (activityId) => {
     return TrackModel.deleteTracksByActivityId(activityId);
 }
@@ -206,6 +218,7 @@ module.exports = {
     getAllTracks,
     getTrackById,
     createTrack,
+    updateTrack,
     deleteTrack,
     deleteTracksByActivityId,
     uploadTrackFile,

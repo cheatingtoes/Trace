@@ -18,3 +18,55 @@
     margin: 0;
     font-size: 1.5rem;
 }
+
+.editViewContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 1rem;
+}
+
+.titleInput {
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 0.5rem;
+    border-radius: 4px;
+    width: 100%;
+    resize: none;
+    line-height: 1.2;
+    color: #333;
+}
+
+.titleInput:hover,
+.titleInput:focus {
+    border-color: #ccc;
+    background-color: #f9f9f9;
+    outline: none;
+}
+
+.descriptionInput {
+    font-size: 1rem;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 0.5rem;
+    border-radius: 4px;
+    width: 100%;
+    resize: none;
+    color: #555;
+}
+
+.descriptionInput:hover,
+.descriptionInput:focus {
+    border-color: #ccc;
+    background-color: #f9f9f9;
+    outline: none;
+}
+
+.dateGroup {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding: 0 0.5rem;
+}

@@ -75,7 +75,6 @@ const MomentsRow = ({
                         )}
                         <span className={styles.rowSubheader}>{subheader}</span>
                     </div>
-                    
                     {clusterId && (
                         <Textarea
                             type="text" 

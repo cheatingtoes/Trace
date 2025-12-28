@@ -29,6 +29,10 @@ const deleteTrack = (id) => {
     return db(TABLE_NAME).where({ id }).del();
 }
 
+const updateTrack = (id, trackData) => {
+    return db(TABLE_NAME).where({ id }).update(trackData).returning('*');
+}
+
 const getTracksByActivityId = (activityId) => {
     return db(TABLE_NAME)
         .leftJoin('polylines', 'tracks.activePolylineId', 'polylines.id')
@@ -73,6 +77,7 @@ module.exports = {
     getTrackById,
     getTrackWithPolyline,
     createTrack,
+    updateTrack,
     deleteTrack,
     deleteTracksByActivityId,
     getTracksByActivityId,

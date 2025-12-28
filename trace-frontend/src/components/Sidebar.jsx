@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { useMap } from '../context/MapProvider';
 import styles from './Sidebar.module.css';
 
-const Sidebar = ({ defaultWidth = 25, side = 'left' }) => {
+const Sidebar = ({ defaultWidth, side = 'left' }) => {
   const [width, setWidth] = useState(defaultWidth);
   const sidebarRef = useRef(null);
   const isResizing = useRef(false);

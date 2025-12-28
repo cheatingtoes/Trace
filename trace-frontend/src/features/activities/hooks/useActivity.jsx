@@ -29,10 +29,15 @@ const useActivity = (activityId) => {
     }, [fetchActivity]);
 
     const updateActivity = async (updatedData) => {
-        // Placeholder for update logic if you need it in the detail view
-        // const response = await api.put(`/activities/${activityId}`, updatedData);
-        // setActivity(response.data);
-        // return response.data;
+        try {
+            const response = await api.put(`/activities/${activityId}`, updatedData);
+            setActivity(response.data);
+            return response.data;
+        } catch (err) {
+            console.error("Failed to update activity", err);
+            setError(err);
+            return null;
+        }
     };
 
     return { activity, loading, error, fetchActivity, updateActivity };

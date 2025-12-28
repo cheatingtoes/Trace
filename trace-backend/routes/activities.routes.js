@@ -8,11 +8,14 @@ router.use(authenticate);
 // GET /api/v1/activities - Get all activities for a user
 router.get('/', ActivityController.getActivitiesForUser);
 
+// POST /api/v1/activities - Create a new activity
+router.post('/', ActivityController.createActivity);
+
 // GET /api/v1/activities/:id - Get a single activity by ID
 router.get('/:id', ActivityController.getActivityById);
 
-// POST /api/v1/activities - Create a new activity
-router.post('/', ActivityController.createActivity);
+// PUT /api/v1/activities/:id - Get a single activity by ID
+router.put('/:id', ActivityController.updateActivity);
 
 // GET /api/v1/activities/:id/tracks - Get all tracks for an activity
 router.get('/:id/tracks', ActivityController.getTracksByActivityId);

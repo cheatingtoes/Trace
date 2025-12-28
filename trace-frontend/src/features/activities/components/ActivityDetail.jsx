@@ -32,7 +32,8 @@ const ActivityDetail = () => {
         error: tracksError, 
         fetchTracks, 
         uploadTrack, 
-        deleteTrack 
+        deleteTrack,
+        updateTrack
     } = useTracks(id);
     
     const { 
@@ -104,9 +105,9 @@ const ActivityDetail = () => {
                     
                     layers.push(
                         <Polyline 
-                            key={`track-${track.id}`} 
+                            key={`track-${track.id}-${track.color || 'blue'}`} 
                             positions={positions} 
-                            color="blue" 
+                            color={track.color || 'blue'} 
                         />
                     );
                 }
@@ -157,7 +158,15 @@ const ActivityDetail = () => {
                         <h2>Edit Activity</h2>
                     </div>
                     <ActivityEditView activity={activity} updateActivity={updateActivity}/>
-                    <TracksEditView tracks={tracks} loading={tracksLoading} error={tracksError} onUpload={uploadTrack} onDelete={deleteTrack} />
+                    <TracksEditView 
+                        tracks={tracks} 
+                        loading={tracksLoading} 
+                        error={tracksError} 
+                        onUpload={uploadTrack} 
+                        onDelete={deleteTrack}
+                        onColorChange={(id, color) => updateTrack(id, { color })}
+                        onNameChange={(id, name) => updateTrack(id, { name })}
+                    />
                     <MomentsEditView 
                         moments={moments} 
                         loading={momentsLoading} 
