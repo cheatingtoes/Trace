@@ -12,9 +12,9 @@
 }
 
 .modal {
-    background-color: white;
+    background-color: var(--bg-color, white);
     padding: 2rem;
-    border-radius: 8px;
+    border-radius: var(--radius-md, 8px);
     width: 400px;
     max-width: 90%;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -24,52 +24,12 @@
     margin-top: 0;
     margin-bottom: 1.5rem;
     font-size: 1.25rem;
-    color: #333;
-}
-
-.formGroup {
-    margin-bottom: 1.5rem;
-}
-
-.label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #555;
-}
-
-.input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1rem;
+    color: var(--text-color, #333);
 }
 
 .actions {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-}
-
-.btn {
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.95rem;
-    border: none;
-}
-
-.cancelBtn {
-    background-color: #f0f0f0;
-    color: #333;
-}
-
-.confirmBtn {
-    background-color: #007bff;
-    color: white;
-}
-
-.confirmBtn:hover {
-    background-color: #0056b3;
+    margin-top: 1.5rem;
 }

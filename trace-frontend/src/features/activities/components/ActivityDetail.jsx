@@ -154,7 +154,7 @@ const ActivityDetail = () => {
             {isEditing ? (
                 <>
                     <div className={styles.header}>
-                        <h2>EDIT ACTIVITY</h2>
+                        <h2>Edit Activity</h2>
                     </div>
                     <ActivityEditView activity={activity} updateActivity={updateActivity}/>
                     <TracksEditView tracks={tracks} loading={tracksLoading} error={tracksError} onUpload={uploadTrack} onDelete={deleteTrack} />

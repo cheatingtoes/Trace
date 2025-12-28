@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { uploadBatchMedia } from '../../utils/upload';
+import styles from './PhotoUpload.module.css';
+import Button from './ui/Button';
 
 const PhotoUpload = ({ activityId }) => {
   const [files, setFiles] = useState(null);
@@ -42,24 +44,30 @@ const PhotoUpload = ({ activityId }) => {
     }
   };
 
+  const isError = status.includes('failed') || status.includes('Error');
+
   return (
-    <div style={{ border: '1px solid #ccc', padding: '16px', borderRadius: '8px', maxWidth: '400px', margin: '16px auto' }}>
-      <h2>Photo Uploader</h2>
-      <p>For Activity ID: <strong>{activityId || '(Not Provided)'}</strong></p>
+    <div className={styles.container}>
+      <h2 className={styles.title}>Photo Uploader</h2>
+      <p className={styles.info}>For Activity ID: <strong>{activityId || '(Not Provided)'}</strong></p>
       <input
         type="file"
         multiple
         onChange={handleFileChange}
         disabled={isLoading}
-        style={{ display: 'block', marginBottom: '8px' }}
+        className={styles.fileInput}
       />
-      <button
+      <Button
         onClick={handleUpload}
         disabled={!files || isLoading || !activityId}
       >
         {isLoading ? 'Uploading...' : `Upload ${files ? files.length : ''} File(s)`}
-      </button>
-      {status && <p style={{ marginTop: '12px', color: status.includes('failed') || status.includes('Error') ? '#D32F2F' : '#388E3C', fontWeight: 'bold' }}>{status}</p>}
+      </Button>
+      {status && (
+          <p className={`${styles.status} ${isError ? styles.error : styles.success}`}>
+              {status}
+          </p>
+      )}
     </div>
   );
 };

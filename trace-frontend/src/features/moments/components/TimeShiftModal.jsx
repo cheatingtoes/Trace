@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import styles from './TimeShiftModal.module.css';
+import Input from '../../../components/ui/Input';
+import Button from '../../../components/ui/Button';
 
 const TimeShiftModal = ({ isOpen, onClose, onConfirm }) => {
     const [minutes, setMinutes] = useState(0);
@@ -18,23 +20,20 @@ const TimeShiftModal = ({ isOpen, onClose, onConfirm }) => {
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
                 <h3 className={styles.header}>Shift Time</h3>
                 <form onSubmit={handleSubmit}>
-                    <div className={styles.formGroup}>
-                        <label className={styles.label}>Shift by minutes (negative to go back):</label>
-                        <input 
-                            type="number" 
-                            className={styles.input}
-                            value={minutes}
-                            onChange={(e) => setMinutes(e.target.value)}
-                            autoFocus
-                        />
-                    </div>
+                    <Input
+                        label="Shift by minutes (negative to go back)"
+                        type="number"
+                        value={minutes}
+                        onChange={(e) => setMinutes(e.target.value)}
+                        autoFocus
+                    />
                     <div className={styles.actions}>
-                        <button type="button" className={`${styles.btn} ${styles.cancelBtn}`} onClick={onClose}>
+                        <Button type="button" variant="secondary" onClick={onClose}>
                             Cancel
-                        </button>
-                        <button type="submit" className={`${styles.btn} ${styles.confirmBtn}`}>
+                        </Button>
+                        <Button type="submit">
                             Apply Shift
-                        </button>
+                        </Button>
                     </div>
                 </form>
             </div>

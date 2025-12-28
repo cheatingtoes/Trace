@@ -1,6 +1,8 @@
 import React from 'react';
 import { useRegister } from '../hooks/useRegister';
 import styles from './RegisterForm.module.css';
+import Input from '../../../components/ui/Input';
+import Button from '../../../components/ui/Button';
 
 const RegisterForm = () => {
     const {
@@ -15,21 +17,36 @@ const RegisterForm = () => {
         <div className={styles.formContainer}>
             {error && <div className={styles.errorMessage}>{error}</div>}
             <form onSubmit={handleRegister}>
-                <div className={styles.formGroup}>
-                    <label>Name</label>
-                    <input name="name" type="text" value={formState.name} onChange={handleChange} required disabled={isSubmitting} />
-                </div>
-                <div className={styles.formGroup}>
-                    <label>Email</label>
-                    <input name="email" type="email" value={formState.email} onChange={handleChange} required disabled={isSubmitting} />
-                </div>
-                <div className={styles.formGroup}>
-                    <label>Password</label>
-                    <input name="password" type="password" value={formState.password} onChange={handleChange} required disabled={isSubmitting} />
-                </div>
-                <button type="submit" className={styles.btnPrimary} disabled={isSubmitting}>
+                <Input
+                    label="Name"
+                    name="name"
+                    type="text"
+                    value={formState.name}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Input
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={formState.email}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Input
+                    label="Password"
+                    name="password"
+                    type="password"
+                    value={formState.password}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? 'Registering...' : 'Register'}
-                </button>
+                </Button>
             </form>
         </div>
     );

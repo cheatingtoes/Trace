@@ -1,6 +1,8 @@
 import React from 'react';
 import { useLogin } from '../hooks/useLogin';
-import styles from './LoginForm.module.css'; // Create this file
+import styles from './LoginForm.module.css';
+import Input from '../../../components/ui/Input';
+import Button from '../../../components/ui/Button';
 
 const LoginForm = () => {
     const {
@@ -16,17 +18,27 @@ const LoginForm = () => {
         <div className={styles.formContainer}>
             {error && <div className={styles.errorMessage}>{error}</div>}
             <form onSubmit={handleLocalLogin}>
-                <div className={styles.formGroup}>
-                    <label>Email</label>
-                    <input name="email" type="email" value={formState.email} onChange={handleChange} required disabled={isSubmitting} />
-                </div>
-                <div className={styles.formGroup}>
-                    <label>Password</label>
-                    <input name="password" type="password" value={formState.password} onChange={handleChange} required disabled={isSubmitting} />
-                </div>
-                <button type="submit" className={styles.btnPrimary} disabled={isSubmitting}>
+                <Input
+                    label="Email"
+                    name="email"
+                    type="email"
+                    value={formState.email}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Input
+                    label="Password"
+                    name="password"
+                    type="password"
+                    value={formState.password}
+                    onChange={handleChange}
+                    required
+                    disabled={isSubmitting}
+                />
+                <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? 'Signing In...' : 'Sign In'}
-                </button>
+                </Button>
             </form>
             <div className={styles.divider}><span>OR</span></div>
             <button onClick={handleGoogleLogin} className={styles.btnGoogle} disabled={isSubmitting}>

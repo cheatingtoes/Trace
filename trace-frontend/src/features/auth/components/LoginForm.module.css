@@ -6,54 +6,10 @@
     margin: auto;
 }
 
-.formGroup {
-    margin-bottom: 1rem;
-    text-align: left;
-}
-
-.formGroup label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-}
-
-.formGroup input {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-    box-sizing: border-box;
-}
-
-.btnPrimary {
-    width: 100%;
-    padding: 0.75rem;
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 1rem;
-    transition: background-color 0.2s;
-}
-
-.btnPrimary:hover {
-    background-color: #1d4ed8;
-}
-
-.btnPrimary:disabled {
-    background-color: #9ca3af;
-    cursor: not-allowed;
-}
-
 .divider {
     margin: 1.5rem 0;
     position: relative;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--input-border, #e5e7eb);
     text-align: center;
 }
 
@@ -62,20 +18,21 @@
     top: -12px;
     left: 50%;
     transform: translateX(-50%);
-    background: white;
+    background: var(--bg-color, white);
     padding: 0 10px;
-    color: #9ca3af;
+    color: var(--text-color, #9ca3af);
     font-size: 0.875rem;
+    opacity: 0.7;
 }
 
 .btnGoogle {
     width: 100%;
     padding: 0.75rem;
-    background-color: white;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
+    background-color: var(--input-bg, white);
+    border: 1px solid var(--input-border, #d1d5db);
+    border-radius: var(--radius-md, 6px);
     font-weight: 500;
-    color: #374151;
+    color: var(--text-color, #374151);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -85,7 +42,8 @@
 }
 
 .btnGoogle:hover {
-    background-color: #f9fafb;
+    background-color: var(--input-bg, #f9fafb);
+    filter: brightness(0.95);
 }
 
 .btnGoogle img {
@@ -94,11 +52,12 @@
 }
 
 .errorMessage {
-    background-color: #fee2e2;
-    color: #dc2626;
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--error-color, #dc2626);
     padding: 0.75rem;
-    border-radius: 6px;
+    border-radius: var(--radius-md, 6px);
     margin-bottom: 1rem;
     font-size: 0.875rem;
     text-align: center;
+    border: 1px solid var(--error-color, #dc2626);
 }

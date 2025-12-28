@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import styles from './ActivityForm.module.css';
+import Input from '../../../components/ui/Input';
+import Button from '../../../components/ui/Button';
+import Textarea from '../../../components/ui/Textarea';
 
 const ActivityForm = ({ onSubmit, onSuccess, isOpen, onClose, initialValues = {}, buttonText = 'Create Activity' }) => {
     const {
@@ -57,33 +60,34 @@ const ActivityForm = ({ onSubmit, onSuccess, isOpen, onClose, initialValues = {}
     return (
         <div className={styles.container}>
             <form onSubmit={handleSubmit} className={styles.form}>
-                <input
+                <Input
+                    label="Activity Name"
                     type="text"
-                    placeholder="Activity Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    className={styles.input}
                 />
-                <textarea
-                    placeholder="Description"
+                <Textarea
+                    label="Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className={styles.textarea}
                 />
-                <input
+                <Input
+                    label="Start Date"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className={styles.input}
                 />
-                <input
+                <Input
+                    label="End Date"
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className={styles.input}
                 />
-                <button type="submit" className={styles.submitButton}>{buttonText}</button>
+                <div className={styles.buttonGroup}>
+                    <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+                    <Button type="submit">{buttonText}</Button>
+                </div>
             </form>
         </div>
     );

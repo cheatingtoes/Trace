@@ -9,6 +9,16 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
+  /* Theme Variables */
+  --primary-color: #646cff;
+  --primary-hover: #535bf2;
+  --text-color: rgba(255, 255, 255, 0.87);
+  --bg-color: #242424;
+  --input-bg: #1a1a1a;
+  --input-border: #444;
+  --error-color: #ef4444;
+  --radius-md: 8px;
+
   /* color-scheme: light;
   color: #000000;
   background-color: #ffffff; */
@@ -64,6 +74,10 @@ button:focus-visible {
   :root {
     color: #213547;
     background-color: #ffffff;
+    --text-color: #213547;
+    --bg-color: #ffffff;
+    --input-bg: #f9f9f9;
+    --input-border: #ccc;
   }
   a:hover {
     color: #747bff;
