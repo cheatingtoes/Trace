@@ -16,6 +16,10 @@ router.get('/:id', MomentController.getMomentById);
 // POST /api/v1/moments - Create a new moment
 router.post('/', MomentController.createMoment);
 
+router.patch('/bulk-update', MomentController.bulkUpdate)
+
+router.patch('/:id', MomentController.updateMoment);
+
 router.delete('/:id', MomentController.deleteMoment);
 
 // 1. Sign Batch (Get URLs)

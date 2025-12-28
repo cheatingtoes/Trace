@@ -1,11 +1,14 @@
 // trace-backend/routes/cluster.routes.js
 const express = require('express');
 const router = express.Router();
-const clusterController = require('../controllers/cluster.controller');
+const ClustersController = require('../controllers/clusters.controller');
+const authenticate = require('../middleware/auth');
 
-router.post('/', clusterController.create);
-router.get('/:id', clusterController.get);
-router.patch('/:id', clusterController.update);
-router.delete('/:id', clusterController.remove);
+router.use(authenticate);
+
+router.post('/', ClustersController.createCluster);
+router.get('/:id', ClustersController.getCluster);
+router.patch('/:id', ClustersController.updateCluster);
+router.delete('/:id', ClustersController.deleteCluster);
 
 module.exports = router;

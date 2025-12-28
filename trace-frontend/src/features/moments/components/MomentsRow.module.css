@@ -10,6 +10,18 @@
 
 .rowHeader {
     display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.headerCheckbox {
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+}
+
+.headerText {
+    display: flex;
     flex-direction: column;
     gap: 0.2rem;
 }
@@ -28,10 +40,11 @@
 
 .momentsGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 1rem;
 }
 
+/* Moment Item */
 .momentItem {
     display: flex;
     flex-direction: column;
@@ -40,11 +53,23 @@
     padding: 0.5rem;
     border-radius: 4px;
     border: 1px solid #ddd;
+    position: relative;
+    cursor: pointer;
+    transition: border-color 0.1s, transform 0.1s;
+}
+
+.momentItem:hover {
+    border-color: #aaa;
+}
+
+.momentItemSelected {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.3);
 }
 
 .thumbnailContainer {
     width: 100%;
-    height: 400px; /* Fixed height as requested/implied for 400x400 */
+    aspect-ratio: 1; /* Square */
     overflow: hidden;
     border-radius: 4px;
     background-color: #eee;
@@ -55,6 +80,25 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Checkmark overlay */
+.selectionCheck {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: 10;
 }
 
 .momentMeta {
@@ -80,6 +124,11 @@
     border-color: #ccc;
     background-color: #f9f9f9;
     outline: none;
+}
+
+/* Stop propagation on inputs */
+.momentNameInput:focus {
+    cursor: text;
 }
 
 .deleteButton {

@@ -1,75 +1,83 @@
 import React, { useRef, useState, useMemo } from 'react';
+import api from '../../../api/axios';
 import styles from './MomentsEditView.module.css';
 import MomentsRow from './MomentsRow';
+import FloatingActionBar from './FloatingActionBar';
+import TimeShiftModal from './TimeShiftModal';
 
 const MomentsEditView = ({ 
     moments = [], 
     onUpload, 
     onDelete,
     onNameChange,
-    onMomentHover
+    onUpdateMoment,
+    onMomentHover,
+    onFetchMoments,
+    activityId
 }) => {
     const fileInputRef = useRef(null);
     const folderInputRef = useRef(null);
     const [isDragOver, setIsDragOver] = useState(false);
+    
+    // Selection State
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [lastClickedId, setLastClickedId] = useState(null);
+    
+    // Modal State
+    const [isTimeShiftOpen, setIsTimeShiftOpen] = useState(false);
 
-    const handleFileChange = (e) => {
-        const files = Array.from(e.target.files || []);
-        if (files.length > 0 && onUpload) {
-            onUpload(files);
-        }
-        // Reset input
-        e.target.value = null;
-    };
-
-    const handleDrop = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const files = Array.from(e.dataTransfer.files || []);
-        setIsDragOver(false);
-        if (files.length > 0 && onUpload) {
-            onUpload(files);
-        }
-    };
-
-    const handleDragOver = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!isDragOver) setIsDragOver(true);
-    };
-
-    const handleDragLeave = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragOver(false);
-    };
-
-    // Group moments by cluster_id
+    // Grouping Logic
     const momentGroups = useMemo(() => {
         if (!moments || moments.length === 0) return [];
 
         const groups = [];
-        let currentGroup = {
-            clusterId: moments[0].cluster_id,
-            moments: [moments[0]]
-        };
+        let currentGroup = null;
 
-        for (let i = 1; i < moments.length; i++) {
-            const moment = moments[i];
-            if (moment.cluster_id !== currentGroup.clusterId) {
-                groups.push(currentGroup);
+        moments.forEach((moment) => {
+            let shouldStartNewGroup = false;
+            // Normalize to null if falsy (undefined, null, "")
+            const momentClusterId = moment.clusterId || null;
+
+            if (!currentGroup) {
+                shouldStartNewGroup = true;
+            } else {
+                const groupClusterId = currentGroup.clusterId || null;
+
+                // 1. Check if Cluster ID changed
+                if (momentClusterId !== groupClusterId) {
+                    shouldStartNewGroup = true;
+                } 
+                // 2. If both are unclustered, check if Day changed
+                else if (momentClusterId === null) {
+                    const currentDay = currentGroup.moments[0].occuredAt 
+                        ? new Date(currentGroup.moments[0].occuredAt).toDateString()
+                        : 'Unknown';
+                    const momentDay = moment.occuredAt 
+                        ? new Date(moment.occuredAt).toDateString()
+                        : 'Unknown';
+                    
+                    if (currentDay !== momentDay) {
+                        shouldStartNewGroup = true;
+                    }
+                }
+            }
+
+            if (shouldStartNewGroup) {
+                if (currentGroup) groups.push(currentGroup);
                 currentGroup = {
-                    clusterId: moment.cluster_id,
+                    clusterId: momentClusterId,
                     moments: [moment]
                 };
             } else {
                 currentGroup.moments.push(moment);
             }
-        }
-        groups.push(currentGroup);
+        });
+        
+        if (currentGroup) groups.push(currentGroup);
         return groups;
     }, [moments]);
 
+    // Helpers
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -86,6 +94,165 @@ const MomentsEditView = ({
         
         const end = formatDate(last);
         return start === end ? start : `${start} - ${end}`;
+    };
+
+    // Handlers
+    const handleFileChange = (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0 && onUpload) onUpload(files);
+        e.target.value = null;
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const files = Array.from(e.dataTransfer.files || []);
+        setIsDragOver(false);
+        if (files.length > 0 && onUpload) onUpload(files);
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isDragOver) setIsDragOver(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragOver(false);
+    };
+
+    // Selection Logic
+    const handleSelect = (idOrIds, shiftKey, forceSelect) => {
+        const newSelected = new Set(selectedIds);
+
+        if (Array.isArray(idOrIds)) {
+            // Bulk select/deselect (from Row Header)
+            idOrIds.forEach(id => {
+                if (forceSelect) newSelected.add(id);
+                else newSelected.delete(id);
+            });
+            setLastClickedId(null);
+        } else {
+            const id = idOrIds;
+            if (shiftKey && lastClickedId && moments.some(m => m.id === lastClickedId)) {
+                // Range Select
+                const lastIdx = moments.findIndex(m => m.id === lastClickedId);
+                const currIdx = moments.findIndex(m => m.id === id);
+                const start = Math.min(lastIdx, currIdx);
+                const end = Math.max(lastIdx, currIdx);
+                
+                for (let i = start; i <= end; i++) {
+                    newSelected.add(moments[i].id);
+                }
+            } else {
+                // Toggle
+                if (newSelected.has(id)) newSelected.delete(id);
+                else newSelected.add(id);
+            }
+            setLastClickedId(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const handleDeselectAll = () => {
+        setSelectedIds(new Set());
+        setLastClickedId(null);
+    };
+
+    // Actions
+    const handleDeleteSelected = async () => {
+        const idsToDelete = Array.from(selectedIds);
+        handleDeselectAll(); // Optimistically clear selection
+        await Promise.all(idsToDelete.map(id => onDelete(id)));
+    };
+
+    const handleTimeShift = async (minutes) => {
+        if (minutes === 0) return;
+        
+        const ids = Array.from(selectedIds);
+        const updates = ids.map(id => {
+            const m = moments.find(m => m.id === id);
+            if (!m || !m.occuredAt) return null;
+            const newTime = new Date(new Date(m.occuredAt).getTime() + minutes * 60000);
+            return { id, capturedAt: newTime.toISOString() };
+        }).filter(Boolean);
+
+        await Promise.all(updates.map(u => onUpdateMoment(u.id, { occuredAt: u.capturedAt })));
+        if (onFetchMoments) onFetchMoments();
+    };
+
+    // Center Action Logic
+    const getCenterAction = () => {
+        if (selectedIds.size === 0) return null;
+
+        // Check continuity
+        const selectedList = moments.filter(m => selectedIds.has(m.id));
+        if (selectedList.length !== selectedIds.size) return null;
+
+        const indices = selectedList.map(m => moments.findIndex(orig => orig.id === m.id)).sort((a, b) => a - b);
+        const isContiguous = indices.every((val, i, arr) => i === 0 || val === arr[i-1] + 1);
+
+        if (!isContiguous) return null;
+
+        const allUnclustered = selectedList.every(m => m.clusterId === null);
+        const allClustered = selectedList.every(m => m.clusterId !== null);
+        const uniqueClusterIds = new Set(selectedList.map(m => m.clusterId).filter(id => id !== null));
+
+        // 1. Create Cluster
+        if (allUnclustered) {
+            return {
+                label: 'Create Cluster',
+                onClick: async () => {
+                    try {
+                        const res = await api.post('/clusters', { 
+                            name: 'New Cluster', 
+                            activityId 
+                        });
+                        const clusterId = res.data.id;
+                        await Promise.all(selectedList.map(m => onUpdateMoment(m.id, { clusterId })));
+                        handleDeselectAll();
+                    } catch (err) {
+                        console.error(err);
+                        alert('Failed to create cluster');
+                    }
+                }
+            };
+        }
+
+        // 2. Ungroup
+        if (allClustered && uniqueClusterIds.size === 1) {
+            return {
+                label: 'Ungroup',
+                onClick: async () => {
+                    await Promise.all(selectedList.map(m => onUpdateMoment(m.id, { clusterId: null })));
+                    handleDeselectAll();
+                }
+            };
+        }
+
+        // 3. Merge
+        if ((!allUnclustered && !allClustered) || uniqueClusterIds.size > 1) {
+             return {
+                label: 'Merge to New Cluster',
+                onClick: async () => {
+                     try {
+                        const res = await api.post('/clusters', { 
+                            activityId 
+                        });
+                        const clusterId = res.data.id;
+                        await Promise.all(selectedList.map(m => onUpdateMoment(m.id, { clusterId })));
+                        handleDeselectAll();
+                    } catch (err) {
+                        console.error(err);
+                        alert('Failed to merge');
+                    }
+                }
+            };
+        }
+
+        return null;
     };
 
     return (
@@ -143,11 +310,15 @@ const MomentsEditView = ({
 
             <div className={styles.groupsContainer}>
                 {momentGroups.map((group, index) => {
-                    // Try to get title from the first moment if it has populated cluster info
-                    // Otherwise default based on clusterId presence
-                    const title = group.clusterId 
-                        ? (group.moments[0].cluster?.title || 'Cluster') 
-                        : 'Unclustered Moments';
+                    const firstMoment = group.moments[0];
+                    const dateStr = formatDate(firstMoment.occuredAt);
+                    
+                    let title = 'Unclustered Moments';
+                    if (group.clusterId) {
+                        title = firstMoment.clusterName || 'Cluster';
+                    } else {
+                        title = `Unclustered Moments - ${dateStr}`;
+                    }
                     
                     const subheader = getGroupDateRange(group.moments);
 
@@ -157,6 +328,8 @@ const MomentsEditView = ({
                             title={title}
                             subheader={subheader}
                             moments={group.moments}
+                            selectedIds={selectedIds}
+                            onSelect={handleSelect}
                             onNameChange={onNameChange}
                             onDelete={onDelete}
                             onMomentHover={onMomentHover}
@@ -164,6 +337,20 @@ const MomentsEditView = ({
                     );
                 })}
             </div>
+
+            <FloatingActionBar 
+                selectedCount={selectedIds.size}
+                onDeselectAll={handleDeselectAll}
+                onDelete={handleDeleteSelected}
+                onTimeShift={() => setIsTimeShiftOpen(true)}
+                centerAction={getCenterAction()}
+            />
+
+            <TimeShiftModal 
+                isOpen={isTimeShiftOpen}
+                onClose={() => setIsTimeShiftOpen(false)}
+                onConfirm={handleTimeShift}
+            />
         </div>
     );
 };

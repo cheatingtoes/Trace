@@ -1,8 +1,7 @@
 const db = require('../config/db');
 
-const create = async (data) => {
-    const [cluster] = await db('clusters').insert(data).returning('*');
-    return cluster;
+const createCluster = (data) => {
+    return db('clusters').insert(data).returning('*');
 };
 
 const findById = async (id) => {
@@ -19,7 +18,7 @@ const remove = async (id) => {
 };
 
 module.exports = {
-    create,
+    createCluster,
     findById,
     update,
     remove,

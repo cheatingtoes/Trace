@@ -154,6 +154,9 @@ const ActivityDetail = () => {
                         onDelete={deleteMoment} 
                         onMomentHover={setHoveredMomentId}
                         onNameChange={(id, name) => updateMoment(id, { name })}
+                        onUpdateMoment={updateMoment}
+                        onFetchMoments={fetchMoments}
+                        activityId={id}
                     />
                     <UploadProgress failedUploads={allFailedUploads} uploadingFiles={allUploadingFiles} processingIds={allProcessingIds} duplicates={momentDuplicates} />
                 </>

@@ -41,6 +41,19 @@ const createMoment = async (momentData) => {
     return MomentModel.createMoment({ id, ...momentData });
 };
 
+const updateMoment = async (id, updates) => {
+    const [updatedMoment] = await MomentModel.update(id, updates);
+    if (!updatedMoment) {
+        throw new NotFoundError(`Moment with ID ${id} not found.`);
+    }
+    return updatedMoment;
+};
+
+const bulkUpdate = async (updates) => {
+    const updatedMoments = await MomentModel.bulkUpdate(updates);
+    return updatedMoments;
+}
+
 const updateStatus = async (id, status) => {
     return MomentModel.updateStatus(id, status);
 };
@@ -182,6 +195,8 @@ module.exports = {
   getMomentsByActivityId,
   getMomentsByStatus,
   createMoment,
+  updateMoment,
+  bulkUpdate,
   updateStatus,
   deleteMoment,
   deleteMomentsByActivityId,

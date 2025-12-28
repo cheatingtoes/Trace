@@ -5,50 +5,80 @@ const MomentsRow = ({
     title, 
     subheader, 
     moments = [], 
+    selectedIds = new Set(),
+    onSelect,
     onNameChange, 
     onDelete,
     onMomentHover
 }) => {
+    // Check if all moments in this row are selected
+    const allSelected = moments.length > 0 && moments.every(m => selectedIds.has(m.id));
+
+    const handleHeaderCheckboxChange = () => {
+        if (!onSelect) return;
+        const ids = moments.map(m => m.id);
+        onSelect(ids, false, !allSelected); // Pass list of IDs and forceSelect state
+    };
+
     return (
         <div className={styles.rowContainer}>
             <div className={styles.rowHeader}>
-                <h4 className={styles.rowTitle}>{title}</h4>
-                <span className={styles.rowSubheader}>{subheader}</span>
+                <input 
+                    type="checkbox" 
+                    className={styles.headerCheckbox}
+                    checked={allSelected}
+                    onChange={handleHeaderCheckboxChange}
+                />
+                <div className={styles.headerText}>
+                    <h4 className={styles.rowTitle}>{title}</h4>
+                    <span className={styles.rowSubheader}>{subheader}</span>
+                </div>
             </div>
             
             <div className={styles.momentsGrid}>
-                {moments.map((moment) => (
-                    <div 
-                        key={moment.id} 
-                        className={styles.momentItem}
-                        onMouseEnter={() => onMomentHover && onMomentHover(moment.id)}
-                        onMouseLeave={() => onMomentHover && onMomentHover(null)}
-                    >
-                        <div className={styles.thumbnailContainer}>
-                            <img 
-                                src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`} 
-                                alt={moment.name || 'Moment'}
-                                className={styles.thumbnail}
-                            />
+                {moments.map((moment) => {
+                    const isSelected = selectedIds.has(moment.id);
+                    return (
+                        <div 
+                            key={moment.id} 
+                            className={`${styles.momentItem} ${isSelected ? styles.momentItemSelected : ''}`}
+                            onMouseEnter={() => onMomentHover && onMomentHover(moment.id)}
+                            onMouseLeave={() => onMomentHover && onMomentHover(null)}
+                            onClick={(e) => onSelect && onSelect(moment.id, e.shiftKey)}
+                        >
+                            {isSelected && (
+                                <div className={styles.selectionCheck}>✓</div>
+                            )}
+                            <div className={styles.thumbnailContainer}>
+                                <img 
+                                    src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`} 
+                                    alt={moment.name || 'Moment'}
+                                    className={styles.thumbnail}
+                                />
+                            </div>
+                            <div className={styles.momentMeta}>
+                                <input 
+                                    type="text" 
+                                    value={moment.name || moment.filename || ''} 
+                                    onChange={(e) => onNameChange && onNameChange(moment.id, e.target.value)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className={styles.momentNameInput}
+                                    placeholder="Untitled"
+                                />
+                                <button 
+                                    className={styles.deleteButton} 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDelete && onDelete(moment.id);
+                                    }}
+                                    title="Delete Moment"
+                                >
+                                    [Trash]
+                                </button>
+                            </div>
                         </div>
-                        <div className={styles.momentMeta}>
-                            <input 
-                                type="text" 
-                                value={moment.name || moment.filename || ''} 
-                                onChange={(e) => onNameChange && onNameChange(moment.id, e.target.value)}
-                                className={styles.momentNameInput}
-                                placeholder="Untitled"
-                            />
-                            <button 
-                                className={styles.deleteButton} 
-                                onClick={() => onDelete && onDelete(moment.id)}
-                                title="Delete Moment"
-                            >
-                                [Trash]
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

@@ -27,6 +27,7 @@ const activitiesRouter = require('./routes/activities.routes');
 const tracksRouter = require('./routes/tracks.routes');
 const polylinesRouter = require('./routes/polylines.routes');
 const momentsRouter = require('./routes/moments.routes');
+const clustersRouter = require('./routes/clusters.route');
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', usersRouter);
@@ -34,6 +35,8 @@ app.use('/api/v1/activities', activitiesRouter);
 app.use('/api/v1/tracks', tracksRouter);
 app.use('/api/v1/polylines', polylinesRouter);
 app.use('/api/v1/moments', momentsRouter);
+app.use('/api/v1/clusters', clustersRouter);
+
 
 // --- Server Root ---
 app.get('/', (req, res) => {

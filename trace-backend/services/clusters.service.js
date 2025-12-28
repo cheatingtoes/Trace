@@ -1,13 +1,12 @@
-// trace-backend/services/cluster.service.js
-const ClusterModel = require('../models/cluster.model');
-const crypto = require('crypto');
+const { uuidv7 } = require('uuidv7');
+const ClustersModel = require('../models/clusters.model');
 const db = require('../config/db');
 
 const createCluster = async (data) => {
     const { lat, lon, alt, ...rest } = data;
     
     const clusterData = {
-        id: crypto.randomUUID(),
+        id: uuidv7(),
         ...rest
     };
 
@@ -18,7 +17,10 @@ const createCluster = async (data) => {
         clusterData.geom = db.raw('ST_SetSRID(ST_MakePoint(?, ?, ?), 4326)', [lon, lat, altitude]);
     }
 
-    return await ClusterModel.create(clusterData);
+    const [cluster] = await ClustersModel.createCluster(clusterData);
+    console.log('new cluster', cluster)
+    return cluster
+
 };
 
 const updateCluster = async (id, data) => {
@@ -30,15 +32,15 @@ const updateCluster = async (id, data) => {
         updateData.geom = db.raw('ST_SetSRID(ST_MakePoint(?, ?, ?), 4326)', [lon, lat, altitude]);
     }
 
-    return await ClusterModel.update(id, updateData);
+    return await ClustersModel.update(id, updateData);
 };
 
 const deleteCluster = async (id) => {
-    return await ClusterModel.remove(id);
+    return await ClustersModel.remove(id);
 };
 
 const getCluster = async (id) => {
-    return await ClusterModel.findById(id);
+    return await ClustersModel.findById(id);
 };
 
 module.exports = {
@@ -46,58 +48,4 @@ module.exports = {
     updateCluster,
     deleteCluster,
     getCluster
-};
-// trace-backend/controllers/cluster.controller.js
-const clusterService = require('../services/cluster.service');
-
-const create = async (req, res, next) => {
-    try {
-        const cluster = await clusterService.createCluster(req.body);
-        res.status(201).json(cluster);
-    } catch (error) {
-        next(error);
-    }
-};
-
-const get = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const cluster = await clusterService.getCluster(id);
-        if (!cluster) {
-            return res.status(404).json({ message: 'Cluster not found' });
-        }
-        res.json(cluster);
-    } catch (error) {
-        next(error);
-    }
-};
-
-const update = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const cluster = await clusterService.updateCluster(id, req.body);
-        if (!cluster) {
-            return res.status(404).json({ message: 'Cluster not found' });
-        }
-        res.json(cluster);
-    } catch (error) {
-        next(error);
-    }
-};
-
-const remove = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        await clusterService.deleteCluster(id);
-        res.status(204).send();
-    } catch (error) {
-        next(error);
-    }
-};
-
-module.exports = {
-    create,
-    get,
-    update,
-    remove
 };

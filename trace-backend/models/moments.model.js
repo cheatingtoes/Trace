@@ -15,14 +15,16 @@ const getMomentByIds = (ids) => {
 
 const getMomentsByActivityId = (activityId) => {
     return db(TABLE_NAME)
-        .where({ activityId })
-        .whereIn('status', ['active', 'processing'])
+        .leftJoin('clusters', 'moments.cluster_id', 'clusters.id')
+        .where({ 'moments.activityId': activityId })
+        .whereIn('moments.status', ['active', 'processing'])
         .select(
-            '*',
-            db.raw('ST_X(geom::geometry) as lon'),
-            db.raw('ST_Y(geom::geometry) as lat')
+            'moments.*',
+            'clusters.name as cluster_name',
+            db.raw('ST_X(moments.geom::geometry) as lon'),
+            db.raw('ST_Y(moments.geom::geometry) as lat')
         )
-        .orderBy('occuredAt', 'asc');
+        .orderBy('moments.occuredAt', 'asc');
 }
 
 const getMomentsByStatus = (ids) => {
@@ -68,9 +70,19 @@ const updateStatus = (momentId, status) => {
     return db(TABLE_NAME).where('id', momentId).update({ status });
 }
 
+const update = (id, data) => {
+    return db(TABLE_NAME).where({ id }).update(data).returning('*');
+};
+
 const deleteMomentsByActivityId = (activityId) => {
     return db(TABLE_NAME).where({ activityId }).del();
 }
+
+const bulkUpdate = (ids, data) => {
+    return db(TABLE_NAME).whereIn('id', ids).update(data);
+};
+  
+
 
 module.exports = {
     getAllMoments,
@@ -84,5 +96,7 @@ module.exports = {
     confirmBatchUploads,
     updateMetadata,
     updateStatus,
+    update,
     deleteMomentsByActivityId,
+    bulkUpdate
 };

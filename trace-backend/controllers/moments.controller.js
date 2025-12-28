@@ -53,6 +53,25 @@ const createMoment = async (req, res, next) => {
     }
 }
 
+const updateMoment = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const updatedMoment = await MomentService.updateMoment(id, req.body);
+        res.status(200).json(success(updatedMoment));
+    } catch (error) {
+        next(error);
+    }
+}
+
+const bulkUpdate = async (req, res, next) => {
+    try {
+        const updatedMoment = await MomentService.bulkUpdate(req.body);
+        res.status(200).json(success(updatedMoment));
+    } catch (error) {
+        next(error);
+    }
+}
+
 const deleteMoment = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -120,7 +139,9 @@ module.exports = {
     getMomentByIds,
     getMomentsByStatus,
     createMoment,
+    updateMoment,
     deleteMoment,
     signBatch,
     confirmBatch,
+    bulkUpdate
 }
