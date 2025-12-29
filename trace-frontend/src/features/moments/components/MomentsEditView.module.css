@@ -8,12 +8,32 @@
     margin-top: 1rem;
 }
 
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .header h3 {
     margin: 0;
     font-size: 0.9rem;
     color: #666;
     letter-spacing: 0.05em;
     font-weight: 600;
+}
+
+.toggleContainer {
+    display: flex;
+    align-items: center;
+}
+
+.toggleLabel {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #666;
+    user-select: none;
 }
 
 .uploadZone {

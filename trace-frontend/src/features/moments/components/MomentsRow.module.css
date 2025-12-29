@@ -80,6 +80,11 @@
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.3);
 }
 
+.momentItemActive {
+    border-color: #ff9800;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.4);
+}
+
 .thumbnailContainer {
     width: 100%;
     aspect-ratio: 1; /* Square */
@@ -112,13 +117,6 @@
     font-weight: bold;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     z-index: 10;
-}
-
-.momentMeta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
 }
 
 .momentNameInput {

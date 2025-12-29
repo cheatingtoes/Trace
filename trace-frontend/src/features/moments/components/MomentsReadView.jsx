@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import styles from './MomentsEditView.module.css';
 import MomentsRow from './MomentsRow';
 
@@ -7,7 +7,11 @@ const MomentsReadView = ({
     onMomentHover,
     onMomentSelect,
     scrollToMomentId,
-    onScrollComplete
+    onScrollComplete,
+    isScrollSyncEnabled,
+    onToggleScrollSync,
+    onMomentCenter,
+    activeMomentId
 }) => {
     
     // Scroll Effect
@@ -25,6 +29,77 @@ const MomentsReadView = ({
             }
         }
     }, [scrollToMomentId, onScrollComplete]);
+
+    // Scroll Sync Logic
+    const containerRef = useRef(null);
+    const scrollTimeoutRef = useRef(null);
+
+    useEffect(() => {
+        const getScrollParent = (node) => {
+            if (!node || node === document.body || node === document.documentElement) return null;
+            
+            const style = getComputedStyle(node);
+            const overflowY = style.overflowY;
+            const isScrollable = overflowY === 'auto' || overflowY === 'scroll';
+            
+            if (isScrollable && node.scrollHeight >= node.clientHeight) {
+                return node;
+            }
+            return getScrollParent(node.parentNode);
+        };
+
+        const handleScroll = () => {
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+
+            scrollTimeoutRef.current = setTimeout(() => {
+                if (!containerRef.current) return;
+                
+                const scrollParent = getScrollParent(containerRef.current);
+                // Fallback to window viewport if no specific scroll parent found (assuming body scroll)
+                const parentRect = scrollParent 
+                    ? scrollParent.getBoundingClientRect() 
+                    : { top: 0, height: window.innerHeight };
+                
+                const centerY = parentRect.top + parentRect.height / 2;
+
+                // Find all moment items
+                const momentElements = containerRef.current.querySelectorAll('[id^="moment-item-"]');
+                let closestElement = null;
+                let closestDistance = Infinity;
+
+                momentElements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    const elCenterY = rect.top + rect.height / 2;
+                    const distance = Math.abs(centerY - elCenterY);
+
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestElement = el;
+                    }
+                });
+
+                if (closestElement) {
+                    const momentId = closestElement.id.replace('moment-item-', '');
+                    // Only trigger if changed and callback exists
+                    if (onMomentCenter) {
+                        onMomentCenter(momentId);
+                    }
+                }
+            }, 100); // 100ms debounce
+        };
+
+        const scrollParent = getScrollParent(containerRef.current);
+        const target = scrollParent || window;
+        
+        target.addEventListener('scroll', handleScroll, { passive: true });
+        
+        return () => {
+            target.removeEventListener('scroll', handleScroll);
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        };
+    }, [onMomentCenter]);
 
     // Grouping Logic (Duplicated from MomentsEditView for read-only stability)
     const momentGroups = useMemo(() => {
@@ -98,9 +173,21 @@ const MomentsReadView = ({
     };
 
     return (
-        <div className={styles.container}>
+        <div className={styles.container} ref={containerRef}>
             <div className={styles.header}>
                 <h3>MOMENTS</h3>
+                {onToggleScrollSync && (
+                    <div className={styles.toggleContainer}>
+                        <label className={styles.toggleLabel}>
+                            <input
+                                type="checkbox"
+                                checked={isScrollSyncEnabled}
+                                onChange={onToggleScrollSync}
+                            />
+                            <span style={{ marginLeft: '5px' }}>Sync Map</span>
+                        </label>
+                    </div>
+                )}
             </div>
             
             <div className={styles.groupsContainer}>
@@ -122,9 +209,11 @@ const MomentsReadView = ({
                             subheader={subheader}
                             moments={group.moments}
                             onMomentHover={onMomentHover}
+                            onMomentSelect={onMomentSelect}
                             clusterId={group.clusterId}
                             clusterDescription={group.clusterDescription}
                             readOnly={true}
+                            activeMomentId={activeMomentId}
                         />
                     );
                 })}

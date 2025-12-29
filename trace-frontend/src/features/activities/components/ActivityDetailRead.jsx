@@ -18,6 +18,8 @@ const ActivityDetailRead = () => {
     const navigate = useNavigate();
     const [hoveredMomentId, setHoveredMomentId] = useState(null);
     const [scrollToMomentId, setScrollToMomentId] = useState(null);
+    const [activeMomentId, setActiveMomentId] = useState(null);
+    const [isScrollSyncEnabled, setIsScrollSyncEnabled] = useState(true);
     const { activity, loading: activityLoading, error: activityError } = useActivity(id);
     const { 
         tracks, 
@@ -31,7 +33,7 @@ const ActivityDetailRead = () => {
         error: momentsError, 
     } = useMoments(id);
     
-    const { setMapLayers, setMapViewport } = useMap();
+    const { setMapLayers, setMapViewport, mapInstance } = useMap();
 
     const defaultIcon = useMemo(() => new L.Icon({
         iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -51,13 +53,36 @@ const ActivityDetailRead = () => {
         shadowSize: [41, 41]
     }), []);
 
-    const handleMomentSelect = (momentId) => {
-        const moment = moments.find(m => m.id === momentId);
+    const handleMomentSelect = (moment) => {
         if (moment && moment.lat != null && moment.lon != null) {
             setMapViewport({
                 center: [moment.lat, moment.lon],
                 zoom: 10 // Close zoom for specific moment
             });
+        }
+    };
+
+    const handleMomentCenter = (momentId) => {
+        setActiveMomentId(momentId);
+        if (isScrollSyncEnabled) {
+            const moment = moments.find(m => m.id === momentId);
+            if (moment && moment.lat != null && moment.lon != null) {
+                const targetZoom = 10;
+                if (mapInstance) {
+                    const bounds = mapInstance.getBounds();
+                    const currentZoom = mapInstance.getZoom();
+                    const latLng = L.latLng(moment.lat, moment.lon);
+                    
+                    // Only skip if contained in bounds AND we are at least at the target zoom
+                    if (bounds.contains(latLng) && currentZoom >= targetZoom) {
+                        return;
+                    }
+                }
+                setMapViewport({
+                    center: [moment.lat, moment.lon],
+                    zoom: targetZoom // Closer zoom for specific moment
+                });
+            }
         }
     };
 
@@ -87,12 +112,13 @@ const ActivityDetailRead = () => {
             moments.forEach(moment => {
                 // Backend now returns lat/lon directly
                 const isHovered = moment.id === hoveredMomentId;
+                const isActive = moment.id === activeMomentId;
                 if (moment.lat != null && moment.lon != null) {
                     layers.push(
                         <Marker 
                             key={`moment-${moment.id}`} 
                             position={[moment.lat, moment.lon]}
-                            icon={isHovered ? highlightedIcon : defaultIcon}
+                            icon={isHovered || isActive ? highlightedIcon : defaultIcon}
                             eventHandlers={{ click: () => setScrollToMomentId(moment.id) }}
                         >
                             <Popup><img src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`} />{`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`}</Popup>
@@ -107,7 +133,7 @@ const ActivityDetailRead = () => {
         return () => {
             setMapLayers([]);
         };
-    }, [tracks, moments, setMapLayers, hoveredMomentId, defaultIcon, highlightedIcon]);
+    }, [tracks, moments, setMapLayers, hoveredMomentId, activeMomentId, defaultIcon, highlightedIcon]);
 
     return (
         <div className={styles.detailContainer}>
@@ -142,6 +168,10 @@ const ActivityDetailRead = () => {
                 onMomentSelect={handleMomentSelect}
                 scrollToMomentId={scrollToMomentId}
                 onScrollComplete={() => setScrollToMomentId(null)}
+                isScrollSyncEnabled={isScrollSyncEnabled}
+                onToggleScrollSync={() => setIsScrollSyncEnabled(prev => !prev)}
+                onMomentCenter={handleMomentCenter}
+                activeMomentId={activeMomentId}
             />
         </div>
     );

@@ -16,7 +16,12 @@ L.Icon.Default.mergeOptions({
 
 const MapController = () => {
     const map = useLeafletMap();
-    const { mapViewport, mapPadding } = useMap();
+    const { mapViewport, mapPadding, setMapInstance } = useMap();
+
+    useEffect(() => {
+        setMapInstance(map);
+        return () => setMapInstance(null);
+    }, [map, setMapInstance]);
 
     useEffect(() => {
         if (mapViewport) {
