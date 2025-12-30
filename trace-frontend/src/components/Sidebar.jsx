@@ -39,7 +39,7 @@ const Sidebar = ({ defaultWidth, side = 'left' }) => {
         newWidth = ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
       }
       // Add constraints for min/max width if desired
-      if (newWidth > 15 && newWidth < 80) {
+      if (newWidth > 15 && newWidth < 50) {
         setWidth(newWidth);
       }
     }

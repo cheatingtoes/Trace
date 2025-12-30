@@ -124,7 +124,7 @@ const MomentsEditView = ({
                         onMomentCenter(momentId);
                     }
                 }
-            }, 100);
+            }, 10); //debounce
         };
 
         const scrollParent = getScrollParent(containerRef.current);

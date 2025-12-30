@@ -19,6 +19,7 @@ const ActivityDetailRead = () => {
     const [hoveredMomentId, setHoveredMomentId] = useState(null);
     const [scrollToMomentId, setScrollToMomentId] = useState(null);
     const [activeMomentId, setActiveMomentId] = useState(null);
+    const [selectedMomentForModal, setSelectedMomentForModal] = useState(null);
     const [isScrollSyncEnabled, setIsScrollSyncEnabled] = useState(true);
     const { activity, loading: activityLoading, error: activityError } = useActivity(id);
     const { 
@@ -54,11 +55,14 @@ const ActivityDetailRead = () => {
     }), []);
 
     const handleMomentSelect = (moment) => {
-        if (moment && moment.lat != null && moment.lon != null) {
-            setMapViewport({
-                center: [moment.lat, moment.lon],
-                zoom: 10 // Close zoom for specific moment
-            });
+        if (moment) {
+            if (moment.lat != null && moment.lon != null) {
+                setMapViewport({
+                    center: [moment.lat, moment.lon],
+                    zoom: 10 // Close zoom for specific moment
+                });
+            }
+            setSelectedMomentForModal(moment);
         }
     };
 
@@ -85,6 +89,44 @@ const ActivityDetailRead = () => {
             }
         }
     };
+
+    const handleNextImage = (e) => {
+        if (e) e.stopPropagation();
+        if (!selectedMomentForModal || !moments) return;
+        const currentIndex = moments.findIndex(m => m.id === selectedMomentForModal.id);
+        if (currentIndex !== -1 && currentIndex < moments.length - 1) {
+            setSelectedMomentForModal(moments[currentIndex + 1]);
+        }
+    };
+
+    const handlePrevImage = (e) => {
+        if (e) e.stopPropagation();
+        if (!selectedMomentForModal || !moments) return;
+        const currentIndex = moments.findIndex(m => m.id === selectedMomentForModal.id);
+        if (currentIndex > 0) {
+            setSelectedMomentForModal(moments[currentIndex - 1]);
+        }
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setSelectedMomentForModal(null);
+            } else if (e.key === 'ArrowRight') {
+                handleNextImage();
+            } else if (e.key === 'ArrowLeft') {
+                handlePrevImage();
+            }
+        };
+
+        if (selectedMomentForModal) {
+            window.addEventListener('keydown', handleKeyDown);
+        }
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [selectedMomentForModal, moments]);
 
     // Update Map Layers
     useEffect(() => {
@@ -173,6 +215,34 @@ const ActivityDetailRead = () => {
                 onMomentCenter={handleMomentCenter}
                 activeMomentId={activeMomentId}
             />
+            {selectedMomentForModal && (
+                <div className={styles.modalOverlay} onClick={() => setSelectedMomentForModal(null)}>
+                    
+                    {moments.findIndex(m => m.id === selectedMomentForModal.id) > 0 && (
+                        <button className={`${styles.navButton} ${styles.prevButton}`} onClick={handlePrevImage}>
+                            &#10094;
+                        </button>
+                    )}
+
+                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        {selectedMomentForModal.storageWebKey ? (
+                            <img 
+                                src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${selectedMomentForModal.storageWebKey}`}
+                                alt={selectedMomentForModal.name || 'Moment Detail'}
+                                className={styles.modalImage}
+                            />
+                        ) : (
+                            <div style={{color: 'white', fontSize: '1.2rem'}}>Image not available</div>
+                        )}
+                    </div>
+
+                    {moments.findIndex(m => m.id === selectedMomentForModal.id) < moments.length - 1 && (
+                        <button className={`${styles.navButton} ${styles.nextButton}`} onClick={handleNextImage}>
+                            &#10095;
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
