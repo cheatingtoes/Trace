@@ -1,6 +1,6 @@
 const { uuidv7 } = require('uuidv7');
 const ClustersModel = require('../models/clusters.model');
-const db = require('../config/db');
+const { NotFoundError } = require('../errors/customErrors');
 
 const createCluster = async (data) => {
     const { lat, lon, alt, ...rest } = data;
@@ -42,9 +42,14 @@ const findById = async (id) => {
     return await ClustersModel.findById(id);
 };
 
+const findClusterForMoment = async (activityId, occuredAt) => {
+    return await ClustersModel.findClusterForMoment(activityId, occuredAt);
+}
+
 module.exports = {
     createCluster,
     updateCluster,
     deleteCluster,
-    findById
+    findById,
+    findClusterForMoment
 };

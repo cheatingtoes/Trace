@@ -120,7 +120,7 @@ const MomentsRow = ({
 
                     return (
                         <div 
-                            key={moment.id} 
+                            key={`moments-row-item-${moment.id}`} 
                             id={`moment-item-${moment.id}`}
                             className={`${styles.momentItem} ${isSelected ? styles.momentItemSelected : ''} ${isActive ? styles.momentItemActive : ''}`}
                             onMouseEnter={() => onMomentHover && onMomentHover(moment.id)}

@@ -123,7 +123,7 @@ const TracksEditView = ({
             <ul className={styles.trackList}>
                 {tracks.map((track, index) => (
                     <TrackItem 
-                        key={track.id || index} 
+                        key={`track-edit-view-${track.id || index}`} 
                         track={track} 
                         index={index} 
                         onColorChange={onColorChange} 

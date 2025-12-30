@@ -116,7 +116,7 @@ const ActivityDetailRead = () => {
                 if (moment.lat != null && moment.lon != null) {
                     layers.push(
                         <Marker 
-                            key={`moment-${moment.id}`} 
+                            key={`moment-read-view${moment.id}`} 
                             position={[moment.lat, moment.lon]}
                             icon={isHovered || isActive ? highlightedIcon : defaultIcon}
                             eventHandlers={{ click: () => setScrollToMomentId(moment.id) }}

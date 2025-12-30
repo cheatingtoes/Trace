@@ -34,7 +34,7 @@ const TracksReadView = ({ tracks = [] }) => {
             <ul className={styles.trackList}>
                 {tracks.map((track, index) => (
                     <TrackItemRead 
-                        key={track.id || index} 
+                        key={`track-read-view-${track.id || index}`} 
                         track={track} 
                         index={index} 
                     />

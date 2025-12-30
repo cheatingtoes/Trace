@@ -65,19 +65,45 @@ const MomentsReadView = ({
                 const centerY = parentRect.top + parentRect.height / 2;
 
                 // Find all moment items
-                const momentElements = containerRef.current.querySelectorAll('[id^="moment-item-"]');
-                let closestElement = null;
-                let closestDistance = Infinity;
+                const momentElements = Array.from(containerRef.current.querySelectorAll('[id^="moment-item-"]'));
+                
+                // Group by visual row to handle grid layouts
+                const rows = [];
+                const TOLERANCE = 5;
+                let currentRow = null;
 
                 momentElements.forEach(el => {
                     const rect = el.getBoundingClientRect();
-                    const elCenterY = rect.top + rect.height / 2;
-                    const distance = Math.abs(centerY - elCenterY);
-
-                    if (distance < closestDistance) {
-                        closestDistance = distance;
-                        closestElement = el;
+                    // Check if new row: if no current row, or top differs significantly
+                    // Note: We assume DOM order matches visual order (top-left to bottom-right)
+                    if (!currentRow || Math.abs(currentRow.top - rect.top) >= TOLERANCE) {
+                        currentRow = { top: rect.top, height: rect.height, items: [] };
+                        rows.push(currentRow);
                     }
+                    currentRow.items.push({ el, rect });
+                });
+
+                let closestElement = null;
+                let closestDistance = Infinity;
+
+                rows.forEach(row => {
+                    // Sort items by left position just in case (though DOM order is usually correct)
+                    row.items.sort((a, b) => a.rect.left - b.rect.left);
+                    
+                    const count = row.items.length;
+                    // Distribute row height among items
+                    const sliceHeight = row.height / count;
+                    
+                    row.items.forEach((item, index) => {
+                        // Virtual center for this item within the row's vertical space
+                        const virtualCenterY = row.top + (index * sliceHeight) + (sliceHeight / 2);
+                        const distance = Math.abs(centerY - virtualCenterY);
+
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestElement = item.el;
+                        }
+                    });
                 });
 
                 if (closestElement) {
@@ -87,7 +113,7 @@ const MomentsReadView = ({
                         onMomentCenter(momentId);
                     }
                 }
-            }, 100); // 100ms debounce
+            }, 10); // 100ms debounce
         };
 
         const scrollParent = getScrollParent(containerRef.current);
@@ -204,7 +230,7 @@ const MomentsReadView = ({
 
                     return (
                         <MomentsRow
-                            key={group.clusterId || `unclustered-${index}`}
+                            key={`moment-read-view-${index}`}
                             title={title}
                             subheader={subheader}
                             moments={group.moments}

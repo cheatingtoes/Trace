@@ -11,4 +11,6 @@ router.get('/:id', ClustersController.findById);
 router.patch('/:id', ClustersController.updateCluster);
 router.delete('/:id', ClustersController.deleteCluster);
 
+router.post('/find-cluster-for-moment', ClustersController.findClusterForMoment)
+
 module.exports = router;

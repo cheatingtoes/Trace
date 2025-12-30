@@ -52,9 +52,21 @@ const findById = async (req, res, next) => {
     }
 };
 
+const findClusterForMoment = async (req, res, next) => {
+    try {
+        const { activityId, occuredAt } = req.body;
+        let cluster = await ClustersService.findClusterForMoment(activityId, occuredAt);
+        res.status(200).json(success(cluster));
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 module.exports = {
     createCluster,
     updateCluster,
     deleteCluster,
-    findById
+    findById,
+    findClusterForMoment
 };

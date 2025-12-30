@@ -52,7 +52,9 @@ const ActivityDetail = () => {
         updateMomentsState 
     } = useMoments(id);
     
-    const { setMapLayers, setMapViewport } = useMap();
+    const { setMapLayers, setMapViewport, mapInstance } = useMap();
+    const [activeMomentId, setActiveMomentId] = useState(null);
+    const [isScrollSyncEnabled, setIsScrollSyncEnabled] = useState(true);
 
     const isEditing = true;
 
@@ -93,6 +95,30 @@ const ActivityDetail = () => {
         }
     };
 
+    const handleMomentCenter = (momentId) => {
+        setActiveMomentId(momentId);
+        if (isScrollSyncEnabled) {
+            const moment = moments.find(m => m.id === momentId);
+            if (moment && moment.lat != null && moment.lon != null) {
+                const targetZoom = 10;
+                if (mapInstance) {
+                    const bounds = mapInstance.getBounds();
+                    const currentZoom = mapInstance.getZoom();
+                    const latLng = L.latLng(moment.lat, moment.lon);
+                    
+                    // Only skip if contained in bounds AND we are at least at the target zoom
+                    if (bounds.contains(latLng) && currentZoom >= targetZoom) {
+                        return;
+                    }
+                }
+                setMapViewport({
+                    center: [moment.lat, moment.lon],
+                    zoom: targetZoom // Closer zoom for specific moment
+                });
+            }
+        }
+    };
+
     const handleDeleteActivity = async () => {
         if (window.confirm("Are you sure you want to delete this activity?")) {
             const success = await deleteActivity();
@@ -128,12 +154,13 @@ const ActivityDetail = () => {
             moments.forEach(moment => {
                 // Backend now returns lat/lon directly
                 const isHovered = moment.id === hoveredMomentId;
+                const isActive = moment.id === activeMomentId;
                 if (moment.lat != null && moment.lon != null) {
                     layers.push(
                         <Marker 
                             key={`moment-${moment.id}`} 
                             position={[moment.lat, moment.lon]}
-                            icon={isHovered ? highlightedIcon : defaultIcon}
+                            icon={isHovered || isActive ? highlightedIcon : defaultIcon}
                             eventHandlers={{ click: () => setScrollToMomentId(moment.id) }}
                         >
                             <Popup><img src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`} />{`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`}</Popup>
@@ -148,7 +175,7 @@ const ActivityDetail = () => {
         return () => {
             setMapLayers([]);
         };
-    }, [tracks, moments, setMapLayers, hoveredMomentId, defaultIcon, highlightedIcon]);
+    }, [tracks, moments, setMapLayers, hoveredMomentId, activeMomentId, defaultIcon, highlightedIcon]);
 
     return (
         <div className={styles.detailContainer}>
@@ -191,6 +218,10 @@ const ActivityDetail = () => {
                         activityId={id}
                         scrollToMomentId={scrollToMomentId}
                         onScrollComplete={() => setScrollToMomentId(null)}
+                        onMomentCenter={handleMomentCenter}
+                        activeMomentId={activeMomentId}
+                        isScrollSyncEnabled={isScrollSyncEnabled}
+                        onToggleScrollSync={() => setIsScrollSyncEnabled(prev => !prev)}
                     />
                     <UploadProgress failedUploads={allFailedUploads} uploadingFiles={allUploadingFiles} processingIds={allProcessingIds} duplicates={momentDuplicates} />
                 </>

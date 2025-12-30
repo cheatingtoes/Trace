@@ -9,10 +9,10 @@ console.log('[Worker] Starting Trace Media Workers...');
 const imageWorker = new Worker('media-image', async (job) => {
   // CRITICAL OPTIMIZATION: Extract momentId directly.
   // Don't rely on 'key' to find the DB row; it's slow.
-  const { momentId, storageKey } = job.data;
+  const { momentId, storageKey, activityId } = job.data;
 
-  console.log(`[Image-Worker] Processing Moment #${momentId} (${storageKey})...`);
-  await processUploadedMedia({ momentId, key: storageKey, type: 'image' });
+  console.log(`[Image-Worker] Processing Moment: ${momentId}, Storage Key: (${storageKey}), for Activity: ${activityId}...`);
+  await processUploadedMedia({ momentId, activityId, key: storageKey, type: 'image' });
 
 }, { connection, concurrency: 10 });
 
@@ -21,8 +21,8 @@ const imageWorker = new Worker('media-image', async (job) => {
 const videoWorker = new Worker('media-video', async (job) => {
   const { momentId, storageKey } = job.data;
 
-  console.log(`[Video-Worker] Processing Moment #${momentId} (${storageKey})...`);
-  await processUploadedMedia({ momentId, key: storageKey, type: 'video' });
+  console.log(`[Video-Worker] Processing Moment #${momentId} (${storageKey}) for Activity #${activityId}...`);
+  await processUploadedMedia({ momentId, key: storageKey, type: 'video', activityId });
 
 }, { connection, concurrency: 1 }); // Strictly 1 video at a time
 

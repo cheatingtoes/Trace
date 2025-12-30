@@ -1,28 +1,33 @@
 const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const config = require('../config');
-const { s3Client, BUCKET_NAME } = require('../config/s3');
-const db = require('../config/db');
 const exifr = require('exifr');
 const sharp = require('sharp');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static');
+const config = require('../config');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { pipeline } = require('stream/promises');
 
+const { s3Client, BUCKET_NAME } = require('../config/s3');
+const db = require('../config/db');
+
+const ClustersService = require('./clusters.service');
+const MomentsService = require('./moments.service');
+
+
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-async function processUploadedMedia({ key, momentId, type }) {
+async function processUploadedMedia({ key, momentId, type, activityId }) {
     if (type === 'image') {
-        return await processImage(key, momentId);
+        return await processImage({ key, momentId, activityId });
     } else if (type === 'video') {
-        return await processVideo(key, momentId);
+        return await processVideo({ key, momentId, activityId });
     }
 }
 
-async function processImage(key, momentId) {
+async function processImage({ key, momentId, activityId }) {
     console.log(`[MediaService] Downloading: ${key} for moment: ${momentId}`);
 
     try {
@@ -93,8 +98,6 @@ async function processImage(key, momentId) {
             status: 'active'
         };
 
-        console.log('exif data', exifData)
-
         const lat = exifData?.latitude;
         const lon = exifData?.longitude;
         const alt = exifData?.altitude || 0;
@@ -103,12 +106,14 @@ async function processImage(key, momentId) {
             updateData.geom = db.raw('ST_SetSRID(ST_MakePoint(?, ?, ?), 4326)', [lon, lat, alt]);
         }
 
-        await db('moments')
-            .where('id', momentId)
-            .update(updateData);
-        
+        const cluster = await ClustersService.findClusterForMoment(activityId, updateData.occuredAt);
+        console.log('@@@@@@', { cluster, occuredAt: updateData.occuredAt })
+        if (cluster) {
+            updateData.clusterId = cluster.id;
+        }
+
+        await MomentsService.updateMoment(momentId, updateData);
         console.log(`[MediaService] Finished Image: ${momentId}`);
-        
     } catch (err) {
         console.error(`[MediaService] Fatal Error for ${key}:`, err);
         throw err;
@@ -154,7 +159,7 @@ async function processVideo(key, momentId) {
             storageKey: key,
             occuredAt: metadata.creation_time || new Date(),
             status: 'active'
-        };
+        };        
 
         await db('moments').where('id', momentId).update(updateData);
         console.log(`[MediaService] Finished Video: ${momentId}`);

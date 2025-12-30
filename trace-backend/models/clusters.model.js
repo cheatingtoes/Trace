@@ -17,9 +17,18 @@ const remove = async (id) => {
     return db('clusters').where({ id }).del();
 };
 
+const findClusterForMoment = async (activityId, occuredAt) => {
+    return db('clusters')
+        .where({ activityId })
+        .where('start_date', '<=', occuredAt)
+        .where('end_date', '>=', occuredAt)
+        .first();
+};
+
 module.exports = {
     createCluster,
     findById,
     update,
     remove,
+    findClusterForMoment,
 };

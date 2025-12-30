@@ -16,7 +16,11 @@ const MomentsEditView = ({
     onFetchMoments,
     activityId,
     scrollToMomentId,
-    onScrollComplete
+    onScrollComplete,
+    onMomentCenter,
+    activeMomentId,
+    isScrollSyncEnabled,
+    onToggleScrollSync
 }) => {
     const fileInputRef = useRef(null);
     const folderInputRef = useRef(null);
@@ -28,6 +32,10 @@ const MomentsEditView = ({
     
     // Modal State
     const [isTimeShiftOpen, setIsTimeShiftOpen] = useState(false);
+
+    // Scroll Sync Refs
+    const containerRef = useRef(null);
+    const scrollTimeoutRef = useRef(null);
 
     // Scroll Effect
     useEffect(() => {
@@ -44,6 +52,91 @@ const MomentsEditView = ({
             }
         }
     }, [scrollToMomentId, onScrollComplete]);
+
+    // Scroll Sync Logic
+    useEffect(() => {
+        const getScrollParent = (node) => {
+            if (!node || node === document.body || node === document.documentElement) return null;
+            
+            const style = getComputedStyle(node);
+            const overflowY = style.overflowY;
+            const isScrollable = overflowY === 'auto' || overflowY === 'scroll';
+            
+            if (isScrollable && node.scrollHeight >= node.clientHeight) {
+                return node;
+            }
+            return getScrollParent(node.parentNode);
+        };
+
+        const handleScroll = () => {
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+
+            scrollTimeoutRef.current = setTimeout(() => {
+                if (!containerRef.current) return;
+                
+                const scrollParent = getScrollParent(containerRef.current);
+                const parentRect = scrollParent 
+                    ? scrollParent.getBoundingClientRect() 
+                    : { top: 0, height: window.innerHeight };
+                
+                const centerY = parentRect.top + parentRect.height / 2;
+
+                const momentElements = Array.from(containerRef.current.querySelectorAll('[id^="moment-item-"]'));
+                
+                // Group by visual row to handle grid layouts
+                const rows = [];
+                const TOLERANCE = 5;
+                let currentRow = null;
+
+                momentElements.forEach(el => {
+                    const rect = el.getBoundingClientRect();
+                    if (!currentRow || Math.abs(currentRow.top - rect.top) >= TOLERANCE) {
+                        currentRow = { top: rect.top, height: rect.height, items: [] };
+                        rows.push(currentRow);
+                    }
+                    currentRow.items.push({ el, rect });
+                });
+
+                let closestElement = null;
+                let closestDistance = Infinity;
+
+                rows.forEach(row => {
+                    row.items.sort((a, b) => a.rect.left - b.rect.left);
+                    const count = row.items.length;
+                    const sliceHeight = row.height / count;
+                    
+                    row.items.forEach((item, index) => {
+                        const virtualCenterY = row.top + (index * sliceHeight) + (sliceHeight / 2);
+                        const distance = Math.abs(centerY - virtualCenterY);
+
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestElement = item.el;
+                        }
+                    });
+                });
+
+                if (closestElement) {
+                    const momentId = closestElement.id.replace('moment-item-', '');
+                    if (onMomentCenter) {
+                        onMomentCenter(momentId);
+                    }
+                }
+            }, 100);
+        };
+
+        const scrollParent = getScrollParent(containerRef.current);
+        const target = scrollParent || window;
+        
+        target.addEventListener('scroll', handleScroll, { passive: true });
+        
+        return () => {
+            target.removeEventListener('scroll', handleScroll);
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        };
+    }, [onMomentCenter]);
 
     // Grouping Logic
     const momentGroups = useMemo(() => {
@@ -241,7 +334,8 @@ const MomentsEditView = ({
                     try {
                         const res = await api.post('/clusters', { 
                             name: 'New Cluster', 
-                            activityId 
+                            activityId,
+                            selectedIds,
                         });
                         const clusterId = res.data.id;
                         await Promise.all(selectedList.map(m => onUpdateMoment(m.id, { clusterId })));
@@ -272,7 +366,8 @@ const MomentsEditView = ({
                 onClick: async () => {
                      try {
                         const res = await api.post('/clusters', { 
-                            activityId 
+                            activityId,
+                            selectedIds
                         });
                         const clusterId = res.data.id;
                         await Promise.all(selectedList.map(m => onUpdateMoment(m.id, { clusterId })));
@@ -289,9 +384,22 @@ const MomentsEditView = ({
     };
 
     return (
-        <div className={styles.container}>
+        <div className={styles.container} ref={containerRef}>
             <div className={styles.header}>
                 <h3>MOMENTS</h3>
+                {onToggleScrollSync && (
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', fontSize: '0.9rem' }}>
+                        <label style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                            <input
+                                type="checkbox"
+                                checked={isScrollSyncEnabled}
+                                onChange={onToggleScrollSync}
+                                style={{ marginRight: '5px' }}
+                            />
+                            Sync Map
+                        </label>
+                    </div>
+                )}
             </div>
             
             <div 
@@ -355,7 +463,7 @@ const MomentsEditView = ({
 
                     return (
                         <MomentsRow
-                            key={group.clusterId || `unclustered-${index}`}
+                            key={`moments-edit-view-${group.clusterId || `unclustered-${index}`}`}
                             title={title}
                             subheader={subheader}
                             moments={group.moments}
@@ -367,6 +475,7 @@ const MomentsEditView = ({
                             clusterId={group.clusterId}
                             clusterDescription={group.clusterDescription}
                             onClusterUpdate={handleClusterUpdate}
+                            activeMomentId={activeMomentId}
                         />
                     );
                 })}
