@@ -43,6 +43,16 @@ const getTracksByActivityId = (activityId) => {
         );
 }
 
+const getTracksByActivityIds = (activityIds) => {
+    return db(TABLE_NAME)
+        .leftJoin('polylines', 'tracks.activePolylineId', 'polylines.id')
+        .whereIn('tracks.activityId', activityIds)
+        .select(
+            'tracks.*',
+            db.raw('ST_AsGeoJSON(polylines.geom) as polyline')
+        );
+}
+
 const deleteTracksByActivityId = (activityId) => {
     return db(TABLE_NAME).where({ activityId }).del();
 }
@@ -81,6 +91,7 @@ module.exports = {
     deleteTrack,
     deleteTracksByActivityId,
     getTracksByActivityId,
+    getTracksByActivityIds,
     getTracksByIds,
     updateStatus,
     findDuplicateTrack

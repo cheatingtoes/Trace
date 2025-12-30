@@ -134,6 +134,14 @@ const getTracksByActivityId = async (activityId) => {
     }));
 };
 
+const getTracksByActivityIds = async (activityIds) => {
+    const tracks = await TrackModel.getTracksByActivityIds(activityIds);
+    return tracks.map(track => ({
+        ...track,
+        polyline: track.polyline ? JSON.parse(track.polyline) : null
+    }));
+};
+
 const getTrackUploadUrl = async (userId, activityId, file) => {
     if (!userId || !activityId || !file) {
         throw new BadRequestError('Missing required fields');
@@ -223,6 +231,7 @@ module.exports = {
     deleteTracksByActivityId,
     uploadTrackFile,
     getTracksByActivityId,
+    getTracksByActivityIds,
     getTrackUploadUrl,
     confirmUpload,
     getTracksByStatus

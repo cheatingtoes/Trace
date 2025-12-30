@@ -29,6 +29,17 @@ const getClustersByActivityId = (activityId) => {
     return db('clusters').where({ activityId }).select('*');
 };
 
+const getClustersByActivityIds = (activityIds) => {
+    return db('clusters')
+        .whereIn('activityId', activityIds)
+        .orderBy('start_date', 'asc')
+        .select(
+            '*',
+            db.raw('ST_X(geom::geometry) as lon'),
+            db.raw('ST_Y(geom::geometry) as lat')
+        );
+};
+
 const deleteClustersByActivityId = (activityId) => {
     return db('clusters').where({ activityId }).del();
 };
@@ -40,5 +51,6 @@ module.exports = {
     remove,
     findClusterForMoment,
     getClustersByActivityId,
+    getClustersByActivityIds,
     deleteClustersByActivityId,
 };

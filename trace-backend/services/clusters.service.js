@@ -95,6 +95,10 @@ const getClustersByActivityId = async (activityId) => {
     return await ClustersModel.getClustersByActivityId(activityId);
 };
 
+const getClustersByActivityIds = async (activityIds) => {
+    return await ClustersModel.getClustersByActivityIds(activityIds);
+};
+
 const deleteClustersByActivityId = async (activityId) => {
     return await ClustersModel.deleteClustersByActivityId(activityId);
 };
@@ -106,5 +110,6 @@ module.exports = {
     findById,
     findClusterForMoment,
     getClustersByActivityId,
+    getClustersByActivityIds,
     deleteClustersByActivityId
 };
