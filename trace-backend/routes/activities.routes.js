@@ -30,4 +30,9 @@ router.get('/:id/moments', ActivityController.getMomentsByActivityId);
 
 router.delete('/:id/moments', ActivityController.deleteMomentsByActivityId);
 
+// GET /api/v1/activities/:id/clusters - Get all clusters for an activity
+router.get('/:id/clusters', ActivityController.getClustersByActivityId);
+
+router.delete('/:id/clusters', ActivityController.deleteClustersByActivityId);
+
 module.exports = router;

@@ -32,13 +32,13 @@ const FloatingActionBar = ({
             </div>
 
             <div className={styles.rightGroup}>
-                <button 
+                {/* <button 
                     className={styles.iconBtn} 
                     onClick={onTimeShift}
                     title="Shift Time"
                 >
                     🕒
-                </button>
+                </button> */}
                 <button 
                     className={`${styles.iconBtn} ${styles.deleteBtn}`} 
                     onClick={() => {

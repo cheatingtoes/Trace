@@ -10,7 +10,7 @@ const getMomentById = (id) => {
 };
 
 const getMomentByIds = (ids) => {
-    return db(TABLE_NAME).whereIn('id', ids).select('*');
+    return db(TABLE_NAME).whereIn('id', ids).select('*').orderBy('moments.occuredAt', 'asc');;
 }
 
 const getMomentsByActivityId = (activityId) => {

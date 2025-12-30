@@ -94,7 +94,6 @@ const useTracks = (activityId = null) => {
                 }
             }
         } catch (err) {
-            console.log('in catch', err)
             setError(err.message || 'An unexpected error occurred during upload');
         }
     };

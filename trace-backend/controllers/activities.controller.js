@@ -1,6 +1,7 @@
 const ActivityService = require('../services/activities.service');
 const TracksService = require('../services/tracks.service');
 const MomentsService = require('../services/moments.service');
+const ClustersService = require('../services/clusters.service');
 const { success } = require('../utils/apiResponse');
 
 
@@ -96,6 +97,26 @@ const deleteMomentsByActivityId = async (req, res, next) => {
     }
 }
 
+const getClustersByActivityId = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const activityClusters = await ClustersService.getClustersByActivityId(id);
+        res.status(200).json(success(activityClusters));
+    } catch (error) {
+        next(error);
+    }
+}
+
+const deleteClustersByActivityId = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const deletedClusters = await ClustersService.deleteClustersByActivityId(id);
+        res.status(200).json(success(deletedClusters));
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
     getActivitiesForUser,
     getActivityById,
@@ -106,4 +127,6 @@ module.exports = {
     deleteTracksByActivityId,
     getMomentsByActivityId,
     deleteMomentsByActivityId,
+    getClustersByActivityId,
+    deleteClustersByActivityId,
 }

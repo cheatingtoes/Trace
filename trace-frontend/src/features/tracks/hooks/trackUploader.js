@@ -26,7 +26,6 @@ export async function* uploadTrackFile({ activityId, file }) {
         const { signedUrl, key, trackId, polylineId, status } = signResponse.data;
 
         if (status === 'duplicate') {
-            console.log('duplicate found for track: ', signResponse.data.trackId)
             yield { type: 'DUPLICATE', payload: { tempId, file, trackId } };
         }
 

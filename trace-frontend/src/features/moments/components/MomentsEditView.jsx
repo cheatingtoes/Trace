@@ -335,7 +335,7 @@ const MomentsEditView = ({
                         const res = await api.post('/clusters', { 
                             name: 'New Cluster', 
                             activityId,
-                            selectedIds,
+                            selectedIds: Array.from(selectedIds),
                         });
                         const clusterId = res.data.id;
                         await Promise.all(selectedList.map(m => onUpdateMoment(m.id, { clusterId })));
@@ -361,23 +361,27 @@ const MomentsEditView = ({
 
         // 3. Merge
         if ((!allUnclustered && !allClustered) || uniqueClusterIds.size > 1) {
-             return {
-                label: 'Merge to New Cluster',
-                onClick: async () => {
-                     try {
-                        const res = await api.post('/clusters', { 
-                            activityId,
-                            selectedIds
-                        });
-                        const clusterId = res.data.id;
-                        await Promise.all(selectedList.map(m => onUpdateMoment(m.id, { clusterId })));
-                        handleDeselectAll();
-                    } catch (err) {
-                        console.error(err);
-                        alert('Failed to merge');
+            const targetClusterId = selectedList.find(m => m.clusterId)?.clusterId;
+
+            if (targetClusterId) {
+                return {
+                    label: 'Merge to First Cluster',
+                    onClick: async () => {
+                        try {
+                            // Update cluster dates with new members
+                            await api.patch(`/clusters/${targetClusterId}`, { 
+                                selectedIds: Array.from(selectedIds)
+                            });
+                            // Move all moments to this cluster
+                            await Promise.all(selectedList.map(m => onUpdateMoment(m.id, { clusterId: targetClusterId })));
+                            handleDeselectAll();
+                        } catch (err) {
+                            console.error(err);
+                            alert('Failed to merge');
+                        }
                     }
-                }
-            };
+                };
+            }
         }
 
         return null;

@@ -137,7 +137,9 @@ const MomentsRow = ({
                                     alt={moment.name || 'Moment'}
                                     className={styles.thumbnail}
                                 />
+
                             </div>
+                                <span>{moment.id || 'Moment'}</span>
                         </div>
                     );
                 })}

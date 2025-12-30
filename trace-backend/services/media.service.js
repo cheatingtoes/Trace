@@ -107,7 +107,6 @@ async function processImage({ key, momentId, activityId }) {
         }
 
         const cluster = await ClustersService.findClusterForMoment(activityId, updateData.occuredAt);
-        console.log('@@@@@@', { cluster, occuredAt: updateData.occuredAt })
         if (cluster) {
             updateData.clusterId = cluster.id;
         }

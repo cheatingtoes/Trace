@@ -25,10 +25,20 @@ const findClusterForMoment = async (activityId, occuredAt) => {
         .first();
 };
 
+const getClustersByActivityId = (activityId) => {
+    return db('clusters').where({ activityId }).select('*');
+};
+
+const deleteClustersByActivityId = (activityId) => {
+    return db('clusters').where({ activityId }).del();
+};
+
 module.exports = {
     createCluster,
     findById,
     update,
     remove,
     findClusterForMoment,
+    getClustersByActivityId,
+    deleteClustersByActivityId,
 };
