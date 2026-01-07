@@ -2,8 +2,8 @@ exports.up = function(knex) {
   return knex.schema.createTable('polylines', function(table) {
     table.uuid('id').primary();
     table.timestamps(true, true);
-    table.specificType('geom', 'GEOMETRY(LineStringZ, 4326)');
-    table.specificType('simplified_geom', 'GEOMETRY(LineStringZ, 4326)');
+    table.specificType('geom', 'GEOMETRY(MultiLineStringZ, 4326)');
+    table.specificType('simplified_geom', 'GEOMETRY(MultiLineStringZ, 4326)');
     table.text('storage_key');
     table.string('mime_type');
     table.bigInteger('file_size_bytes')   

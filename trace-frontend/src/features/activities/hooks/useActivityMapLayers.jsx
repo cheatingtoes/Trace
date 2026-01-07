@@ -44,8 +44,13 @@ const useActivityMapLayers = ({
                 const { polyline } = track;
                 if (polyline && polyline.coordinates && Array.isArray(polyline.coordinates)) {
                     // GeoJSON is [lon, lat], Leaflet wants [lat, lon]
-                    const positions = polyline.coordinates.map(coord => [coord[1], coord[0]]);
-                    
+                    let positions;
+                    if (polyline.type === 'MultiLineString') {
+                        positions = polyline.coordinates.map(line => line.map(coord => [coord[1], coord[0]]));
+                    } else {
+                        positions = polyline.coordinates.map(coord => [coord[1], coord[0]]);
+                    }
+
                     layers.push(
                         <Polyline 
                             key={`track-${track.id}-${track.color || 'blue'}`} 

@@ -21,38 +21,37 @@ async function processGpxStream({ storageKey, trackId }) {
     const s3Item = await s3Client.send(command);
     const fileStream = s3Item.Body;
 
-    // 1. Parse Stream & Accumulate Points in Memory
-    // This avoids DB overhead for row-by-row inserts and massive aggregations.
-    const coordinates = await parseGpxToCoordinates(fileStream);
+    // 1. Parse Stream -> Returns Array of Arrays (MultiLineString)
+    const segmentCoordinates = await parseGpxToCoordinates(fileStream);
 
-    if (coordinates.length === 0) {
+    // Basic Validation
+    if (segmentCoordinates.length === 0 || segmentCoordinates[0].length === 0) {
         throw new Error('No valid track points found in GPX file.');
     }
 
-    // Extract polylineId from key
     const polylineIdMatch = storageKey.match(/polylines\/([^/]+)\.gpx$/);
     let polylineId;
     if (polylineIdMatch && polylineIdMatch[1]) {
         polylineId = polylineIdMatch[1];
     } else {
-         console.warn(`[GPX-Stream] Could not extract polylineId from key: ${storageKey}.`);
          throw new Error(`Invalid S3 Key format: ${storageKey}`);
     }
 
-    // 2. Construct GeoJSON
+    // 2. Construct GeoJSON as MultiLineString
+    // Structure: { type: "MultiLineString", coordinates: [ [[x,y], [x,y]], [[x,y], [x,y]] ] }
     const geoJsonGeometry = {
-        type: 'LineString',
-        coordinates: coordinates // [[lon, lat, ele], ...]
+        type: 'MultiLineString',
+        coordinates: segmentCoordinates
     };
 
-    // 3. Update Database in a Single Query
+    // 3. Update Database
+    // NOTE: Ensure your DB column `geom` is type `geometry(MultiLineString, 4326)` 
+    // or generic `geometry(Geometry, 4326)`.
     await db.transaction(async (trx) => {
         await trx('polylines')
             .where({ id: polylineId })
             .update({
                 geom: db.raw('ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', [JSON.stringify(geoJsonGeometry)]),
-                // We skip server-side simplification (simplified_geom) to avoid DB OOM.
-                // It can be generated lazily or by a more powerful worker if needed.
                 storage_key: storageKey
             });
 
@@ -64,24 +63,35 @@ async function processGpxStream({ storageKey, trackId }) {
             });
     });
 
-    console.log(`[GPX-Stream] Successfully updated polyline ${polylineId} and activated track ${trackId} with ${coordinates.length} points.`);
+    const totalPoints = segmentCoordinates.reduce((acc, seg) => acc + seg.length, 0);
+    console.log(`[GPX-Stream] Updated polyline ${polylineId} (MultiLineString) with ${segmentCoordinates.length} segments and ${totalPoints} total points.`);
 }
 
 /**
- * Parses stream and returns array of [lon, lat, ele] coordinates
+ * Parses stream and returns array of arrays of [lon, lat, ele] coordinates
+ * Returns: [ [ [lon, lat, ele], ... ], [ [lon, lat, ele], ... ] ]
  */
 function parseGpxToCoordinates(inputStream) {
     return new Promise((resolve, reject) => {
         const parser = sax.createStream(true, { trim: true });
         
-        let coordinates = [];
+        // Master list containing segments
+        let multiLineCoordinates = []; 
+        
+        // The current segment being built
+        let currentSegment = [];
+        
         let currentPoint = null;
         let lastSavedPoint = null;
         let currentTag = null;
         const MIN_DISTANCE_METERS = 2;
 
         parser.on('opentag', (node) => {
-            if (node.name === 'trkpt') {
+            if (node.name === 'trkseg') {
+                // START OF SEGMENT: Reset the current list and filter state
+                currentSegment = [];
+                lastSavedPoint = null;
+            } else if (node.name === 'trkpt') {
                 currentPoint = {
                     lat: parseFloat(node.attributes.lat),
                     lon: parseFloat(node.attributes.lon),
@@ -100,8 +110,9 @@ function parseGpxToCoordinates(inputStream) {
 
         parser.on('closetag', (tagName) => {
             currentTag = null;
+
             if (tagName === 'trkpt' && currentPoint) {
-                // Filter points
+                // Filter points logic (unchanged, just applied to currentSegment)
                 let shouldSave = true;
                 if (lastSavedPoint) {
                     const dist = haversineDistance(lastSavedPoint, currentPoint);
@@ -111,16 +122,32 @@ function parseGpxToCoordinates(inputStream) {
                 }
 
                 if (shouldSave) {
-                    // GeoJSON format: [lon, lat, ele]
-                    coordinates.push([currentPoint.lon, currentPoint.lat, currentPoint.ele]);
+                    // Push to CURRENT SEGMENT, not the master list yet
+                    currentSegment.push([currentPoint.lon, currentPoint.lat, currentPoint.ele]);
                     lastSavedPoint = currentPoint;
                 }
                 currentPoint = null;
+            } 
+            else if (tagName === 'trkseg') {
+                // END OF SEGMENT: "Commit" this segment to the master list
+                if (currentSegment.length > 0) {
+                    multiLineCoordinates.push(currentSegment);
+                }
             }
         });
 
         parser.on('end', () => {
-            resolve(coordinates);
+            // Fallback: If the GPX didn't use <trkseg> tags (rare but possible), 
+            // check if we have leftover points in currentSegment and save them.
+            if (currentSegment.length > 0 && multiLineCoordinates.length === 0) {
+                 multiLineCoordinates.push(currentSegment);
+            } else if (currentSegment.length > 0) {
+                 // If strict XML structure was followed, this shouldn't happen, 
+                 // but good for robustness.
+                 multiLineCoordinates.push(currentSegment);
+            }
+            
+            resolve(multiLineCoordinates);
         });
 
         parser.on('error', (err) => reject(err));

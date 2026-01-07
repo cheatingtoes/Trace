@@ -61,13 +61,9 @@ async function uploadTrackFile({ file, activityId, name, description, userId }) 
         // C. Convert DOM -> GeoJSON
         const geoJson = toGeoJSON.gpx(doc);
 
-        const trackFeature = geoJson.features.find(f => f.geometry.type === 'LineString');
+        const trackFeature = geoJson.features.find(f => f.geometry.type === 'LineString' || f.geometry.type === 'MultiLineString');
         
         if (!trackFeature) {
-            const multiTrack = geoJson.features.find(f => f.geometry.type === 'MultiLineString');
-            if (multiTrack) {
-                throw new Error('Complex GPX (MultiLineString) not yet supported.');
-            }
             throw new Error('No track found in GPX file.');
         }
 
@@ -88,7 +84,7 @@ async function uploadTrackFile({ file, activityId, name, description, userId }) 
                 mimeType: 'application/gpx+xml',
                 fileSizeBytes: file.size,
                 geom: db.raw(
-                    'ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', 
+                    'ST_SetSRID(ST_Multi(ST_GeomFromGeoJSON(?)), 4326)', 
                     [JSON.stringify(geometry)]
                 )
             }).returning('*');
