@@ -36,7 +36,20 @@ const ActivityDetailRead = () => {
         error: momentsError, 
     } = useMoments(id);
     
-    const { setMapViewport } = useMap();
+    const { setMapViewport, mapInstance } = useMap();
+    const [isZooming, setIsZooming] = useState(false);
+
+    useEffect(() => {
+        if (!mapInstance) return;
+        const onZoomStart = () => setIsZooming(true);
+        const onZoomEnd = () => setIsZooming(false);
+        mapInstance.on('zoomstart', onZoomStart);
+        mapInstance.on('zoomend', onZoomEnd);
+        return () => {
+            mapInstance.off('zoomstart', onZoomStart);
+            mapInstance.off('zoomend', onZoomEnd);
+        };
+    }, [mapInstance]);
 
     useEffect(() => {
         if (!momentsLoading && moments && moments.length > 0 && !initialPanRef.current) {
@@ -54,7 +67,7 @@ const ActivityDetailRead = () => {
 
     // Map Layers Hook
     useActivityMapLayers({
-        tracks,
+        tracks: isZooming ? [] : tracks,
         moments,
         hoveredMomentId,
         activeMomentId,

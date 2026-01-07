@@ -51,9 +51,22 @@ const ActivityDetailEdit = () => {
         updateMomentsState 
     } = useMoments(id);
     
-    const { setMapViewport } = useMap();
+    const { setMapViewport, mapInstance } = useMap();
     const [activeMomentId, setActiveMomentId] = useState(null);
     const [isScrollSyncEnabled, setIsScrollSyncEnabled] = useState(true);
+    const [isZooming, setIsZooming] = useState(false);
+
+    useEffect(() => {
+        if (!mapInstance) return;
+        const onZoomStart = () => setIsZooming(true);
+        const onZoomEnd = () => setIsZooming(false);
+        mapInstance.on('zoomstart', onZoomStart);
+        mapInstance.on('zoomend', onZoomEnd);
+        return () => {
+            mapInstance.off('zoomstart', onZoomStart);
+            mapInstance.off('zoomend', onZoomEnd);
+        };
+    }, [mapInstance]);
 
     const isEditing = true;
 
@@ -68,7 +81,7 @@ const ActivityDetailEdit = () => {
 
     // Map Layers Hook
     useActivityMapLayers({
-        tracks,
+        tracks: isZooming ? [] : tracks,
         moments,
         hoveredMomentId,
         activeMomentId,

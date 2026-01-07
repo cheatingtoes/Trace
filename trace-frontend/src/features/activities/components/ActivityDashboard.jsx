@@ -12,7 +12,19 @@ import { useMap } from '../../../context/MapProvider';
 const ActivityDashboard = () => {
     const { activities, loading, error, createActivity, fetchActivities } = useActivities();
     const [isExpanded, setIsExpanded] = useState(false);
-    const { setMapLayers, setMapViewport } = useMap();
+    const { setMapLayers, setMapViewport, mapInstance } = useMap();
+    const [isZooming, setIsZooming] = useState(false);
+
+    useEffect(() => {
+        if (!mapInstance) return;
+        const onZoomStart = () => setIsZooming(true);
+        const onZoomEnd = () => setIsZooming(false);
+        mapInstance.on('zoomstart', onZoomStart);
+        mapInstance.on('zoomend', onZoomEnd);
+            mapInstance.off('zoomstart', onZoomStart);
+            mapInstance.off('zoomend', onZoomEnd);
+        };
+    }, [mapInstance]);
 
     const handleActivityCreated = () => {
         setIsExpanded(false);
@@ -41,7 +53,7 @@ const ActivityDashboard = () => {
 
         activities.forEach(activity => {
             // Render Tracks
-            if (activity.tracks) {
+            if (activity.tracks && !isZooming) {
                 activity.tracks.forEach(track => {
                     const { polyline, color } = track;
                     if (polyline && polyline.coordinates && Array.isArray(polyline.coordinates)) {
@@ -87,7 +99,7 @@ const ActivityDashboard = () => {
         return () => {
             setMapLayers([]);
         };
-    }, [activities, setMapLayers, defaultIcon]);
+    }, [activities, setMapLayers, defaultIcon, isZooming]);
 
     return (
         <div className={styles.dashboardContainer}>
