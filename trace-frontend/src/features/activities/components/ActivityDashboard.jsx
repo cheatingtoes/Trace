@@ -21,6 +21,7 @@ const ActivityDashboard = () => {
         const onZoomEnd = () => setIsZooming(false);
         mapInstance.on('zoomstart', onZoomStart);
         mapInstance.on('zoomend', onZoomEnd);
+        return () => {
             mapInstance.off('zoomstart', onZoomStart);
             mapInstance.off('zoomend', onZoomEnd);
         };

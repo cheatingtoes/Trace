@@ -70,7 +70,7 @@ const ActivityDetailRead = () => {
         tracks: isZooming ? [] : tracks,
         moments,
         hoveredMomentId,
-        activeMomentId,
+        activeMomentId: isZooming ? null : activeMomentId,
         setScrollToMomentId
     });
     const syncMapToMoment = useMomentMapSync(moments, isScrollSyncEnabled);
@@ -167,6 +167,7 @@ const ActivityDetailRead = () => {
                 onToggleScrollSync={() => setIsScrollSyncEnabled(prev => !prev)}
                 onMomentCenter={handleMomentCenter}
                 activeMomentId={activeMomentId}
+                isZooming={isZooming}
             />
             {selectedMomentForModal && (
                 <div className={styles.modalOverlay} onClick={() => setSelectedMomentForModal(null)}>

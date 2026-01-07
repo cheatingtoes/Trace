@@ -3,6 +3,8 @@ import L from 'leaflet';
 import { Polyline, Marker, Popup } from 'react-leaflet';
 import { useMap } from '../../../context/MapProvider';
 
+const EMPTY_ARRAY = [];
+
 const useActivityMapLayers = ({
     tracks,
     moments,
@@ -30,11 +32,15 @@ const useActivityMapLayers = ({
         shadowSize: [41, 41]
     }), []);
 
+    // Stabilize arrays to prevent infinite loops when parent passes new [] references
+    const stableTracks = tracks && tracks.length === 0 ? EMPTY_ARRAY : tracks;
+    const stableMoments = moments && moments.length === 0 ? EMPTY_ARRAY : moments;
+
     useEffect(() => {
         const layers = [];
 
-        if (tracks) {
-            tracks.forEach(track => {
+        if (stableTracks) {
+            stableTracks.forEach(track => {
                 const { polyline } = track;
                 if (polyline && polyline.coordinates && Array.isArray(polyline.coordinates)) {
                     // GeoJSON is [lon, lat], Leaflet wants [lat, lon]
@@ -51,8 +57,8 @@ const useActivityMapLayers = ({
             });
         }
 
-        if (moments) {
-            moments.forEach(moment => {
+        if (stableMoments) {
+            stableMoments.forEach(moment => {
                 const isHovered = moment.id === hoveredMomentId;
                 const isActive = moment.id === activeMomentId;
                 if (moment.lat != null && moment.lon != null) {
@@ -75,10 +81,14 @@ const useActivityMapLayers = ({
 
         setMapLayers(layers);
 
+    }, [stableTracks, stableMoments, setMapLayers, hoveredMomentId, activeMomentId, defaultIcon, highlightedIcon, setScrollToMomentId]);
+
+    // Separate cleanup effect to avoid clearing layers on every update
+    useEffect(() => {
         return () => {
             setMapLayers([]);
         };
-    }, [tracks, moments, setMapLayers, hoveredMomentId, activeMomentId, defaultIcon, highlightedIcon, setScrollToMomentId]);
+    }, [setMapLayers]);
 };
 
 export default useActivityMapLayers;
