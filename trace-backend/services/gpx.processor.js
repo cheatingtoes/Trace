@@ -44,6 +44,9 @@ async function processGpxStream({ storageKey, trackId }) {
         coordinates: segmentCoordinates
     };
 
+    const geoJsonString = JSON.stringify(geoJsonGeometry);
+    const TOLERANCE = 0.0001;
+
     // 3. Update Database
     // NOTE: Ensure your DB column `geom` is type `geometry(MultiLineString, 4326)` 
     // or generic `geometry(Geometry, 4326)`.
@@ -51,7 +54,11 @@ async function processGpxStream({ storageKey, trackId }) {
         await trx('polylines')
             .where({ id: polylineId })
             .update({
-                geom: db.raw('ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', [JSON.stringify(geoJsonGeometry)]),
+                geom: db.raw('ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)', [geoJsonString]),
+                simplified_geom: db.raw(
+                    'ST_Simplify(ST_SetSRID(ST_GeomFromGeoJSON(?), 4326), ?)', 
+                    [geoJsonString, TOLERANCE]
+                ),
                 storage_key: storageKey
             });
 

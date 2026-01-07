@@ -39,7 +39,7 @@ const getTracksByActivityId = (activityId) => {
         .where('tracks.activityId', activityId)
         .select(
             'tracks.*',
-            db.raw('ST_AsGeoJSON(polylines.geom) as polyline')
+            db.raw('ST_AsGeoJSON(polylines.simplified_geom, 6) as polyline')
         );
 }
 
@@ -49,7 +49,7 @@ const getTracksByActivityIds = (activityIds) => {
         .whereIn('tracks.activityId', activityIds)
         .select(
             'tracks.*',
-            db.raw('ST_AsGeoJSON(polylines.geom) as polyline')
+            db.raw('ST_AsGeoJSON(polylines.simplified_geom, 6) as polyline')
         );
 }
 
