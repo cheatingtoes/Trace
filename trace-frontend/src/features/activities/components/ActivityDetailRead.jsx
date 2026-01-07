@@ -1,8 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMemo, useEffect, useState } from 'react';
-import L from 'leaflet';
-import { Polyline, Marker, Popup } from 'react-leaflet';
-import styles from './ActivityDetail.module.css';
+import { useEffect, useState, useRef } from 'react';
+import styles from './ActivityDetailEdit.module.css';
 import ActivityReadView from './ActivityReadView';
 import TracksReadView from '../../tracks/components/TracksReadView';
 import MomentsReadView from '../../moments/components/MomentsReadView';
@@ -12,6 +10,8 @@ import useActivity from '../hooks/useActivity';
 import useTracks from '../../tracks/hooks/useTracks';
 import useMoments from '../../moments/hooks/useMoments';
 import { useMap } from '../../../context/MapProvider';
+import useActivityMapLayers from '../hooks/useActivityMapLayers';
+import useMomentMapSync from '../../moments/hooks/useMomentMapSync';
 
 const ActivityDetailRead = () => {
     const { id } = useParams();
@@ -21,6 +21,8 @@ const ActivityDetailRead = () => {
     const [activeMomentId, setActiveMomentId] = useState(null);
     const [selectedMomentForModal, setSelectedMomentForModal] = useState(null);
     const [isScrollSyncEnabled, setIsScrollSyncEnabled] = useState(true);
+    const initialPanRef = useRef(false);
+
     const { activity, loading: activityLoading, error: activityError } = useActivity(id);
     const { 
         tracks, 
@@ -34,25 +36,31 @@ const ActivityDetailRead = () => {
         error: momentsError, 
     } = useMoments(id);
     
-    const { setMapLayers, setMapViewport, mapInstance } = useMap();
+    const { setMapViewport } = useMap();
 
-    const defaultIcon = useMemo(() => new L.Icon({
-        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        shadowSize: [41, 41]
-    }), []);
+    useEffect(() => {
+        if (!momentsLoading && moments && moments.length > 0 && !initialPanRef.current) {
+            const firstMoment = moments[0];
+            setActiveMomentId(firstMoment.id);
+            if (firstMoment.lat != null && firstMoment.lon != null) {
+                setMapViewport({
+                    center: [firstMoment.lat, firstMoment.lon],
+                    zoom: 10
+                });
+            }
+            initialPanRef.current = true;
+        }
+    }, [moments, momentsLoading, setMapViewport]);
 
-    const highlightedIcon = useMemo(() => new L.Icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        shadowSize: [41, 41]
-    }), []);
+    // Map Layers Hook
+    useActivityMapLayers({
+        tracks,
+        moments,
+        hoveredMomentId,
+        activeMomentId,
+        setScrollToMomentId
+    });
+    const syncMapToMoment = useMomentMapSync(moments, isScrollSyncEnabled);
 
     const handleMomentSelect = (moment) => {
         if (moment) {
@@ -68,26 +76,7 @@ const ActivityDetailRead = () => {
 
     const handleMomentCenter = (momentId) => {
         setActiveMomentId(momentId);
-        if (isScrollSyncEnabled) {
-            const moment = moments.find(m => m.id === momentId);
-            if (moment && moment.lat != null && moment.lon != null) {
-                const targetZoom = 10;
-                if (mapInstance) {
-                    const bounds = mapInstance.getBounds();
-                    const currentZoom = mapInstance.getZoom();
-                    const latLng = L.latLng(moment.lat, moment.lon);
-                    
-                    // Only skip if contained in bounds AND we are at least at the target zoom
-                    if (bounds.contains(latLng) && currentZoom >= targetZoom) {
-                        return;
-                    }
-                }
-                setMapViewport({
-                    center: [moment.lat, moment.lon],
-                    zoom: targetZoom // Closer zoom for specific moment
-                });
-            }
-        }
+        syncMapToMoment(momentId);
     };
 
     const handleNextImage = (e) => {
@@ -127,55 +116,6 @@ const ActivityDetailRead = () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [selectedMomentForModal, moments]);
-
-    // Update Map Layers
-    useEffect(() => {
-        const layers = [];
-
-        if (tracks) {
-            tracks.forEach(track => {
-                const { polyline } = track;
-                if (polyline && polyline.coordinates && Array.isArray(polyline.coordinates)) {
-                    // GeoJSON is [lon, lat], Leaflet wants [lat, lon]
-                    const positions = polyline.coordinates.map(coord => [coord[1], coord[0]]);
-                    
-                    layers.push(
-                        <Polyline 
-                            key={`track-${track.id}-${track.color || 'blue'}`} 
-                            positions={positions} 
-                            color={track.color || 'blue'} 
-                        />
-                    );
-                }
-            });
-        }
-
-        if (moments) {
-            moments.forEach(moment => {
-                // Backend now returns lat/lon directly
-                const isHovered = moment.id === hoveredMomentId;
-                const isActive = moment.id === activeMomentId;
-                if (moment.lat != null && moment.lon != null) {
-                    layers.push(
-                        <Marker 
-                            key={`moment-read-view${moment.id}`} 
-                            position={[moment.lat, moment.lon]}
-                            icon={isHovered || isActive ? highlightedIcon : defaultIcon}
-                            eventHandlers={{ click: () => setScrollToMomentId(moment.id) }}
-                        >
-                            <Popup><img src={`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`} />{`${import.meta.env.VITE_S3_PUBLIC_ENDPOINT}/${import.meta.env.VITE_S3_BUCKET_NAME}/${moment.storageThumbKey}`}</Popup>
-                        </Marker>
-                    );
-                }
-            });
-        }
-
-        setMapLayers(layers);
-
-        return () => {
-            setMapLayers([]);
-        };
-    }, [tracks, moments, setMapLayers, hoveredMomentId, activeMomentId, defaultIcon, highlightedIcon]);
 
     return (
         <div className={styles.detailContainer}>

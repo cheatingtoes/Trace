@@ -12,7 +12,7 @@ import { useMap } from '../../../context/MapProvider';
 const ActivityDashboard = () => {
     const { activities, loading, error, createActivity, fetchActivities } = useActivities();
     const [isExpanded, setIsExpanded] = useState(false);
-    const { setMapLayers } = useMap();
+    const { setMapLayers, setMapViewport } = useMap();
 
     const handleActivityCreated = () => {
         setIsExpanded(false);
@@ -26,6 +26,13 @@ const ActivityDashboard = () => {
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
         shadowSize: [41, 41]
     }), []);
+
+    useEffect(() => {
+        setMapViewport({
+            center: [39.0, -100.0],
+            zoom: 3
+        });
+    }, [setMapViewport]);
 
     useEffect(() => {
         if (!activities) return;

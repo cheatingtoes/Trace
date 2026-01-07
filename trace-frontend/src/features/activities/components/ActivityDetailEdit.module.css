@@ -37,13 +37,6 @@
     color: #333;
 }
 
-.titleInput:hover,
-.titleInput:focus {
-    border-color: #ccc;
-    background-color: #f9f9f9;
-    outline: none;
-}
-
 .descriptionInput {
     font-size: 1rem;
     border: 1px solid transparent;
@@ -53,13 +46,6 @@
     width: 100%;
     resize: none;
     color: #555;
-}
-
-.descriptionInput:hover,
-.descriptionInput:focus {
-    border-color: #ccc;
-    background-color: #f9f9f9;
-    outline: none;
 }
 
 .dateGroup {

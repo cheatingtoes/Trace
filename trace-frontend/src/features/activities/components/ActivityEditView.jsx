@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from './ActivityDetail.module.css';
+import styles from './ActivityDetailEdit.module.css';
 import Textarea from '../../../components/ui/Textarea';
 import Input from '../../../components/ui/Input';
 

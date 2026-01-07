@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './ActivityDetail.module.css';
+import styles from './ActivityDetailEdit.module.css';
 
 const ActivityReadView = ({ activity }) => {
     return (

@@ -1,9 +1,11 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import api from '../../../api/axios';
 import styles from './MomentsEditView.module.css';
 import MomentsRow from './MomentsRow';
 import FloatingActionBar from './FloatingActionBar';
 import TimeShiftModal from './TimeShiftModal';
+import useMomentGrouping from '../hooks/useMomentGrouping';
+import useMomentScroll from '../hooks/useMomentScroll';
 
 const MomentsEditView = ({
     moments = [], 
@@ -34,161 +36,17 @@ const MomentsEditView = ({
     const [isTimeShiftOpen, setIsTimeShiftOpen] = useState(false);
 
     // Scroll Sync Refs
-    const containerRef = useRef(null);
-    const scrollTimeoutRef = useRef(null);
+    const containerRef = useRef(null);    
 
-    // Scroll Effect
-    useEffect(() => {
-        if (scrollToMomentId) {
-            const element = document.getElementById(`moment-item-${scrollToMomentId}`);
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Optional: Flash the element or highlight it temporarily
-                element.classList.add(styles.flashHighlight);
-                setTimeout(() => {
-                    element.classList.remove(styles.flashHighlight);
-                    if (onScrollComplete) onScrollComplete();
-                }, 2000);
-            }
-        }
-    }, [scrollToMomentId, onScrollComplete]);
-
-    // Scroll Sync Logic
-    useEffect(() => {
-        const getScrollParent = (node) => {
-            if (!node || node === document.body || node === document.documentElement) return null;
-            
-            const style = getComputedStyle(node);
-            const overflowY = style.overflowY;
-            const isScrollable = overflowY === 'auto' || overflowY === 'scroll';
-            
-            if (isScrollable && node.scrollHeight >= node.clientHeight) {
-                return node;
-            }
-            return getScrollParent(node.parentNode);
-        };
-
-        const handleScroll = () => {
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-            }
-
-            scrollTimeoutRef.current = setTimeout(() => {
-                if (!containerRef.current) return;
-                
-                const scrollParent = getScrollParent(containerRef.current);
-                const parentRect = scrollParent 
-                    ? scrollParent.getBoundingClientRect() 
-                    : { top: 0, height: window.innerHeight };
-                
-                const centerY = parentRect.top + parentRect.height / 2;
-
-                const momentElements = Array.from(containerRef.current.querySelectorAll('[id^="moment-item-"]'));
-                
-                // Group by visual row to handle grid layouts
-                const rows = [];
-                const TOLERANCE = 5;
-                let currentRow = null;
-
-                momentElements.forEach(el => {
-                    const rect = el.getBoundingClientRect();
-                    if (!currentRow || Math.abs(currentRow.top - rect.top) >= TOLERANCE) {
-                        currentRow = { top: rect.top, height: rect.height, items: [] };
-                        rows.push(currentRow);
-                    }
-                    currentRow.items.push({ el, rect });
-                });
-
-                let closestElement = null;
-                let closestDistance = Infinity;
-
-                rows.forEach(row => {
-                    row.items.sort((a, b) => a.rect.left - b.rect.left);
-                    const count = row.items.length;
-                    const sliceHeight = row.height / count;
-                    
-                    row.items.forEach((item, index) => {
-                        const virtualCenterY = row.top + (index * sliceHeight) + (sliceHeight / 2);
-                        const distance = Math.abs(centerY - virtualCenterY);
-
-                        if (distance < closestDistance) {
-                            closestDistance = distance;
-                            closestElement = item.el;
-                        }
-                    });
-                });
-
-                if (closestElement) {
-                    const momentId = closestElement.id.replace('moment-item-', '');
-                    if (onMomentCenter) {
-                        onMomentCenter(momentId);
-                    }
-                }
-            }, 10); //debounce
-        };
-
-        const scrollParent = getScrollParent(containerRef.current);
-        const target = scrollParent || window;
-        
-        target.addEventListener('scroll', handleScroll, { passive: true });
-        
-        return () => {
-            target.removeEventListener('scroll', handleScroll);
-            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-        };
-    }, [onMomentCenter]);
-
-    // Grouping Logic
-    const momentGroups = useMemo(() => {
-        if (!moments || moments.length === 0) return [];
-
-        const groups = [];
-        let currentGroup = null;
-
-        moments.forEach((moment) => {
-            let shouldStartNewGroup = false;
-            // Normalize to null if falsy (undefined, null, "")
-            const momentClusterId = moment.clusterId || null;
-
-            if (!currentGroup) {
-                shouldStartNewGroup = true;
-            } else {
-                const groupClusterId = currentGroup.clusterId || null;
-
-                // 1. Check if Cluster ID changed
-                if (momentClusterId !== groupClusterId) {
-                    shouldStartNewGroup = true;
-                } 
-                // 2. If both are unclustered, check if Day changed
-                else if (momentClusterId === null) {
-                    const currentDay = currentGroup.moments[0].occuredAt 
-                        ? new Date(currentGroup.moments[0].occuredAt).toDateString()
-                        : 'Unknown';
-                    const momentDay = moment.occuredAt 
-                        ? new Date(moment.occuredAt).toDateString()
-                        : 'Unknown';
-                    
-                    if (currentDay !== momentDay) {
-                        shouldStartNewGroup = true;
-                    }
-                }
-            }
-
-            if (shouldStartNewGroup) {
-                if (currentGroup) groups.push(currentGroup);
-                currentGroup = {
-                    clusterId: momentClusterId,
-                    clusterDescription: moment.clusterDescription,
-                    moments: [moment]
-                };
-            } else {
-                currentGroup.moments.push(moment);
-            }
-        });
-        
-        if (currentGroup) groups.push(currentGroup);
-        return groups;
-    }, [moments]);
+    useMomentScroll({
+        scrollToMomentId,
+        onScrollComplete,
+        onMomentCenter,
+        containerRef,
+        flashHighlightClassName: styles.flashHighlight
+    });
+    
+    const momentGroups = useMomentGrouping(moments);
 
     // Helpers
     const formatDate = (dateStr) => {

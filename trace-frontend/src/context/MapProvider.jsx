@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useMemo } from 'react';
 import MapContext from './MapContext';
 
 export const MapProvider = ({ children }) => {
@@ -7,8 +7,15 @@ export const MapProvider = ({ children }) => {
     const [mapPadding, setMapPadding] = useState({ left: 0, right: 0, top: 0, bottom: 0 }); // Padding in px
     const [mapInstance, setMapInstance] = useState(null);
 
+    const value = useMemo(() => ({
+        mapLayers, setMapLayers,
+        mapViewport, setMapViewport,
+        mapPadding, setMapPadding,
+        mapInstance, setMapInstance
+    }), [mapLayers, mapViewport, mapPadding, mapInstance]);
+
     return (
-        <MapContext.Provider value={{ mapLayers, setMapLayers, mapViewport, setMapViewport, mapPadding, setMapPadding, mapInstance, setMapInstance }}>
+        <MapContext.Provider value={value}>
             {children}
         </MapContext.Provider>
     );
