@@ -3,12 +3,12 @@ import styles from './TracksEditView.module.css';
 
 const TrackItemRead = ({ track, index }) => {
     return (
-        <li className={styles.trackItem} style={{ cursor: 'default' }}>
+        <li className={styles.trackItem}>
             <div className={styles.leftGroup}>
                 <span className={styles.index}>{index + 1}.</span>
                 <div 
                     className={styles.colorInput} 
-                    style={{ backgroundColor: track.color || '#FF0000', cursor: 'default', border: 'none' }}
+                    style={{ backgroundColor: track.color || '#FF0000', border: 'none' }}
                 />
                 <div className={styles.nameInput}>
                     <span style={{ fontSize: '0.95rem', fontWeight: 500 }}>
@@ -26,7 +26,7 @@ const TracksReadView = ({ tracks = [] }) => {
     }
 
     return (
-        <div className={styles.container}>
+        <div className={styles.container} style={{ pointerEvents: 'none' }}>
             <div className={styles.header}>
                 <h3>TRACKS</h3>
             </div>

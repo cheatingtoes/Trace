@@ -48,7 +48,7 @@ const MomentsReadView = ({
 
     return (
         <div className={styles.container} ref={containerRef}>
-            <div className={styles.header}>
+            <div className={styles.header} style={{ pointerEvents: 'none' }}>
                 <h3>MOMENTS</h3>
                 {onToggleScrollSync && (
                     <div className={styles.toggleContainer}>

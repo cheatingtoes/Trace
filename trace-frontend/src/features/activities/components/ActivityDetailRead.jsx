@@ -137,7 +137,7 @@ const ActivityDetailRead = () => {
                     </button>
                 }
             />
-            <div className={styles.header}>
+            <div className={styles.header} style={{ pointerEvents: 'none' }}>
                 <h2>Activity Details</h2>
             </div>
             <ActivityReadView activity={activity} />

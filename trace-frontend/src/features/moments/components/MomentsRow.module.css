@@ -44,11 +44,20 @@
     font-weight: 600;
     color: #333;
     margin: 0;
+    pointer-events: none;
+}
+
+.clusterDescription {
+    font-size: 0.95rem; 
+    color: #555;
+    margin-top: 0.2rem;
+    pointer-events: none; 
 }
 
 .rowSubheader {
     font-size: 0.85rem;
     color: #666;
+    pointer-events: none;
 }
 
 .momentsGrid {

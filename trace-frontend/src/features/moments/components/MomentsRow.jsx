@@ -91,7 +91,7 @@ const MomentsRow = ({
                                 onKeyDown={(e) => handleKeyDown(e, 'description')}
                             />
                         ) : (
-                             localDescription && <div style={{ fontSize: '0.95rem', color: '#555', marginTop: '0.2rem' }}>{localDescription}</div>
+                             localDescription && <div className={styles.clusterDescription}>{localDescription}</div>
                         )
                     )}
                 </div>
