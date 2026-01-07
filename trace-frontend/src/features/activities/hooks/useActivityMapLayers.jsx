@@ -67,6 +67,7 @@ const useActivityMapLayers = ({
                             key={`moment-${moment.id}`} 
                             position={[moment.lat, moment.lon]}
                             icon={isHovered || isActive ? highlightedIcon : defaultIcon}
+                            zIndexOffset={isHovered || isActive ? 1000 : 0}
                             eventHandlers={{ click: () => setScrollToMomentId(moment.id) }}
                         >
                             <Popup>

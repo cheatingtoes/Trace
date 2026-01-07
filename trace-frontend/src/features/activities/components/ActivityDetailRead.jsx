@@ -42,7 +42,10 @@ const ActivityDetailRead = () => {
     useEffect(() => {
         if (!mapInstance) return;
         const onZoomStart = () => setIsZooming(true);
-        const onZoomEnd = () => setIsZooming(false);
+        const onZoomEnd = () => {
+            setIsZooming(false);
+            localStorage.setItem('activity-map-zoom', mapInstance.getZoom());
+        };
         mapInstance.on('zoomstart', onZoomStart);
         mapInstance.on('zoomend', onZoomEnd);
         return () => {
@@ -56,9 +59,10 @@ const ActivityDetailRead = () => {
             const firstMoment = moments[0];
             setActiveMomentId(firstMoment.id);
             if (firstMoment.lat != null && firstMoment.lon != null) {
+                const savedZoom = localStorage.getItem('activity-map-zoom') ? parseInt(localStorage.getItem('activity-map-zoom'), 10) : 10;
                 setMapViewport({
                     center: [firstMoment.lat, firstMoment.lon],
-                    zoom: 10
+                    zoom: savedZoom > 7 ? savedZoom : 10
                 });
             }
             initialPanRef.current = true;
@@ -89,6 +93,7 @@ const ActivityDetailRead = () => {
 
     const handleMomentCenter = (momentId) => {
         setActiveMomentId(momentId);
+        if (mapInstance && mapInstance.getZoom() < 10) return;
         syncMapToMoment(momentId);
     };
 
