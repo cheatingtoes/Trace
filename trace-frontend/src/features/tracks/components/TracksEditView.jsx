@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
+
 import styles from './TracksEditView.module.css';
 import Input from '../../../components/ui/Input';
 import Textarea from '../../../components/ui/Textarea';
@@ -6,6 +8,7 @@ import Textarea from '../../../components/ui/Textarea';
 const TrackItem = ({ track, index, onColorChange, onNameChange, onDelete }) => {
     const [localName, setLocalName] = useState(track.name || '');
     const [localColor, setLocalColor] = useState(track.color || '#FF0000');
+    const [isHovered, setIsHovered] = useState(false);
 
     useEffect(() => {
         setLocalName(track.name || '');
@@ -31,9 +34,12 @@ const TrackItem = ({ track, index, onColorChange, onNameChange, onDelete }) => {
     };
 
     return (
-        <li className={styles.trackItem}>
+        <li 
+            className={styles.trackItem}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
             <div className={styles.leftGroup}>
-                <span className={styles.index}>{index + 1}.</span>
                 <Input 
                     type="color" 
                     value={localColor} 
@@ -49,6 +55,12 @@ const TrackItem = ({ track, index, onColorChange, onNameChange, onDelete }) => {
                         onBlur={handleNameBlur}
                         onKeyDown={handleKeyDown}
                         placeholder="Track Name"
+                        style={{
+                            borderColor: isHovered ? undefined : 'transparent',
+                            backgroundColor: isHovered ? undefined : 'transparent',
+                            resize: 'none',
+                            overflow: 'hidden'
+                        }}
                     />
                 </div>
             </div>
@@ -57,8 +69,13 @@ const TrackItem = ({ track, index, onColorChange, onNameChange, onDelete }) => {
                     className={styles.iconButton} 
                     onClick={() => onDelete && onDelete(track.id)}
                     title="Delete Track"
+                    style={{
+                        opacity: isHovered ? 1 : 0,
+                        visibility: isHovered ? 'visible' : 'hidden',
+                        transition: 'opacity 0.2s'
+                    }}
                 >
-                    🗑️
+                    <Trash2 />
                 </button>
             </div>
         </li>

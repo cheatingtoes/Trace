@@ -1,5 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
+import { ArrowBigLeft } from 'lucide-react';
+import { Pencil } from 'lucide-react';
+
 import styles from './ActivityDetailEdit.module.css';
 import ActivityReadView from './ActivityReadView';
 import TracksReadView from '../../tracks/components/TracksReadView';
@@ -141,7 +144,7 @@ const ActivityDetailRead = () => {
                 left={
                     <>
                         <button onClick={() => navigate(-1)} style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '1.2rem', marginRight: '0.5rem' }}>
-                            ←
+                            <ArrowBigLeft />
                         </button>
                     </>
                 }
@@ -151,7 +154,7 @@ const ActivityDetailRead = () => {
                         style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '1.2rem' }}
                         title="Edit Activity"
                     >
-                        ✏️
+                        <Pencil />
                     </button>
                 }
             />

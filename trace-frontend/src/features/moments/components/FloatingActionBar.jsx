@@ -1,5 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { Trash2 } from 'lucide-react';
+
 import styles from './FloatingActionBar.module.css';
 
 const FloatingActionBar = ({ 
@@ -48,7 +50,7 @@ const FloatingActionBar = ({
                     }}
                     title="Delete Selected"
                 >
-                    🗑️
+                    <Trash2 />
                 </button>
             </div>
         </div>,

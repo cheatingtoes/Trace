@@ -82,13 +82,6 @@
     min-width: 0;
 }
 
-.index {
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    min-width: 1.5rem;
-    font-variant-numeric: tabular-nums;
-}
-
 .checkbox {
     cursor: pointer;
     width: 16px;

@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import L from 'leaflet';
 import { Polyline, Marker, Popup } from 'react-leaflet';
+import { Plus, Minus } from 'lucide-react';
+
 import ActivityForm from './ActivityForm'; // Assuming CreateActivity is in the same directory
 import ActivityList from './ActivityList';     // Assuming ActivityList is in the same directory
 import styles from './ActivityDashboard.module.css';
@@ -115,7 +117,7 @@ const ActivityDashboard = () => {
                 right={
                     <div className={styles.createActivityButton}>
                         <button onClick={() => setIsExpanded(!isExpanded)} className={ActivityFormStyles.expandButton}>
-                            {isExpanded ? '-' : '+'}
+                            {isExpanded ? <Minus /> : <Plus />}
                         </button>
                     </div>
                 }

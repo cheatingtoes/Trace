@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { ArrowBigLeft, Trash2 } from 'lucide-react';
+
 import styles from './ActivityDetailEdit.module.css';
 import ActivityEditView from './ActivityEditView';
 import TracksEditView from '../../tracks/components/TracksEditView';
@@ -119,11 +121,11 @@ const ActivityDetailEdit = () => {
                 left={
                     <>
                         <button onClick={() => navigate(-1)} style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '1.2rem', marginRight: '0.5rem' }}>
-                            ←
+                            <ArrowBigLeft />
                         </button>
                     </>
                 }
-                right={<span onClick={handleDeleteActivity} style={{ cursor: 'pointer' }}>🗑️</span>}
+                right={<span onClick={handleDeleteActivity} style={{ cursor: 'pointer' }}><Trash2 /></span>}
             />
             <div className={styles.header}>
                 <h2>Edit Activity</h2>

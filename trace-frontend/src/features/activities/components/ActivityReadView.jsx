@@ -3,7 +3,7 @@ import styles from './ActivityDetailEdit.module.css';
 
 const ActivityReadView = ({ activity }) => {
     return (
-        <div className={styles.editViewContainer}>
+        <div className={styles.editViewContainer} style={{ pointerEvents: 'none' }}>
             <div className={styles.titleInput} style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
                 {activity?.name || 'Untitled Activity'}
             </div>
